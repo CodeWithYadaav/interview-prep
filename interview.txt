@@ -1,0 +1,168 @@
+JavaScript and Node.js
+Scoping and Hoisting
+Promises, Callbacks, Async/Await
+diffrence in any and unknown
+Node.js Event Loop
+Output-based Questions (JS execution and behavior)
+Error Handling and Exceptional Cases
+Generic Functions in TypeScript
+Sorting an Array
+Finding the Second or Third Largest Element from an Array
+Returning the Index from an Array that Matches a Given Target
+
+
+
+SQL and Databases
+Finding Duplicates from a Table (SQL)
+Read Large Sets of Data from CSV and Insert into DB
+Pooling in Databases
+Normalisation
+Handling Slow Queries (Indexing Best Practices)
+Second Largest Salary (SQL Query)
+LEFT JOIN vs RIGHT JOIN
+Column Join and DB Join in NestJS
+SQL Injection and Security Without ORM
+Database Migrations
+
+
+
+
+TypeORM vs Sequelize
+Comparison of TypeORM vs Sequelize
+
+
+
+
+API Security and Scalability
+Best Practices for Securing APIs
+If No Cloud, How to Make Server Scalable?
+Logging and Monitoring for Errors
+Status Codes (HTTP Responses)
+
+
+
+
+NestJS and Express.js
+Interceptor Guards in NestJS
+NestJS Dependency Injection (IoC)
+Comparison: NestJS vs Express.js
+What Does NestJS Use Under the Hood?
+
+
+
+
+Design and Architecture
+Table Design for Categories, Subcategories, etc.
+Microservices Architecture (MSA)	
+What Questions to Ask if Starting a Project from Scratch?
+
+
+
+
+Performance and Optimization
+Reading Large Datasets with Streams
+Database Query Optimization (Indexing)
+
+
+
+
+Git and Version Control
+Git Version Control
+
+
+
+
+String and Array Manipulation Problems
+Anagrams
+Return the Character with Maximum Occurrences from a String
+Return the Minimum Number of Characters from a String
+Return the Index of Target in an Array
+Count of Maximum Value in an Array
+sort the array
+
+
+
+
+Authentication and Authorization
+Authentication and Authorization Practices
+
+
+
+design pattern
+
+
+
+find the quotent 
+a=5;b=2
+o/p=2
+now use that without using / operator
+
+
+
+find missing no from an array 
+
+Que-------------
+
+const obj = {
+    value: 0,
+    add: ,
+    sub: ,
+    div: ,
+    mul: 
+}
+
+
+
+obj.add(5).sub(5).add(10).sub(2).mul(10).div(6)
+console.log(obj.value)
+
+
+Que-------------
+
+
+sharding 
+Hoisting
+
+find missing no from array
+
+
+streams | pipes
+
+
+L&T
+
+const name = 'Praveen';
+
+String.___proto__ =
+
+
+name.toLowerCase() -> praveen
+
+// name.toAlternateUpperCase()
+// PrAvEeN
+ 
+
+
+
+
+ecmascript new feature in js 
+globalThis
+nullish and || operator
+promises
+
+
+
+NTT 
+non-prime number with odd numbers upto 100 records
+promises,Callbacks,evenloop,event driven,call by value, call by refrence,
+
+self join que
+emp table
+id,name,empId
+select e.name,m.name from emp as e join emp as m on e.id=m.empId
+
+
+
+git rebase 
+git cherrypick
+git latest logs

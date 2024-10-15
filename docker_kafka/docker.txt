@@ -1,0 +1,29 @@
+Basics of Docker
+What is Docker, and how does it differ from a virtual machine?
+What are the main components of Docker architecture?
+Explain Docker Engine, Docker Image, Docker Container, and Docker Registry.
+What is a Docker image, and how is it different from a container?
+What are the Dockerfile instructions, and how are they used to build Docker images?
+What is the purpose of the docker-compose tool, and how is it different from docker run?
+How do you create, start, stop, and remove Docker containers?
+Use commands like docker run, docker stop, docker rm, docker ps, etc.
+How do you handle persistent data in Docker containers?
+Discuss Docker volumes and bind mounts.
+
+
+Intermediate to Advanced Docker
+How do you optimize Docker images for faster build times and smaller size?
+What is the difference between CMD and ENTRYPOINT in Docker?
+How does Docker handle networking, and what are the different types of Docker networks?
+Bridge, host, overlay, etc.
+How can you connect multiple containers in a Docker environment using docker-compose?
+What is the difference between Docker copy and Docker volume?
+How do you manage multiple environments (development, testing, production) using Docker?
+What is a multi-stage build in Docker, and how does it work?
+How do you troubleshoot slow performance in a Docker container?
+What security best practices should be followed when using Docker containers?
+Docker Orchestration
+What is Docker Swarm, and how is it different from Kubernetes?
+How do you scale Docker containers using Docker Swarm or Kubernetes?
+How do you ensure high availability and fault tolerance in a Docker Swarm cluster?
+What are Docker services and stacks, and how do they work in Docker Swarm?

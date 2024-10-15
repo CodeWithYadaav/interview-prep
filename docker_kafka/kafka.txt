@@ -1,0 +1,42 @@
+Basics of Kafka
+What is Apache Kafka, and what are its key use cases?
+Discuss real-time data pipelines, stream processing, messaging, etc.
+What are the core components of Kafka?
+Explain topics, partitions, producers, consumers, brokers, and zookeeper.
+How does Kafka ensure durability and fault tolerance of messages?
+What is a Kafka topic, and how does Kafka manage partitions?
+How does Kafka handle message ordering and delivery guarantees?
+Explain at-most-once, at-least-once, and exactly-once delivery semantics.
+How do Kafka producers and consumers work?
+Talk about producing messages, consuming them, and consumer groups.
+What is the role of Zookeeper in Kafka?
+What are Kafka brokers, and how do they work together to form a cluster?
+What is the difference between Kafka and traditional message brokers (e.g., RabbitMQ, ActiveMQ)?
+Kafka Architecture and Concepts
+Explain how Kafka handles data replication across brokers.
+What is ISR (In-Sync Replica)?
+What are Kafka partitions, and why are they important for scalability?
+How do Kafka consumers handle partition assignments, and what is consumer group rebalancing?
+What happens if a Kafka broker goes down? How does Kafka handle failures?
+How does Kafka handle offset management, and why is it important?
+Discuss how consumers commit offsets.
+What are Kafka connectors, and how do they fit into Kafka's ecosystem?
+Discuss Kafka Connect for data ingestion and integration.
+What is Kafka Streams, and how does it enable real-time stream processing?
+Performance and Scaling Kafka
+How do you ensure that Kafka can handle high throughput?
+Discuss tuning configurations like batch size, compression, and partitioning.
+How do you scale Kafka horizontally and vertically?
+What are the best practices for partitioning topics in Kafka for optimal performance?
+How do you monitor and troubleshoot Kafka performance issues?
+Kafka Advanced Concepts
+What is the difference between compacted topics and regular topics in Kafka?
+What is Kafka exactly-once semantics, and how is it achieved?
+How does Kafka ensure data consistency across distributed systems?
+What are Kafka inter-broker replication and cross-cluster replication, and when are they used?
+How do you secure a Kafka cluster?
+Discuss SSL, Kerberos, and SASL authentication.
+How does Kafka handle large messages, and what is the maximum size of a message?
+How would you design a Kafka-based architecture for a large-scale, high-availability system?
+Explain the role of Kafka retention policies and log compaction.
+What is Kafka Consumer Lag, and how do you monitor and minimize it?

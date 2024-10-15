@@ -1,0 +1,88 @@
+What are microservices, and how do they differ from monolithic architecture?
+What are the key principles of microservices architecture?
+Discuss principles like decentralized governance, independent deployment, scalability, and fault tolerance.
+What are the benefits of using microservices over a monolithic architecture?
+Examples include scalability, flexibility, easier deployment, and improved fault isolation.
+What challenges do you face while implementing microservices?
+Talk about data consistency, distributed transactions, monitoring, deployment complexity, etc.
+What is service discovery in microservices, and how does it work?
+Explain the role of service registries like Consul, Eureka, or Zookeeper.
+Communication Between Microservices
+How do microservices communicate with each other?
+Discuss synchronous communication (e.g., HTTP/REST, gRPC) and asynchronous communication (e.g., message queues, Kafka).
+What are synchronous and asynchronous communication in microservices? Provide examples of each.
+How do you handle communication failures in microservices?
+Discuss patterns like circuit breakers, retries, fallbacks, and timeouts.
+What is API Gateway, and why is it used in microservices architecture?
+Explain its role in routing, load balancing, authentication, etc.
+What is a message broker, and when would you use one in microservices?
+Discuss tools like RabbitMQ, Kafka, ActiveMQ, etc.
+Data Management and Microservices
+How do you handle data consistency across multiple microservices?
+Discuss eventual consistency, distributed transactions (SAGA pattern), and CQRS.
+What is the SAGA pattern in microservices, and when would you use it?
+How do you manage transactions in microservices, especially when multiple services need to be updated?
+Explain distributed transactions, the two-phase commit, and event-driven approaches.
+What is CQRS (Command Query Responsibility Segregation), and how is it useful in microservices?
+How do you manage databases in a microservices architecture? Should each microservice have its own database?
+Discuss database per service pattern and shared database patterns.
+Security in Microservices
+How do you handle security in microservices architecture?
+Discuss authentication and authorization using OAuth2, JWT, API Gateways, and security patterns like zero trust.
+What is OAuth2 and how can it be applied in microservices?
+How do you handle service-to-service communication security?
+Use of mTLS (mutual TLS), encryption, and API Gateway authentication.
+Scalability and Performance
+How do you scale microservices?
+Discuss horizontal scaling, autoscaling, load balancing, and container orchestration (Kubernetes, Docker Swarm).
+How do you ensure high availability and fault tolerance in microservices architecture?
+Discuss patterns like redundancy, replication, retries, and the circuit breaker pattern.
+How would you handle the load-balancing of microservices?
+Discuss both client-side and server-side load balancing techniques.
+What is the role of Kubernetes in microservices?
+Explain container orchestration, autoscaling, and service discovery using Kubernetes.
+Monitoring and Observability
+How do you monitor microservices?
+Discuss tools and techniques for logging, distributed tracing (Zipkin, Jaeger), and metrics (Prometheus, Grafana).
+What is distributed tracing, and how is it helpful in microservices architecture?
+Discuss the importance of tracing requests across services using tools like OpenTelemetry.
+How do you handle logging in microservices architecture?
+Discuss centralized logging approaches, log aggregation, and tools like ELK stack, Fluentd.
+What are the challenges in monitoring microservices compared to monolithic systems?
+Resilience and Fault Tolerance
+What are some patterns for ensuring resilience in microservices?
+Circuit breaker, retries, bulkheads, fallback mechanisms.
+What is the Circuit Breaker pattern, and how does it help in microservices?
+What is the Bulkhead pattern in microservices, and how does it contribute to fault isolation?
+Deployment and DevOps
+How do you deploy microservices in a continuous integration/continuous delivery (CI/CD) pipeline?
+Discuss CI/CD tools, rolling updates, blue-green deployment, and canary releases.
+How do you handle versioning of microservices APIs?
+What is a sidecar pattern, and how is it used in microservices architecture?
+Discuss the role of sidecars in service mesh environments like Istio or Linkerd.
+How do you manage state in a stateless microservices architecture?
+Explain the use of external storage systems (databases, caches) and sticky sessions.
+How would you perform service discovery in microservices during deployments using Kubernetes?
+Patterns and Anti-Patterns
+What are some common design patterns in microservices architecture?
+Event Sourcing, SAGA, Circuit Breaker, CQRS, API Gateway, etc.
+What are some anti-patterns in microservices architecture?
+Examples: sharing databases, overloading the API Gateway, building distributed monoliths.
+Design and Architecture
+How would you design a payment system using microservices architecture?
+Discuss service boundaries, event-driven design, transactions, and fault tolerance.
+How would you approach breaking down a monolith into microservices?
+Discuss identifying bounded contexts, extracting services, and ensuring smooth transitions.
+What questions should you ask when starting a new microservices project?
+Considerations like service boundaries, scalability requirements, communication patterns, and database design.
+Can you explain the differences between microservices and SOA (Service-Oriented Architecture)?
+Distributed Systems
+How do you handle latency and reliability issues in distributed microservices systems?
+What is the CAP theorem, and how does it apply to microservices?
+Discuss Consistency, Availability, and Partition tolerance in the context of microservices.
+What are some best practices for designing fault-tolerant and resilient microservices?
+Tools and Frameworks
+Which tools do you use for containerization and orchestration in microservices?
+Discuss Docker, Kubernetes, Helm, and other tools.
+How would you manage inter-service communication in a large microservices environment?
+Discuss service mesh (Istio, Linkerd), API Gateway, or message brokers (Kafka, RabbitMQ).

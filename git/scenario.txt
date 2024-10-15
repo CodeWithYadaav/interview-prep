@@ -1,0 +1,6 @@
+Q1.You accidentally committed a sensitive file, but haven't pushed it to the remote repository. How do you undo this commit and remove the file?
+
+        Discuss git reset and git rm --cached.
+
+Q2. If you want to synchronize your local repository with the latest changes from a remote branch without losing your local changes, what steps do you follow?
+        Discuss using git pull --rebase, stashing, or manually resolving conflicts.

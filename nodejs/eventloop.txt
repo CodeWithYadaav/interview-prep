@@ -1,0 +1,39 @@
+The event loop is a fundamental concept in JavaScript that allows for non-blocking, asynchronous operations. It manages the execution of code, collects and processes events, and executes queued sub-tasks in a single-threaded environment. Here's a simple breakdown:
+
+
+Key Concepts:
+Single-Threaded:
+JavaScript runs in a single thread, meaning it can only execute one operation at a time.
+
+Call Stack:
+This is where the JavaScript engine keeps track of the currently executing functions. When a function is called, it is pushed onto the stack, and when it completes, it is popped off.
+
+Web APIs:
+When asynchronous operations (like timers, HTTP requests) are initiated, they are handled by the browser’s Web APIs. Once they complete, a callback function is sent to the callback queue.
+
+Callback Queue:
+This queue holds all the callbacks that are ready to be executed.
+
+Event Loop:
+The event loop continuously checks the call stack and the callback queue. If the call stack is empty, it takes the first callback from the queue and pushes it onto the stack for execution.
+
+
+How It Works:
+Execute Synchronous Code: The call stack starts executing synchronous code line by line.
+Handle Asynchronous Code: When it encounters asynchronous code (like a setTimeout or an API call), it hands that task off to the Web APIs.
+Continue Executing: The event loop allows the call stack to continue executing other code while the asynchronous task is being processed in the background.
+Queue Callbacks: Once the asynchronous operation is complete, the callback is placed in the callback queue.
+Empty Call Stack: When the call stack is empty, the event loop will take the next callback from the queue and execute it.
+
+
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout 1");
+}, 0);
+
+setTimeout(() => {
+  console.log("Timeout 2");
+}, 0);
+
+console.log("End");

@@ -1,0 +1,69 @@
+What is Git, and why is it used?
+Explain version control and why Git is a distributed version control system.
+What is the difference between git pull and git fetch?
+How do you create a new Git repository?
+Commands like git init and git clone.
+How do you check the status of your Git repository?
+Explain git status and what it shows.
+How do you stage and commit changes in Git?
+Discuss git add and git commit.
+What is the difference between git reset and git revert?
+How do you check the commit history of a Git repository?
+Explain git log and its various options like --oneline or --graph.
+What are Git branches, and how do you create and switch between them?
+Commands like git branch, git checkout, and git switch.
+How do you merge branches in Git, and what is a merge conflict?
+Discuss the process of resolving merge conflicts.
+How do you delete a branch in Git?
+Difference between deleting a local (git branch -d) and remote branch.
+Advanced Git Concepts
+What is the difference between git merge and git rebase?
+Discuss when to use each and their impact on commit history.
+What is the purpose of the .gitignore file, and how does it work?
+What are Git tags, and how do you use them?
+Commands like git tag and the difference between lightweight and annotated tags.
+How do you stash changes in Git, and what are some use cases for git stash?
+Explain git stash and commands like git stash apply and git stash pop.
+How do you undo the last commit in Git?
+Explain git reset --soft, git reset --hard, and git commit --amend.
+What is a detached HEAD state in Git, and how can you resolve it?
+How do you rename a branch in Git?
+Use git branch -m for local renaming and git push origin :old-name new-name for remote.
+What is git cherry-pick, and how is it used?
+What is the difference between git reset --hard and git reset --soft?
+Explain how they affect the working directory, index, and commit history.
+How do you rewrite commit history using git rebase -i?
+Discuss interactive rebasing for squashing commits, editing commit messages, or reordering.
+Collaborating with Git
+How do you push changes to a remote repository in Git?
+Explain git push and handling branches with different names.
+How do you set up a remote repository in Git, and what are origin and upstream?
+How do you handle a situation where someone else has pushed changes to a branch you’re working on?
+Discuss strategies like pulling, rebasing, and resolving conflicts.
+How do you configure Git for a new project with user information and remote URLs?
+Discuss git config, .gitconfig, and setting remotes with git remote add.
+How do you resolve merge conflicts in Git?
+Explain conflict markers, git merge, and tools like git mergetool.
+How do you revert a pushed commit from a remote branch?
+Use git revert and git push to undo changes without rewriting history.
+Git Workflows and Best Practices
+What is Git Flow, and how does it structure feature development and releases?
+What is a pull request (PR), and how is it used in collaborative Git workflows?
+Discuss the role of PRs in code reviews and feature integration.
+What is git bisect, and how do you use it to find the commit that introduced a bug?
+What are submodules in Git, and how do you manage them?
+How do you handle large files or binary files in Git?
+Discuss Git LFS (Large File Storage) and the .gitattributes file.
+How can you squash multiple commits into one?
+Use git rebase -i for squashing.
+What is the git reflog, and how can it help you recover from mistakes?
+How do you ensure that sensitive data like passwords or API keys are not committed to a Git repository?
+Discuss .gitignore, environment variables, and secret management.
+Git Collaboration Scenarios
+How do you contribute to an open-source project on GitHub?
+Discuss forking, cloning, creating branches, and submitting pull requests.
+You’ve made some changes locally but realized you are on the wrong branch. How do you move your changes to a new branch?
+Explain git stash, creating a new branch, and applying the stash.
+How do you handle a situation where a git pull causes a merge conflict?
+Discuss conflict resolution and committing the resolved state.
+What is the best way to manage dependencies in Git when working on multiple projects that rely on each other?

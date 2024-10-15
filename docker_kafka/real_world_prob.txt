@@ -1,0 +1,5 @@
+How would you create a multi-container setup using Docker Compose for Kafka, Zookeeper, and a Kafka-based application?
+Describe a situation where you faced issues with Kafka consumers processing messages slowly. How did you resolve it?
+How would you secure communication between Kafka brokers and clients using Docker?
+You notice that your Kafka consumers experience frequent rebalancing. What could be the causes, and how would you fix them?
+How do you manage Kafka logs when running Kafka in a Docker container?

@@ -1,0 +1,74 @@
+Finding Duplicates from a Table (SQL)
+
+SELECT email, COUNT(*) as count
+FROM users
+GROUP BY email
+HAVING COUNT(*) > 1;
+
+
+Read Large Sets of Data from CSV and Insert into DB
+Pooling in Databases
+Handling Slow Queries (Indexing Best Practices,limit/offset ,sharding)
+Normalisation
+Second Largest Salary (SQL Query)
+LEFT JOIN vs RIGHT JOIN
+Column Join and DB Join in NestJS
+SQL Injection and Security Without ORM
+Database Migrations
+
+Reading Large Datasets with Streams
+Database Query Optimization (Indexing)
+Comparison of TypeORM vs Sequelize
+
+Table Design for Categories, Subcategories, etc.
+
+2nd hisghest salery
+select name,Salary from Users where salery= (select Max(salery) from users < (select Max(salery) from users))
+
+##How indexing works in mysql/postgres
+In both MySQL and PostgreSQL, indexes improve query performance by reducing the amount of data that must be scanned. However, indexing strategies should be carefully planned to balance the speed of reads versus the overhead on writes.
+
+
+###ACID
+ACID properties are a set of key principles that ensure reliable database transactions. Here's a simple breakdown you can use for interviews:
+
+Atomicity:
+
+Ensures that each transaction is "all or nothing." If any part of the transaction fails, the entire transaction is rolled back, leaving the database unchanged. For example, in a bank transfer, either both the debit and credit happen, or neither does.
+Consistency:
+
+Guarantees that a transaction will bring the database from one valid state to another, maintaining database integrity. This means all rules, such as constraints, are enforced, ensuring that only valid data is saved.
+Isolation:
+
+Ensures that the execution of a transaction is independent of other concurrent transactions. Each transaction behaves as if it is the only one happening, avoiding conflicts from simultaneous operations.
+Durability:
+
+Ensures that once a transaction is committed, it remains permanent, even in the event of a system crash or failure. The changes made by the transaction will persist.
+These properties help ensure data reliability, especially in critical systems like banking and e-commerce.
+
+
+
+###postgres and sql diffrence
+
+
+Type of Database:
+
+PostgreSQL: An open-source, object-relational database known for its extensibility and standards compliance.
+SQL Server (Microsoft): A relational database management system (RDBMS) developed by Microsoft, focused on enterprise solutions.
+
+Language Support:
+PostgreSQL: Supports SQL but also extends it with additional features like custom data types, arrays, and full-text search.
+SQL Server: Primarily supports T-SQL (Transact-SQL), which is Microsoft’s proprietary extension of SQL.
+
+Platform Support:
+PostgreSQL: Cross-platform, available on Windows, macOS, and Linux.
+SQL Server: Mostly used in Windows environments, though recent versions support Linux.
+
+Licensing:
+PostgreSQL: Completely free and open-source under the PostgreSQL License.
+SQL Server: Commercial with licensing fees, though there is a free "Express" edition for small-scale applications.
+
+Performance Tuning:
+PostgreSQL: Offers more advanced features like parallel query execution and optimization for read-heavy workloads.
+SQL Server: Highly optimized for enterprise-level applications with a strong focus on write-heavy operations.
+For interviews, the key differences focus on extensibility, cross-platform availability, and open-source nature (PostgreSQL) vs. enterprise features and commercial licensing (SQL Server).
