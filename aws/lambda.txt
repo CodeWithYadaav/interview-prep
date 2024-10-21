@@ -1,0 +1,6 @@
+1. Lambda Timeout
+2. Lambda Max memory
+3. Lambda layer
+4. Lambda coldstart
+5. Lambda invocation types
+6. Lambda Alias
