@@ -21,7 +21,7 @@
 //     var name= "praveen"
 //     //innerscope 2
 //     function displayName(){
-//         //innerscope
+//         //innerscope 1
 //         console.log(name);
         
 //     }

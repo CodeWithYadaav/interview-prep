@@ -24,6 +24,7 @@ Table Design for Categories, Subcategories, etc.
 
 2nd hisghest salery
 select name,Salary from Users where salery= (select Max(salery) from users < (select Max(salery) from users))
+select name,MAX(salary) AS salary from Users where salery<(select Max(salery) from users)
 
 ##How indexing works in mysql/postgres
 In both MySQL and PostgreSQL, indexes improve query performance by reducing the amount of data that must be scanned. However, indexing strategies should be carefully planned to balance the speed of reads versus the overhead on writes.
