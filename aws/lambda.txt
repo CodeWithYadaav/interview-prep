@@ -4,3 +4,42 @@
 4. Lambda coldstart
 5. Lambda invocation types
 6. Lambda Alias
+
+
+
+1. Lambda Timeout
+Definition: The Lambda timeout is the maximum duration for which a Lambda function can run before AWS automatically terminates it.
+Default Setting: The default timeout is 3 seconds, but it can be configured up to a maximum of 15 minutes.
+Importance: Setting an appropriate timeout is crucial to prevent unnecessary charges for idle resources and to ensure that long-running processes are properly managed.
+
+
+2. Lambda Max Memory
+Definition: The maximum memory setting defines the amount of memory allocated to a Lambda function. This memory can range from 128 MB to 10,240 MB.
+Impact on Performance: More memory not only provides more storage but also increases CPU power and network bandwidth allocated to the function, potentially leading to improved performance.
+Cost Consideration: AWS charges for Lambda based on the amount of memory allocated and the execution duration, so it’s important to find the right balance for your use case.
+
+
+3. Lambda Layer
+Definition: Lambda layers are a way to package and manage common code and dependencies that can be shared across multiple Lambda functions.
+Usage: Layers can include libraries, custom runtimes, and other dependencies, allowing for better organization and easier updates.
+Advantages: By using layers, developers can avoid code duplication and simplify deployment processes.
+
+
+4. Lambda Cold Start
+Definition: A cold start occurs when a Lambda function is invoked for the first time or after a period of inactivity. AWS needs to initialize a new execution environment, leading to a delay.
+Impact: Cold starts can introduce latency, especially for functions that require additional libraries or have complex initialization processes.
+Mitigation Strategies: To reduce cold start times, consider keeping functions warm with scheduled invocations or using provisioned concurrency.
+
+
+5. Lambda Invocation Types
+Types:
+Synchronous Invocation: The caller waits for the function to process the event and return a response. This is typical for API Gateway requests.
+Asynchronous Invocation: The caller does not wait for a response; instead, the function is invoked, and AWS manages retries. This is often used for event-driven architectures (e.g., S3 events).
+Stream Invocation: Lambda can also be invoked in response to changes in data streams (e.g., Kinesis or DynamoDB Streams).
+Choosing the Right Type: Understanding the invocation type is crucial for building efficient and responsive applications.
+
+
+6. Lambda Alias
+Definition: An alias is a pointer to a specific version of a Lambda function. It allows you to manage and control which version of a function is invoked without changing the client code.
+Usage: Aliases can be used to implement blue-green deployments or canary releases by directing a portion of traffic to a new function version.
+Benefits: This provides a way to safely test new versions of a function in production while maintaining the ability to quickly roll back to the previous version if needed.

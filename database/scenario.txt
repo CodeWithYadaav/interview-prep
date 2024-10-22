@@ -30,23 +30,6 @@ select name,MAX(salary) AS salary from Users where salery<(select Max(salery) fr
 In both MySQL and PostgreSQL, indexes improve query performance by reducing the amount of data that must be scanned. However, indexing strategies should be carefully planned to balance the speed of reads versus the overhead on writes.
 
 
-###ACID
-ACID properties are a set of key principles that ensure reliable database transactions. Here's a simple breakdown you can use for interviews:
-
-Atomicity:
-
-Ensures that each transaction is "all or nothing." If any part of the transaction fails, the entire transaction is rolled back, leaving the database unchanged. For example, in a bank transfer, either both the debit and credit happen, or neither does.
-Consistency:
-
-Guarantees that a transaction will bring the database from one valid state to another, maintaining database integrity. This means all rules, such as constraints, are enforced, ensuring that only valid data is saved.
-Isolation:
-
-Ensures that the execution of a transaction is independent of other concurrent transactions. Each transaction behaves as if it is the only one happening, avoiding conflicts from simultaneous operations.
-Durability:
-
-Ensures that once a transaction is committed, it remains permanent, even in the event of a system crash or failure. The changes made by the transaction will persist.
-These properties help ensure data reliability, especially in critical systems like banking and e-commerce.
-
 
 
 ###postgres and sql diffrence

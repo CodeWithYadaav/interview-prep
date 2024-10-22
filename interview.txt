@@ -415,6 +415,13 @@ systango
 
 // console.log("lllllll",{middleName});
 
+what is views
+type of views
+cons of indexing
+
+###
+pros and cons of Microservices
+
 
 
 1800 309 1147
@@ -423,3 +430,6 @@ C07540510
 
 if my application's user exist in dubai,india,uk,canada then what i want is  to wish him happy birthday at exact 12:00AM in the night according to it timezone it should be at 12:00AM only not other timeZone respect to its other country time how will you do 
 stack is nodejs,reactsjs and postgres
+
+
+

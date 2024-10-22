@@ -10,7 +10,19 @@ function maxOccurence(str){
             charCount[char]=1
         }
     }
-    return charCount
+    // return charCount
+
+    let maxChar = '';
+    let maxCount = 0;
+
+    for (let char in charCount) {
+        if (charCount[char] > maxCount) {
+            maxCount = charCount[char];
+            maxChar = char;
+        }
+    }
+
+    return { maxChar, maxCount };
 }
 
 
