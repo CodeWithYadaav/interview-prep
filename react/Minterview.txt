@@ -1,0 +1,19 @@
+React JS
+
+Closures
+Promises
+Promise States
+How Async code work under the hood
+Async Await
+Props
+Prop Drilling
+Can we use React in plain HTML and JS
+
+Next JS
+Generate a random password-genrator route using App Router and write a code to generate a random 8 character length password
+getServerSideProps
+
+
+AWS
+Cloudfront
+How to provide latest build to client if its fetching it from CDN
