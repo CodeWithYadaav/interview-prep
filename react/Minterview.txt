@@ -1,3 +1,5 @@
+/// Tech verito ///
+
 React JS
 
 Closures
@@ -6,7 +8,8 @@ Promise States
 How Async code work under the hood
 Async Await
 Props
-Prop Drilling
+Prop Drilling 
+How to prevent prop drilling
 Can we use React in plain HTML and JS
 
 Next JS
@@ -17,3 +20,51 @@ getServerSideProps
 AWS
 Cloudfront
 How to provide latest build to client if its fetching it from CDN
+
+/// Monotype solutions //
+
+Closures
+Promises
+difference between Promise and Callbacks
+Where to use Promises and where to use Callbacks
+Async/Await
+JavaScript Async or Sync lang
+JavaScript single threaded or multithreaded
+Event loop
+this keyword in browser
+
+Create a todo list where to add data in list and delete data from it in React
+
+[1,1,1,1,1,0.3,null, undefined, "", "-", null, 0.6] --- Count the frequency of numbers
+ input aa2[b]c3[de5[f]] Output aabbcdefffffdefffffdefffff
+
+SQS - How many type of ques inside SQS or Rabit MQ or Kafka
+What is the work of a QUE
+
+
+
+
+/// InovationM  ///
+Intro and What have you done in your current project
+
+Closurs
+JavaScript in ASYNC or SYNC lang
+Hot to handle Async Task (Event loop)
+this keyword
+
+useEffect // working of useEffect
+useCallback // How and where you have used useCallback
+useMemo
+React optimisation techniques
+Redux and Redux workflow
+
+Css
+Box Modal
+Flex Box
+Psudo classes
+
+
+HTML
+Symentic Tags
+how Header and footer tags are different from simple div
+Meta tags
