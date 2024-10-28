@@ -433,3 +433,58 @@ stack is nodejs,reactsjs and postgres
 
 
 
+
+// module file
+console.log(await "hello");
+
+firminiq
+
+You tube design
+
+// const a = function() {
+
+//     console.log(this);//w
+  
+//     const b = function() {
+  
+//               console.log(this);//w
+  
+//               const c = {
+  
+//                   hi:   ()=>  {
+  
+//                               console.log(this);//w
+  
+//                       }
+  
+//               };
+  
+//       c.hi();
+  
+//     };
+  
+//     b();
+  
+//   };
+   
+//   a();
+   
+
+
+
+// const list = new Array(6).join('1.1').split(".");//10000
+
+// console.log(list);
+
+// function removeItemsFromList() {
+//     var item = list.pop();
+//     console.log(item);
+//     if(item){
+
+//         removeItemsFromList();
+//     }
+// };
+
+
+// removeItemsFromList();
+// console.log(list);

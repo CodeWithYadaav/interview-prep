@@ -1,9 +1,24 @@
 
-// ===============================
-// 1: Singleton Pattern
-// ===============================
-// Ensures a class has only one instance and provides a global point of access to that instance.
-// When to use: When exactly one instance of a class is needed throughout the lifecycle of the application (e.g., logging, database connections).
+/*
+ ===============================
+ 1: Singleton Pattern
+ ===============================
+ The Singleton Pattern ensures that a class has only one instance and provides a global point of access to that instance.
+ 
+ When to use: This pattern is ideal when exactly one instance of a class is needed throughout the lifecycle of the application,
+ such as in cases like logging, database connections, configuration settings, or thread pools.
+
+ Key Points to Keep in Mind:
+ - **Global Access**: The Singleton instance can be accessed globally, making it convenient for shared resources.
+ - **Lazy Initialization**: The instance can be created only when it is needed, which can save resources.
+ - **Controlled Access**: By controlling the creation of the instance, you can ensure that the system behaves predictably.
+
+ Cons:
+ - **Single Responsibility Principle Violation**: The Singleton may hold too much responsibility, making it hard to test and maintain.
+ - **Hidden Dependencies**: Other parts of the code might become tightly coupled to the Singleton, making testing and debugging difficult.
+ - **Concurrency Issues**: In a multi-threaded environment, care must be taken to ensure that the singleton instance is thread-safe.
+*/
+
 
 class Singleton {
     constructor() {
@@ -34,13 +49,29 @@ console.log(singleton1.getData());  // Output: ['Item 1', 'Item 2']
 console.log(singleton1 === singleton2);  // Output: true (both variables point to the same instance)
 
 
-// ===============================
-// 2. Factory Pattern
-// ===============================
-// A pattern used to create objects without specifying the exact class of object that will be created.
-// A creational pattern that provides an interface for creating objects in a super class but allows subclasses to alter the type of objects that will be created.
-// When to use: When you need to create objects without specifying the exact class of object that will be created.
+/*
+ ===============================
+ 2: Factory Pattern
+ ===============================
+ The Factory Pattern is a creational design pattern that allows for the creation of objects without specifying their exact class.
+ It provides an interface for creating objects, enabling subclasses to decide which class to instantiate.
 
+ When to use: Use this pattern when you want flexibility in object creation, allowing for easy extension.
+
+ Key Points:
+ - **Decoupling**: Separates the creation of objects from their usage, promoting maintainability.
+ - **Open/Closed Principle**: You can add new object types without modifying existing code.
+ - **Centralized Control**: All object creation logic is in one place, simplifying management.
+
+ Cons:
+ - **Complexity**: Can make the code more complex, especially for simple cases.
+ - **Overhead**: May introduce unnecessary abstraction.
+ - **Debugging**: Can complicate debugging since instantiation is hidden.
+
+ Example:
+ This example demonstrates a factory for creating different types of vehicles.
+
+*/
 class Car {
     constructor(name) {
         this.name = name;  // Car name
@@ -60,13 +91,80 @@ const factory = new CarFactory();
 const sedan = factory.createCar("sedan");
 console.log(sedan.name);  // Output: Sedan
 
-
 // ===============================
-// 3. Observer Pattern
+// ###Another example
 // ===============================
+class Vehicle {
+    constructor(name) {
+        this.name = name; // Name of the vehicle
+    }
+    
+    drive() {
+        console.log(`${this.name} is driving.`);
+    }
+}
 
-// This pattern defines a one-to-many relationship where a change in one object triggers updates to its observers.
-// When to use: When changes in one object need to be propagated to other dependent objects (e.g., event handling systems).
+class Car extends Vehicle {
+    constructor(name) {
+        super(name); // Call the parent constructor
+    }
+}
+
+class Truck extends Vehicle {
+    constructor(name) {
+        super(name); // Call the parent constructor
+    }
+}
+
+class VehicleFactory {
+    // Factory method to create vehicles based on type
+    createVehicle(type, name) {
+        switch (type) {
+            case 'car':
+                return new Car(name); // Return a new Car instance
+            case 'truck':
+                return new Truck(name); // Return a new Truck instance
+            default:
+                throw new Error('Vehicle type not supported'); // Handle unsupported types
+        }
+    }
+}
+
+// Usage of the Factory Pattern
+const factoryy = new VehicleFactory(); // Create a new factory instance
+
+const myCar = factoryy.createVehicle('car', 'Toyota'); // Create a car
+const myTruck = factoryy.createVehicle('truck', 'Ford'); // Create a truck
+
+myCar.drive(); // Output: Toyota is driving.
+myTruck.drive(); // Output: Ford is driving.
+
+
+ 
+/*
+ ===============================
+ 3: Observer Pattern
+ ===============================
+ The Observer Pattern defines a one-to-many relationship between objects, where a change in one object (the subject) 
+ triggers updates to all its observers.
+
+ When to use: Use this pattern when you want changes in one object to automatically notify and update dependent objects, 
+ such as in event handling systems.
+
+ Key Points:
+ - **Decoupling**: Subjects and observers are loosely coupled, allowing them to change independently.
+ - **Dynamic Relationships**: Observers can be added or removed at runtime, providing flexibility.
+ - **Broadcast Communication**: The pattern facilitates a publish-subscribe model for event-driven architectures.
+
+ Cons:
+ - **Memory Leaks**: If observers are not properly removed, it may lead to memory leaks.
+ - **Complexity**: Managing many observers can increase complexity and make the system harder to understand.
+ - **Performance**: Notifying a large number of observers can lead to performance issues.
+
+ Example:
+ This example illustrates the Observer Pattern with a simple subject and observer setup.
+
+*/
 
 class Subject {
     constructor() {
@@ -107,11 +205,29 @@ subject.subscribe(observer2);
 subject.notify("Hello Observers!");  // Both observers will receive the data
 
 
-// ===============================
-// 4. Strategy Pattern
-// ===============================
-// Defines a family of algorithms, encapsulates each one, and makes them interchangeable.
-// When to use: When you have multiple algorithms for a specific task and want to switch between them dynamically.
+/*
+ ===============================
+ 4: Strategy Pattern
+ ===============================
+ The Strategy Pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable, allowing 
+ the client to choose the appropriate algorithm at runtime.
+
+ When to use: Use this pattern when you have multiple algorithms for a specific task and want to switch between them dynamically 
+ based on client needs or conditions.
+
+ Key Points:
+ - **Encapsulation**: Each algorithm is encapsulated in its own class, promoting separation of concerns.
+ - **Flexibility**: Easily switch algorithms at runtime without altering the context that uses them.
+ - **Open/Closed Principle**: New strategies can be added without changing existing code, adhering to the open/closed principle.
+
+ Cons:
+ - **Increased Complexity**: Introducing multiple strategy classes can complicate the code structure.
+ - **Communication Overhead**: Strategies may need to communicate with the context, adding complexity.
+
+ Example:
+ The following example demonstrates the Strategy Pattern with different sorting strategies.
+
+*/
 
 class StrategyContext {
     setStrategy(strategy) {
@@ -144,11 +260,29 @@ console.log(context.executeStrategy(5, 3));  // Output: 8
 context.setStrategy(new MultiplyStrategy());
 console.log(context.executeStrategy(5, 3));  // Output: 15
 
-// ===============================
-// 5. Decorator Pattern
-// ===============================
-// Allows behavior to be added to individual objects, dynamically, without affecting other objects from the same class.
-// When to use: When you want to add responsibilities to objects dynamically and transparently.
+/*
+ ===============================
+ 5: Decorator Pattern
+ ===============================
+ The Decorator Pattern allows behavior to be added to individual objects dynamically, without affecting other objects 
+ from the same class. This pattern provides a flexible alternative to subclassing for extending functionality.
+
+ When to use: Use this pattern when you want to add responsibilities to objects dynamically and transparently, 
+ without modifying their structure.
+
+ Key Points:
+ - **Flexibility**: You can add or remove decorations (responsibilities) at runtime.
+ - **Single Responsibility Principle**: Each decorator focuses on a specific responsibility, promoting cleaner code.
+ - **Composability**: Multiple decorators can be combined to enhance an object's behavior.
+
+ Cons:
+ - **Complexity**: The number of classes may increase, leading to a more complex design.
+ - **Debugging Difficulty**: It can be harder to trace through the layers of decorators to understand the final behavior.
+
+ Example:
+ The following example demonstrates the Decorator Pattern with a simple coffee ordering system.
+
+*/
 
 class SimpleCoffee {
     cost() {
@@ -186,12 +320,28 @@ console.log(coffee.cost());  // Output: 7 (coffee + milk)
 coffee = new SugarDecorator(coffee);
 console.log(coffee.cost());  // Output: 8 (coffee + milk + sugar)
 
-// ===============================
-// 6. Adapter Pattern
-// ===============================
+/*
+ ===============================
+ 6: Adapter Pattern
+ ===============================
+ The Adapter Pattern allows objects with incompatible interfaces to work together. It acts as a bridge between two incompatible interfaces.
 
-// Allows objects with incompatible interfaces to collaborate.
-// When to use: When you want to use an existing class, but its interface is incompatible with the rest of your code.
+ When to use: Use this pattern when you need to integrate a class that is incompatible with the rest of your code but cannot modify its source code.
+
+ Key Points:
+ - **Compatibility**: It enables the integration of different systems that would otherwise be incompatible.
+ - **Flexibility**: You can adapt classes to work together without modifying their source code.
+ - **Code Reusability**: Existing classes can be reused in different contexts.
+
+ Cons:
+ - **Complexity**: Introducing an adapter can add complexity to the system.
+ - **Performance Overhead**: The additional layer can lead to slight performance hits in certain cases.
+ - **Debugging Difficulty**: It might complicate debugging, as the flow is altered by the adapter.
+
+ Example:
+ The following example demonstrates the Adapter Pattern in a simple media player scenario.
+
+*/
 
 class OldSystem {
     getData() {
@@ -220,11 +370,31 @@ const adapter = new Adapter();
 console.log(adapter.getData());  // Output: New Data
 
 
-// ===============================
-// 7. Command Pattern
-// ===============================
-// Encapsulates a request as an object, thereby allowing for parameterizing clients with different requests.
-// When to use: When you need to parameterize methods with different requests, delay or queue requests, and support undoable operations.
+/*
+ ===============================
+ 7: Command Pattern
+ ===============================
+ The Command Pattern encapsulates a request as an object, allowing you to parameterize clients with different requests. This pattern also enables queuing and undoable operations.
+
+ When to use: Use this pattern when you need to:
+ - Parameterize methods with different requests.
+ - Delay or queue requests for later execution.
+ - Support undoable operations.
+
+ Key Points:
+ - **Decoupling**: The sender of a request is decoupled from the receiver, promoting loose coupling.
+ - **Flexibility**: You can easily add new commands without changing existing code.
+ - **History Management**: It allows for operations like undo, redo, or logging of operations.
+
+ Cons:
+ - **Complexity**: Introducing commands can increase system complexity, especially if overused.
+ - **Number of Classes**: It may lead to a proliferation of command classes for different requests.
+ - **Maintenance Overhead**: Managing many command objects can become cumbersome.
+
+ Example:
+ The following example demonstrates the Command Pattern with a simple remote control scenario.
+
+*/
 
 class Command {
     execute() {}
