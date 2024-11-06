@@ -92,10 +92,18 @@
 //    console.log("haello") 
 // }, 1000, 'asdm');
 
-const obj = {
-    a :10
+// const obj = {
+//     a :10
+// }
+
+// Object.freeze(obj)
+// obj.a = 20
+// console.log(obj.age)
+
+
+
+{
+    var names='ko'
 }
 
-Object.freeze(obj)
-obj.a = 20
-console.log(obj.age)
+console.log(names);
