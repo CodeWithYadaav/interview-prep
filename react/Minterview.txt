@@ -68,3 +68,52 @@ HTML
 Symentic Tags
 how Header and footer tags are different from simple div
 Meta tags
+
+
+/// Broadraige ///
+Difference between class and id, can we style using id
+remove duplicates in array
+what is typeof and instanceof
+what is the meaning of <string> and  <T> in TypeScript
+Fix a broken timer page of a react app it should work perfectly with input to show value on our page
+useMemo and useCallback
+how to check whether it is array or not
+how to check type of any variable
+
+
+
+///InnovationM Part-2 /// 
+Closures
+example of closures using counter, counter should increment
+example of a callback should call after 5 second
+How to send data to parent to child and vice-versa
+What is higher order component
+what is React memo write the syntax how to use it
+What are the optimisation techniques used in React App
+What is flex box
+useMemo and useCallback
+Create a custom hook
+how to define variable in SCSS
+what is the meaning of import and extend in scss
+Write structer of redux reducer and how it works
+What is combine reducer
+Write code for redux thunk
+
+
+/// Barraiser Turing /// 
+
+How node JS work in Server
+Alternate of Callbacks
+Create a React timer APP  module where time ticks in reverse when complete it should alert I am complete 
+Longest substring "abcacbed"
+Create a backend server using HTTP
+Create a server using express
+API security techniques
+
+
+
+/// GSPANN Technologies ///
+Create a Page with username and password field and implemented given api and display data
+Create a backend server for same username and password and authorize using jwt with proper folder structger used in live projects
+How dynamic routing works in Next js App router 
+
