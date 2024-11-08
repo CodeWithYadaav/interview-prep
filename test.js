@@ -113,3 +113,13 @@
 //   }
 //   return result.reverse();
 // }
+
+// Object.freeze(obj)
+// obj.a = 20
+// console.log(obj.age)
+
+{
+  var names = "ko";
+}
+
+console.log(names);
