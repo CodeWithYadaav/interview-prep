@@ -83,13 +83,14 @@ how to check type of any variable
 
 
 ///InnovationM Part-2 /// 
+ES6 features
 Closures
 example of closures using counter, counter should increment
 example of a callback should call after 5 second
 How to send data to parent to child and vice-versa
 What is higher order component
 what is React memo write the syntax how to use it
-What are the optimisation techniques used in React App
+What are the optimization techniques used in React App
 What is flex box
 useMemo and useCallback
 Create a custom hook
@@ -117,3 +118,40 @@ Create a Page with username and password field and implemented given api and dis
 Create a backend server for same username and password and authorize using jwt with proper folder structger used in live projects
 How dynamic routing works in Next js App router 
 
+//Photon interactive //
+Create a todo with add edit update functionality with task complete feature
+
+// SLK Software //
+JS
+Data types in js
+type cohesion
+falsy values
+call apply bind
+closures
+hoisting
+Promises
+Callbacks
+promise working
+difference between arrow and simple functions
+
+React
+Advantage and disadvantages
+how React router works
+how virtual Dom works
+all functionality of useEffect
+optimization techniques
+custom hooks
+
+node
+how node js works
+Single threaded or multithreaded
+how handle asynchronous tasks
+
+
+
+
+// ValueLabs // 
+clusters
+write code for binary search 
+reverse a number without using string method
+sort an array without using sort function
