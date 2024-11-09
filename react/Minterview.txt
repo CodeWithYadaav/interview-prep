@@ -133,11 +133,13 @@ Promises
 Callbacks
 promise working
 difference between arrow and simple functions
+higher order functions
 
 React
 Advantage and disadvantages
 how React router works
 how virtual Dom works
+Props and States
 all functionality of useEffect
 optimization techniques
 custom hooks
