@@ -5,7 +5,8 @@
 
 
 const original = { name: "Alice", details: { age: 25 } };
-const shallowCopy = { ...original }; // Shallow copy
+// const shallowCopy = { ...original }; // Shallow copy
+const shallowCopy = Object.assign( {},original ); // Shallow copy
 
 shallowCopy.details.age = 30;
 console.log(original.details.age); // Output: 30 (both objects share the same nested 'details')

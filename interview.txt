@@ -158,6 +158,8 @@ promises,Callbacks,evenloop,event driven,call by value, call by refrence,
 self join que
 emp table
 id,name,empId
+
+
 select e.name,m.name from emp as e join emp as m on e.id=m.empId
 
 
@@ -488,3 +490,63 @@ You tube design
 
 // removeItemsFromList();
 // console.log(list);
+
+
+
+console.log("start");
+
+setTimeout(()=>{
+    console.log("a");
+    
+},0)
+
+
+
+Promise.resolve().then(() => {
+  
+  setTimeout(() => {
+    console.log("b");
+  }, 0);
+  console.log("promise");
+});
+
+
+console.log("end");
+
+
+diffrence between encryption and hashing
+
+
+//InfocusP
+
+function throwsErrorRandomly() {
+  if (Math.random() > 0.1) {
+    throw new Error('Bad Luck!');
+  }
+  return 'Good Luck!';
+}
+
+async function retry(fn, maxNumberOfRetries, delayBetweenRetry) {
+
+  for (let attempt = 1; attempt <= maxNumberOfRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxNumberOfRetries) {
+        throw error;
+      }
+      console.log(
+        `Attempt ${attempt} failed. Retrying  in ${delayBetweenRetry} ms...`
+      );
+      await new Promise(resolve => setTimeout(resolve, delayBetweenRetry)); 
+    }
+  }
+}
+
+// Usage
+retry(throwsErrorRandomly, 3, 500)
+  .then(console.log)
+  .catch(error => console.error('All attempts failed:', error.message));
+
+
+https://datalemur.com/questions/sql-page-with-no-likes
