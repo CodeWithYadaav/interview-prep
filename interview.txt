@@ -550,3 +550,22 @@ retry(throwsErrorRandomly, 3, 500)
 
 
 https://datalemur.com/questions/sql-page-with-no-likes
+
+
+
+// Cardekho
+find largest consicutive subarrays
+find count of max repeating Occurrences
+
+Callbacks
+hoisting
+promises
+async await
+
+
+// InfocusP
+2 largest Salary
+find records from 2 tables with 0 likes
+
+kafka
+consumers group
