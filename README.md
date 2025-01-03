@@ -6,11 +6,13 @@ Welcome to the Comprehensive Interview Preparation repository! This resource is 
 
 **1. interview.txt**
 A concise collection of the most frequently asked interview questions.
+
 🛠 Purpose: Start here for targeted preparation.
 
 
 **2. React/mInterview.txt**
 A specialized list of React-specific interview questions.
+
 🛠 Purpose: Perfect for developers preparing for React-based roles.
 
 
