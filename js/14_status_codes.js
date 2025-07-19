@@ -2,9 +2,9 @@ export const httpStatusCodes = {
     OK: 200,                         // The request has succeeded
     CREATED: 201,                    // The request has succeeded and a new resource has been created
     ACCEPTED: 202,                   // The request has been accepted for processing, but the processing is not complete
-    NO_CONTENT: 204,                 // The server successfully processed the request and is not returning any content
+    NO_CONTENT: 204,                 // Tnhe server successfully processed the request and is not returning any content
   
-    BAD_REQUEST: 400,                // The server could not understand the request due to invalid syntax
+    BAD_REQUEST: 400,                // The server could ot understand the request due to invalid syntax
     UNAUTHORIZED: 401,               // The client must authenticate itself to get the requested response
     FORBIDDEN: 403,                  // The server understood the request, but it refuses to authorize it
     NOT_FOUND: 404,                  // The server can’t find the requested resource

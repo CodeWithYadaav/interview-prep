@@ -50,12 +50,12 @@
 // }
 
 
-// const nums=[1,2,3,4]
+const nums=[1,2,3,4]
 
-// const multiply = nums.myMap((num,i,arr)=>{
-// return num*3
-// })
-// console.log(multiply);
+const multiply = nums.myMap((num,i,arr)=>{
+return num*3
+})
+console.log(multiply);
 
 
 

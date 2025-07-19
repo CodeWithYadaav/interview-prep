@@ -10,7 +10,6 @@
 // function local(){
 //     //local
 //     console.log(username);
-    
 // }
 // local()
 

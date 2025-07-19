@@ -17,15 +17,15 @@
 // where function can be treated as variables where function can do anything same will do as variable 
 // we can pass the function into another funciton just like normal variable and can manipulate and return from function 
 
-// function square(num){
-//     return num*num
-// }
+function square(num){
+    return num*num
+}
 
-// function displaySquare(fn){
-//     console.log("square is ::"+fn(5));
+function displaySquare(fn){
+    console.log("square is ::"+fn(5));
     
-// }
-// displaySquare(square)
+}
+displaySquare(square)
 
 
 //Q4 what is IIFE  immediate invoked 

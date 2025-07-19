@@ -1,0 +1,1002 @@
+Q1
+✅ What is JavaScript?
+JavaScript is a high-level, interpreted programming language that is:
+
+Primarily used for web development — it adds interactivity, logic, and dynamic content to websites.
+
+Runs in the browser (like Chrome, Firefox) and on the server (via Node.js).
+
+Single-threaded, but asynchronous thanks to the event loop (more on this if needed).
+
+Dynamically typed — variable types are determined at runtime.
+
+Prototype-based object-oriented — uses prototypes instead of classical classes (though ES6 introduced class syntax as sugar).
+
+✅ Core Uses of JavaScript:
+Client-side scripting (running in the browser):
+
+DOM manipulation (e.g., updating HTML content)
+
+Form validation
+
+Handling user events (clicks, keypresses)
+
+Server-side scripting (via Node.js):
+
+Building APIs
+
+Handling file systems, databases
+
+Real-time applications (e.g., chat apps)
+
+
+
+Q2
+✅ What is Node.js?
+Node.js is a runtime environment that allows you to run JavaScript outside the browser, typically on the server side.
+
+🔧 Key Characteristics:
+Feature	Description
+Built on V8	Uses Google Chrome’s V8 JavaScript engine to execute code fast.
+Single-threaded	Uses one main thread but handles concurrency using the event loop and async I/O.
+Non-blocking I/O	Performs I/O operations (like reading a file or hitting a DB) asynchronously without blocking the main thread.
+Cross-platform	Works on Windows, Linux, macOS.
+Uses npm	Node Package Manager (npm) hosts thousands of libraries and modules.
+
+🧠 Why Use Node.js?
+To build fast, scalable network applications (e.g., REST APIs, real-time chat apps).
+
+To reuse JavaScript across frontend and backend.
+
+Excellent for event-driven applications like real-time messaging or streaming.
+
+// server.js
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.end('Hello from Node.js server!');
+});
+
+server.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});
+
+
+
+
+Q3
+✅ 1. Callback
+A callback is a function passed as an argument to another function, to be called later (often after an async operation finishes).
+
+🔸 Example (with setTimeout):
+
+function fetchData(callback) {
+  setTimeout(() => {
+    callback("Data fetched!");
+  }, 1000);
+}
+
+fetchData((result) => {
+  console.log(result); // after 1 second: "Data fetched!"
+});
+
+
+
+function greet(name ,callback){
+    console.log(Hi`${name}`)
+    callback()
+}
+
+function message(){
+console.log('Welcome')
+}
+
+greet('praveen',message)
+
+🧠 Problem: Nested callbacks = callback hell → hard to read, debug, and maintain.
+
+✅ 2. Promise
+A Promise is an object that represents the eventual completion (or failure) of an async operation.
+
+It has 3 states:
+
+pending
+
+fulfilled
+
+rejected
+
+🔸 Example:
+
+function fetchData() {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve("Data fetched!");
+    }, 1000);
+  });
+}
+
+fetchData().then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error(error);
+});
+🧠 Promises help flatten nested code and handle errors better than callbacks.
+
+✅ 3. async/await (introduced in ES2017)
+async/await is syntactic sugar over promises — makes asynchronous code look like synchronous.
+
+🔸 Example:
+
+function fetchData() {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve("Data fetched!"), 1000);
+  });
+}
+
+async function getData() {
+  const result = await fetchData();
+  console.log(result);
+}
+
+getData();
+🧠 Makes code cleaner, easier to debug, and avoids chaining .then().
+
+✅ Summary Table:
+Concept	Style	Error Handling	Readability	Use Case
+Callback	Functional	Manual	Hard (nested)	Legacy code, simple async
+Promise	Object-based	.catch()	Better	API calls, async ops
+Async/Await	Imperative	try/catch	Best (sync-like)	Most modern async scenarios
+
+
+
+
+
+
+
+
+Q4
+ANY vs Unknown type in TS
+
+| Feature                     | `any`                                         | `unknown`                                               |
+| --------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| **Type Safety**             | ❌ Unsafe – disables all checks                | ✅ Safe – forces type checking                           |
+| **Can assign to anything?** | ✅ Yes                                         | ❌ No – must do type narrowing first                     |
+| **Use Case**                | When you want to escape TypeScript completely | When the type is unknown but you want to enforce checks |
+| **Acts like...**            | Opting out of TypeScript                      | Type-safe alternative to `any`                          |
+
+
+Example with any:
+
+let value: any = "hello";
+
+value.toUpperCase(); // ✅ OK
+value();             // ✅ OK, but might crash at runtime
+value.nonExistent(); // ✅ OK, no error from TypeScript
+⚠️ TypeScript won't catch errors with any. It assumes you know what you're doing.
+
+🔸 Example with unknown:
+
+let value: unknown = "hello";
+
+value.toUpperCase(); // ❌ Error: Object is of type 'unknown'
+
+if (typeof value === "string") {
+  console.log(value.toUpperCase()); // ✅ Type-safe
+}
+✅ Forces you to narrow the type (e.g., with typeof, instanceof, or custom guards) before using it.
+
+✅ When to Use
+Use any if you want to opt out of type checking temporarily.
+
+Use unknown when you don’t yet know the type, but want type safety and force proper checks before using the value.
+
+🔐 Interview Tip
+If asked which is better, say:
+
+"unknown is a safer alternative to any. It protects code from accidental misuse by forcing proper type checks before usage."
+
+
+
+
+Q5
+Node.js Event Loop
+
+✅ What is the Node.js Event Loop?
+The event loop is the heart of Node.js. It's what allows Node.js to perform non-blocking I/O operations — even though it's single-threaded — by offloading tasks like file reads, network calls, or timers to the system and handling their results asynchronously.
+
+🧠 Core Idea:
+Node.js handles many operations concurrently using a single thread — thanks to the event loop, which processes callbacks in a loop.
+
+🌀 How the Event Loop Works:
+The event loop runs in phases, and each phase handles a specific kind of callback:
+
+Phase	Handles...
+Timers	setTimeout(), setInterval()
+Pending Callbacks	Some system-level callbacks
+Idle/Prepare	Internal only
+Poll	Retrieves new I/O events (e.g., file read)
+Check	setImmediate() callbacks
+Close Callbacks	e.g., socket.on('close')
+
+In between these phases, it also checks the Microtask Queue (Promise.then, queueMicrotask).
+
+🔄 Event Loop Flow (Simplified):
+
+
+start
+│
+├─▶ process.nextTick / microtasks
+│
+├─▶ timers (setTimeout, setInterval)
+│
+├─▶ pending callbacks
+│
+├─▶ I/O polling (read file, API)
+│
+├─▶ check (setImmediate)
+│
+├─▶ close callbacks
+│
+└─▶ loop again
+🔸 Example: setTimeout vs setImmediate vs Promise
+
+setTimeout(() => console.log("setTimeout"), 0);
+setImmediate(() => console.log("setImmediate"));
+Promise.resolve().then(() => console.log("Promise"));
+console.log("Main");
+Output (typical):
+
+Main
+Promise
+setTimeout
+setImmediate
+✅ Explanation:
+
+Main runs first (synchronous).
+
+Promise (microtask) runs next — before timers.
+
+Then setTimeout (in the timers phase).
+
+Then setImmediate (in the check phase).
+
+🧠 Interview Tip:
+Say:
+
+The event loop lets Node.js handle many connections and I/O operations without blocking, using a single-threaded, non-blocking, asynchronous model.
+
+
+
+
+Q6
+✅ What is error handling?
+
+✅ How it works in JavaScript/TypeScript
+
+✅ Common error types
+
+✅ Exceptional cases (real-world scenarios)
+
+✅ Best practices
+
+✅ 1. What is Error Handling?
+Error handling is the process of detecting, catching, and responding to errors in your code gracefully — instead of crashing or misbehaving.
+
+✅ 2. Basic Error Handling in JavaScript / TypeScript
+🔸 try...catch block
+
+try {
+  // risky code
+  const result = JSON.parse('{"valid": true}');
+  console.log(result.valid);
+} catch (error) {
+  console.error("Something went wrong:", error);
+} finally {
+  console.log("Cleanup or final steps");
+}
+
+try – Code that may throw error
+
+catch – Handles the error
+
+finally – Runs no matter what
+
+✅ 3. Common JavaScript Error Types
+Error Type	Description	Example
+SyntaxError	Code syntax is incorrect	eval("if (true {")
+TypeError	Wrong data type used	null.toString()
+ReferenceError	Using an undeclared variable	console.log(x) when x is not defined
+RangeError	Number out of range	new Array(-1)
+URIError	Bad URI handling	decodeURIComponent('%')
+EvalError	Issues with eval()	Rare in modern JS
+AggregateError	Multiple errors together (Promise.any)	Promise.any([p1, p2])
+
+✅ 4. Exceptional Error Cases (Real-World)
+🔹 1. Network failure
+
+try {
+  const res = await fetch("https://api.example.com/data");
+  if (!res.ok) throw new Error("Network response was not ok");
+  const data = await res.json();
+} catch (err) {
+  console.error("Network error:", err);
+}
+🔹 2. Invalid user input
+
+function divide(a: number, b: number) {
+  if (b === 0) throw new Error("Cannot divide by zero");
+  return a / b;
+}
+🔹 3. Database failure (Node.js example)
+
+try {
+  const user = await db.findUserById(id);
+  if (!user) throw new Error("User not found");
+} catch (err) {
+  logError(err);
+  return res.status(500).json({ message: "Internal error" });
+}
+🔹 4. File system error
+
+const fs = require("fs");
+
+try {
+  const data = fs.readFileSync("missing.txt");
+} catch (err) {
+  console.error("File read failed:", err.message);
+}
+✅ 5. Best Practices
+✅ Always handle async errors with try/catch or .catch()
+
+✅ Never ignore errors (don’t leave empty catch blocks)
+
+✅ Use custom error classes for better error types
+
+✅ Log errors with enough context (timestamp, userId, etc.)
+
+✅ Avoid exposing raw errors to users (security risk)
+
+✅ Use Error Boundaries in React for rendering errors
+
+🧠 In Interviews Say:
+"JavaScript has both sync and async error handling. I use try/catch for sync and catch or try/await for async flows. I also write custom error classes and log properly to avoid silent failures."
+
+
+
+
+Question
+Generic Functions in TypeScript
+
+✅ What are Generic Functions?
+A generic function allows you to write a function once and use it with different types, while still maintaining type safety.
+
+Think of generics like placeholders for types.
+
+🔸 Basic Syntax:
+
+function identity<T>(value: T): T {
+  return value;
+}
+
+identity<number>(42);        // returns 42
+identity<string>("hello");   // returns "hello"
+T is a type variable (can be any name like T, U, K, V).
+
+You can think of it like: function identity(value: any): any — but type-safe.
+
+🔸 Real-world Example: Array Utility
+
+function getFirstElement<T>(arr: T[]): T {
+  return arr[0];
+}
+
+const firstNum = getFirstElement<number>([1, 2, 3]); // number
+const firstStr = getFirstElement(["a", "b"]);        // string
+
+🔸 With Multiple Generics
+
+function merge<T, U>(obj1: T, obj2: U): T & U {
+  return { ...obj1, ...obj2 };
+}
+
+const result = merge({ name: "Raj" }, { age: 30 });
+// result: { name: "Raj", age: 30 }
+🔸 With Constraints (extends)
+Sometimes you want to limit what type T can be:
+
+
+function getLength<T extends { length: number }>(value: T): number {
+  return value.length;
+}
+
+getLength("hello");       // ✅ string has length
+getLength([1, 2, 3]);      // ✅ array has length
+// getLength(42);         // ❌ number doesn't have length
+✅ Why Use Generics?
+Benefit	Why it matters
+✅ Type Safety	Catches errors at compile time
+✅ Reusability	One function works for many types
+✅ Intellisense	Better editor support for function arguments/return
+
+✅ Interview One-Liner:
+"Generics in TypeScript let us build reusable, type-safe components or functions. They're better than any because they preserve types instead of losing them."
+
+
+
+
+
+Question
+Logging and Monitoring for Errors
+✅ Logging and Monitoring for Errors — Interview-Ready Explanation
+Logging and monitoring are essential in real-world apps to:
+
+Detect and debug errors in production
+
+Track usage patterns and performance bottlenecks
+
+Alert developers when something breaks
+
+✅ 1. What is Logging?
+Logging means recording information (errors, warnings, events) at runtime.
+
+🔸 Common Logging Levels:
+Level	When to use
+error	Something failed (e.g., DB error, unhandled exception)
+warn	Non-critical issue, but should be reviewed
+info	Important runtime events (e.g., server started)
+debug	Detailed dev-only information
+
+🔸 Example (Node.js with winston):
+
+import winston from "winston";
+
+const logger = winston.createLogger({
+  level: "info",
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "errors.log", level: "error" }),
+  ],
+});
+
+logger.info("Server started");
+logger.error("Database connection failed");
+✅ Logs can be stored to:
+
+Console
+
+Files
+
+Remote services like Logstash, Datadog, or ElasticSearch
+
+✅ 2. What is Monitoring?
+Monitoring means continuously tracking your application’s health, performance, and errors — and alerting you when things go wrong.
+
+🔸 What you monitor:
+API error rates
+
+Request/response time
+
+CPU/memory usage
+
+Database timeouts
+
+Uncaught exceptions
+
+🔸 Popular Monitoring Tools:
+Tool	Purpose
+Sentry	Real-time error tracking (stack traces, user context)
+Datadog	Full-stack monitoring (metrics, logs, traces)
+Prometheus + Grafana	Open-source monitoring with dashboards
+New Relic / Dynatrace	APM (Application Performance Monitoring)
+
+✅ 3. Real-World Example: Using Sentry
+
+import * as Sentry from "@sentry/node";
+
+Sentry.init({ dsn: "your-sentry-dsn" });
+
+try {
+  throw new Error("Something failed");
+} catch (err) {
+  Sentry.captureException(err);
+}
+✅ Sentry shows:
+
+Stack trace
+
+Affected user
+
+Error frequency
+
+Affected environments (prod/staging)
+
+✅ 4. Best Practices for Logging & Monitoring
+✅ Don’t log sensitive data (passwords, tokens)
+
+✅ Use structured logs (JSON format) for better parsing
+
+✅ Tag logs with userId, requestId, timestamp
+
+✅ Separate logs by environment (prod vs dev)
+
+✅ Set up alerts (Slack, email) for error spikes
+
+🧠 Interview One-Liner:
+“I use logging (e.g., with winston or pino) to trace and debug app issues, and monitoring tools like Sentry or Datadog to catch errors in real-time and alert us before users notice.”
+
+
+
+
+
+question
+Status Codes (HTTP Responses)
+✅ What are HTTP Status Codes?
+HTTP status codes are 3-digit numbers returned by a server to indicate the result of a client’s request.
+
+🧠 Categorized by First Digit:
+Code Range	Type	Meaning
+1xx	Informational	Request received, continuing process
+2xx	Success	Request successful
+3xx	Redirection	Further action needed
+4xx	Client Error	Problem with request from client
+5xx	Server Error	Problem on server side
+
+✅ Common Status Codes (with examples)
+🔵 2xx – Success
+Code	Meaning	Example
+200	OK	Successful GET request
+201	Created	Resource successfully created (POST)
+204	No Content	Success, but no body (DELETE)
+
+🟡 3xx – Redirection
+Code	Meaning	Example
+301	Moved Permanently	Page has been permanently moved
+302	Found (Temporary redirect)	Common in login redirects
+304	Not Modified	Used for caching (no need to resend)
+
+🔴 4xx – Client Errors
+Code	Meaning	Example
+400	Bad Request	Malformed data / missing params
+401	Unauthorized	No auth or invalid token
+403	Forbidden	Authenticated but not allowed
+404	Not Found	Resource doesn't exist
+409	Conflict	Duplicate data (e.g., user already exists)
+422	Unprocessable Entity	Semantic validation error (used in APIs)
+
+🔴 5xx – Server Errors
+Code	Meaning	Example
+500	Internal Server Error	Generic server crash or failure
+502	Bad Gateway	Server got invalid response from upstream
+503	Service Unavailable	Server is down or overloaded
+504	Gateway Timeout	Upstream server didn’t respond
+
+✅ Example in Express.js:
+
+app.post("/users", (req, res) => {
+  if (!req.body.name) {
+    return res.status(400).json({ error: "Name is required" });
+  }
+
+  // Assume user already exists
+  return res.status(409).json({ error: "User already exists" });
+});
+✅ Interview One-Liner:
+"I use HTTP status codes to signal the result of client requests clearly — 2xx for success, 4xx for client-side validation or auth errors, and 5xx for server issues. This helps frontend and backend communicate effectively."
+
+
+
+
+
+
+Question
+Diffrence in NestJS and Express.js?
+
+✅ Basic Code Comparison
+🔸 Express.js Route
+
+// app.js
+const express = require("express");
+const app = express();
+
+app.get("/hello", (req, res) => {
+  res.send("Hello from Express");
+});
+🔸 NestJS Controller
+
+// hello.controller.ts
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('hello')
+export class HelloController {
+  @Get()
+  getHello(): string {
+    return 'Hello from NestJS';
+  }
+}
+🧠 Notice the use of @Controller and @Get() — NestJS uses decorators and structure out of the box.
+
+✅ NestJS is Built On Top of Express
+By default, NestJS uses Express.js under the hood, but you can also swap in Fastify for performance.
+
+const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+✅ Features in NestJS (built-in or via decorators):
+| Feature              | Express   | NestJS         |
+| -------------------- | --------- | -------------- |
+| Routing              | ✅ Yes     | ✅ Yes          |
+| Middleware           | ✅ Yes     | ✅ Yes          |
+| Dependency Injection | ❌ Manual  | ✅ Built-in     |
+| Decorators           | ❌ No      | ✅ Yes          |
+| Guards/Pipes/Filters | ❌ Manual  | ✅ Built-in     |
+| Testing Support      | ❌ Minimal | ✅ Structured   |
+| CLI Tools            | ❌ No      | ✅ Powerful CLI |
+
+
+✅ When to Choose What?
+| Use Case                                     | Choose     |
+| -------------------------------------------- | ---------- |
+| Quick, small-scale API                       | Express.js |
+| Large, scalable, team-based project          | NestJS     |
+| Full TypeScript support, modularity required | NestJS     |
+| Fine-grained custom control                  | Express.js |
+
+🧠 Interview One-Liner:
+"Express.js is a minimal framework for building Node.js apps, giving you full control. NestJS builds on top of it with a structured, TypeScript-first approach using OOP and Dependency Injection, ideal for large-scale applications."
+
+
+
+
+Question
+Interceptor Guards in NestJS?
+
+| Feature        | **Guard**                                | **Interceptor**                                             |
+| -------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| **Purpose**    | Handles **authorization/authentication** | Handles **transformation, logging, timeout, caching, etc.** |
+| **Runs**       | **Before route handler**                 | **Before and after** route handler                          |
+| **Access to**  | Request object, context                  | Request + Response + Return value                           |
+| **Can block?** | ✅ Yes (can deny access)                  | ❌ No (doesn't block, just modifies flow)                    |
+| **Decorator**  | `@UseGuards()`                           | `@UseInterceptors()`                                        |
+
+
+
+🔐 1. Guard — Used for Access Control
+🔸 Example: RolesGuard
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    return user?.role === 'admin';
+  }
+}
+🔸 Usage:
+
+@UseGuards(RolesGuard)
+@Get('admin')
+getAdminData() {
+  return 'Secret data for admin';
+}
+🧠 Guards return a boolean or a Promise/Observable of boolean — if false, request is denied.
+
+
+
+🔄 2. Interceptor — Used for Transforming/Logging/Timing
+🔸 Example: LoggingInterceptor
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
+
+    return next.handle().pipe(
+      tap(() => console.log(`Request took ${Date.now() - now}ms`))
+    );
+  }
+}
+🔸 Usage:
+
+@UseInterceptors(LoggingInterceptor)
+@Get('hello')
+sayHello() {
+  return 'Hello World!';
+}
+🧠 Interceptors wrap around the request/response and can modify the result, log, cache, or delay responses.
+
+🔁 Lifecycle Position:
+
+Request --> Guard --> Interceptor (Before) --> Controller --> Interceptor (After) --> Response
+
+| Use Case                   | Guard or Interceptor?  |
+| -------------------------- | ---------------------- |
+| Role-based access check    | ✅ Guard                |
+| Check if user is logged in | ✅ Guard                |
+| Logging request time       | ✅ Interceptor          |
+| Transform response format  | ✅ Interceptor          |
+| Add a timeout to requests  | ✅ Interceptor          |
+| Rate limiting              | ✅ Guard or Interceptor |
+| Input validation           | ❌ Use Pipe instead     |
+
+
+🧠 Interview One-Liner:
+"Guards in NestJS are used for access control and run before the route is executed. Interceptors are used to transform or observe the request/response, running before and after the controller logic."
+
+
+
+
+
+
+Question
+
+Authentication stategey and caching stragies used
+
+
+
+
+ Interview One-Liners:
+Authentication:
+“I prefer JWT-based stateless auth for scalability, backed by role-based guards in NestJS. For enterprise apps, we may use OAuth2 or session-based auth with Redis.”
+
+Caching:
+“I typically use Redis for distributed caching, often with a cache-aside pattern. For API layers, I leverage HTTP caching headers for GET requests.”
+
+
+Question 
+✅ Difference Between __proto__ and prototype
+
+| Term           | `__proto__`                                                         | `prototype`                                                            |
+| -------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **What it is** | An internal reference to the prototype of an object                 | A property of constructor functions (used to define prototype methods) |
+| **Type**       | Property on **objects**                                             | Property on **constructor functions**                                  |
+| **Used for**   | Accessing the actual prototype object                               | Defining properties/methods to be inherited                            |
+| **Standard?**  | Part of ES6+ (getter/setter) but **not recommended for production** | Fully standard in JS                                                   |
+
+
+ In Simple Terms:
+__proto__ is the link from an object to its prototype.
+
+prototype is a blueprint used when creating new objects with new.
+
+	
+	function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.sayHello = function () {
+  console.log("Hello, I am " + this.name);
+};
+
+const p1 = new Person("Alice");
+
+// __proto__ chain
+console.log(p1.__proto__ === Person.prototype); // ✅ true
+
+// p1 gets sayHello from its prototype
+p1.sayHello(); // Hello, I am Alice
+
+
+
+
+ What’s Happening Behind the Scenes:
+Person.prototype is an object that holds shared methods (like sayHello).
+
+When you do new Person(), JavaScript:
+
+Creates a new object
+
+Sets p1.__proto__ = Person.prototype
+
+Calls the constructor (Person) with this bound to p1
+
+
+
+✅ Interview One-Liner:
+"__proto__ is the internal link from an object to its prototype. prototype is a property on constructor functions used to define methods that instances can inherit."
+
+
+
+
+Question 
+Ecmascript new feature in js 
+
+
+✅ ES2021 and earlier (Honorable Mentions)
+?? – Nullish Coalescing Operator
+
+?. – Optional Chaining
+
+Promise.allSettled()
+
+String.replaceAll()
+
+WeakRef, FinalizationRegistry
+
+🧠 Interview One-Liner:
+“Recent ECMAScript updates focus on ergonomics and safety, like toReversed() for immutable arrays, Set utilities in ES2024, and top-level await to simplify async code in modules.”
+
+
+
+Question 
+GlobalThis
+✅ What is globalThis?
+globalThis is a standard, platform-agnostic way to access the global object in any JavaScript environment.
+
+| Environment | Global Object |
+| ----------- | ------------- |
+| Browser     | `window`      |
+| Web Worker  | `self`        |
+| Node.js     | `global`      |
+✅ Example:
+
+// Works in browser and Node.js
+globalThis.myAppName = "ChatGPT";
+
+console.log(globalThis.myAppName); // "ChatGPT"
+You no longer need to write conditionals like:
+
+
+const root = typeof window !== "undefined" ? window :
+             typeof global !== "undefined" ? global : this;
+✅ Use Cases
+✅ Defining global variables that work everywhere
+
+✅ Sharing config in multi-platform libraries
+
+✅ Accessing built-in globals in any environment
+
+✅ Writing isomorphic (browser + server) JS
+
+
+🧠 Interview One-Liner:
+“globalThis is the standardized way to access the global object in any JS environment — replacing platform-specific globals like window and global.”
+
+
+
+
+
+Question
+nullish and || operator| Operator | Returns right-hand side **if**...            |    |                                                                              |
+| -------- | -------------------------------------------- | -- | ---------------------------------------------------------------------------- |
+| \`       |                                              | \` | Left-hand side is **falsy** (`false`, `0`, `''`, `null`, `undefined`, `NaN`) |
+| `??`     | Left-hand side is **null or undefined only** |    |                                                                              |
+
+
+
+console.log(0 || 42);   // 42 ❗ (0 is falsy)
+console.log(0 ?? 42);   // 0 ✅ (0 is not null/undefined)
+
+console.log(null || "default");   // "default"
+console.log(null ?? "default");   // "default"
+
+console.log(false || "fallback"); // "fallback"
+console.log(false ?? "fallback"); // false ✅
+
+
+✅ Use Case Comparison:
+| Use Case | Use || | Use ?? |
+|------------------------------|----------------------|----------------------------|
+| Provide fallback for empty string or 0 | ✅ || | ❌ Avoid ?? here |
+| Provide fallback only for null or undefined | ❌ || may over-trigger | ✅ ?? is better |
+| User input like 0, false valid | ❌ || wrong fallback | ✅ ?? keeps valid values |
+
+const count = 0;
+const display = count || 10;  // ❌ result is 10, not 0
+const correct = count ?? 10;  // ✅ result is 0
+
+
+🧠 Interview One-Liner:
+"|| returns the right-hand side if the left is falsy (like 0 or empty string), while ?? only returns the right if the left is null or undefined, making it safer for default values in user input."
+
+
+
+
+
+
+Question
+if my application's user exist in dubai,india,uk,canada then what i want is  to wish him happy birthday at exact 12:00AM in the night according to it timezone it should be at 12:00AM only not other timeZone respect to its other country time how will you do 
+stack is nodejs,reactsjs and postgres
+
+
+✅ Core Requirement:
+"Wish each user exactly at 12:00 AM local time in Dubai, India, UK, Canada, etc."
+
+So instead of sending all at once, you must trigger per user by their timezone.
+
+✅ 3-Step High-Level Plan
+🔹 Step 1: Store the User's Timezone in DB
+
+In your users table, store:
+timezone TEXT NOT NULL   -- e.g., 'Asia/Dubai', 'Asia/Kolkata', 'Europe/London', 'America/Toronto'
+dob DATE NOT NULL
+
+
+Step 2: Create a Daily Cron Job (Node.js)
+Run every 5 minutes (not 24h) — but intelligently filter which users are currently hitting 12:00 AM in their timezone.
+
+Use cron + luxon (or dayjs with timezone support):
+
+
+Step 3: Send Greeting (Email/SMS/In-app)
+
+✅ Optional: Add Retry/Once-a-Day Logic
+Avoid resending if job runs multiple times in the 00:00–00:05 window:
+
+CREATE TABLE birthday_wishes_log (
+  user_id INT,
+  sent_at TIMESTAMP,
+  PRIMARY KEY(user_id, sent_at::DATE)
+);
+
+
+
+| Task                     | Tool                                               |
+| ------------------------ | -------------------------------------------------- |
+| Timezone conversion      | `luxon` or `dayjs`                                 |
+| Scheduler                | `node-cron`, `agenda`, or `bull`                   |
+| Timezone capture (React) | `Intl.DateTimeFormat().resolvedOptions().timeZone` |
+| DB                       | PostgreSQL with `timezone` column                  |
+
+🧠 Interview One-Liner:
+“I’d store user timezones in the DB and run a cron job every few minutes. I’d convert current UTC time to each user’s timezone using Luxon and match for 12:00 AM + birthday. This ensures local-time precision for greetings.”
+
+
+
+
+Question
+diffrence between encryption and hashing
+
+
+| Feature         | **Encryption**                                    | **Hashing**                             |
+| --------------- | ------------------------------------------------- | --------------------------------------- |
+| **Purpose**     | Keep data secret (confidentiality)                | Verify data integrity                   |
+| **Output**      | Reversible (can decrypt)                          | Irreversible (cannot get original data) |
+| **Key**         | Requires a key (public/private or symmetric)      | No key — one-way function               |
+| **Example Use** | Secure messages, passwords in transit             | Password storage, data verification     |
+| **Same Input?** | Same input can give different output (if IV used) | Always same output                      |
+
+
+
+🔐 Encryption
+✅ Definition:
+Encryption transforms readable data into unreadable form using a key, so it can be safely transmitted/stored.
+
+🔸 Example (AES):
+const encrypted = encrypt("hello", secretKey); 
+const decrypted = decrypt(encrypted, secretKey); 
+Types:
+
+Symmetric (same key for encrypt/decrypt) — e.g., AES
+
+Asymmetric (public/private keys) — e.g., RSA
+Types:
+
+Symmetric (same key for encrypt/decrypt) — e.g., AES
+
+Asymmetric (public/private keys) — e.g., RSA
+
+🔒 Use Cases:
+Sending sensitive info (card details, tokens)
+
+Secure communication (HTTPS, JWTs)
+
+
+
+🧩 Hashing
+✅ Definition:
+Hashing is a one-way function that converts data into a fixed-size string (hash), mainly used to verify integrity.
+
+🔸 Example (SHA256):
+const hash = sha256("password123");
+Always same output for same input
+
+Irreversible — you can't get original input from the hash
+
+🧠 Interview One-Liner:
+“Encryption is reversible and used to keep data confidential; hashing is one-way and used to verify integrity or identity — like storing passwords securely.”
+
+
+
+
+

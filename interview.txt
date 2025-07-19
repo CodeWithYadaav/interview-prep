@@ -5,7 +5,7 @@ diffrence in any and unknown in TypeScript
 Node.js Event Loop
 Output-based Questions (JS execution and behavior)
 Error Handling and Exceptional error Cases
-Generic Functions in TypeScript
+  Generic Functions in TypeScript
 Sorting an Array
 flatten the array
 Finding the Second or Third Largest Element from an Array
@@ -31,6 +31,10 @@ Database Migrations
 TypeORM vs Sequelize
 Comparison of TypeORM vs Sequelize
 
+Strategies
+kafka strategies
+caching strategies
+Authentication strategies
 
 
 
@@ -569,3 +573,83 @@ find records from 2 tables with 0 likes
 
 kafka
 consumers group
+
+
+
+
+
+
+
+
+GKM IT
+1.event loop with practical how it works basically promise o/p based
+
+console.log('start')
+
+setTimeout(() => {
+    console.log('timer 1')
+}, 0)
+
+Promise.resolve().then(() => {
+    console.log('promise 1')
+}).then(() => {
+    console.log('promise 2')
+})
+
+async function asyncFunc() {
+    console.log('async promise 3')
+    await Promise.resolve()
+    setTimeout(() => {
+        console.log('async promise resolve 4')
+    }, 0)  
+}
+
+asyncFunc() 
+setTimeout(() => {
+    console.log('timer 2')
+}, 0)
+
+console.log('end')
+
+
+2.custom middleware eg rate limit
+3.group anagram
+4.flaten an array
+
+
+
+EPAM
+remove 2 large no from an array
+rearrange array with given other  indices
+[90,70,20,80,60]
+[4,0,3,2,1]
+
+o/p
+[0,1,2,3,4]
+[70,60,80,20,90]
+
+
+Nodejs
+event loop 
+promise
+micro macro task 
+@Controller @module @service
+Dependency Injection in nest js 
+interceptors in nest 
+caching strategy
+Authentication and Authorization
+Authentication stategy 
+How can achieve Multithread 
+Libuv
+prototypes and ___proto__
+
+
+React 
+virtual DOM
+Genrator function
+React webpacks, bundlers 
+memo vs useMemo
+useCallbacks
+state manage in large application
+Hooks
+Use of key attribute

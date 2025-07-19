@@ -1,0 +1,208 @@
+Closure
+In JavaScript, closures are functions that "remember" the environment in which they were created, even after that environment has finished executing. In simple terms, a closure gives you access to the variables from the outer function even after the outer function has returned.
+
+Key Concepts of Closures:
+Function inside a function: A closure occurs when you define a function inside another function.
+
+Access to outer function's variables: The inner function has access to the outer function's variables, parameters, and other inner functions.
+
+State retention: The inner function "remembers" the values of its enclosing scope (the outer function's variables) even when it's executed outside of that scope.
+
+function outerFunction(outerVariable) {
+    return function innerFunction(innerVariable) {
+        console.log("Outer Variable: " + outerVariable);  // Access to outer variable
+        console.log("Inner Variable: " + innerVariable);  // Access to inner variable
+    };
+}
+
+const myClosure = outerFunction("Hello");
+myClosure("World");  // The inner function still has access to outerFunction's variables
+
+
+How Closures Work:
+The innerFunction has access to its own parameters (innerVariable), its own scope, and the scope of the outerFunction that created it.
+
+Even though outerFunction has finished execution, the closure remembers the outerVariable (the value "Hello" in this case) and can access it when myClosure is called.
+
+Why Closures are Useful:
+Data encapsulation: Closures allow you to create private variables that are not accessible from outside the closure.
+
+Function factories: You can use closures to create functions dynamically based on the input they receive, preserving state across multiple function calls.
+
+Let me know if you'd like more examples or clarification!
+
+
+
+Question 
+Props
+Prop Drilling 
+
+Props in React:
+In React, props (short for properties) are used to pass data from a parent component to a child component. Props are immutable, meaning once a value is passed, it cannot be changed by the child component. They allow components to be dynamic and reusable.
+
+function Parent() {
+    const message = "Hello from Parent!";
+    return <Child message={message} />;
+}
+
+function Child(props) {
+    return <h1>{props.message}</h1>;
+}
+In this example:
+
+The Parent component passes a message prop to the Child component.
+
+The Child component receives message via props and displays it.
+
+
+
+Prop Drilling:
+Prop drilling is a term used to describe the process of passing props from a parent component down to child components, and then further down the component tree, even if intermediate components don't need the props. This can lead to unnecessarily complex component structures and can be difficult to maintain in large applications.
+
+Example of Prop Drilling:
+function Grandparent() {
+    const message = "Message from Grandparent!";
+    return <Parent message={message} />;
+}
+
+function Parent(props) {
+    return <Child message={props.message} />;
+}
+
+function Child(props) {
+    return <h1>{props.message}</h1>;
+}
+
+
+
+
+In this case:
+
+The message prop is passed from the Grandparent to Parent to Child, even though the Parent component doesn't actually use the message prop itself. This is an example of prop drilling.
+
+Problems with Prop Drilling:
+Code Clutter: If props need to be passed down through many layers of components, it can make the code harder to follow.
+
+Maintenance Difficulty: If you need to modify or update the prop data, you may have to change it in multiple places.
+
+Unnecessary Rerenders: Passing props down through many components can trigger unnecessary rerenders of intermediate components that don't even use those props.
+
+
+
+
+Question
+
+Solutions to Prop Drilling:
+To prevent prop drilling in React, you can use the following approaches:
+
+React Context API: Create a global context to store data and make it accessible to any component without the need to pass props through intermediate components.
+
+State Management Libraries: Use libraries like Redux, MobX, or Recoil to centralize the application state, avoiding the need to pass props down through many layers of components.
+
+Component Composition: Instead of passing props through many components, break down your components and pass props only where necessary. You can also use higher-order components (HOCs) or render props to manage logic separately.
+
+Context API: React's Context API allows you to avoid prop drilling by creating a global state that can be accessed by any component, regardless of how deep it is in the component tree.
+
+
+const MessageContext = React.createContext();
+
+function Grandparent() {
+    return (
+        <MessageContext.Provider value="Message from Grandparent!">
+            <Parent />
+        </MessageContext.Provider>
+    );
+}
+
+function Parent() {
+    return <Child />;
+}
+
+function Child() {
+    const message = React.useContext(MessageContext);
+    return <h1>{message}</h1>;
+}
+
+State Management Libraries: Using external state management libraries like Redux or MobX can help manage the state more efficiently, especially in larger applications.
+
+By using these techniques, you can avoid passing props unnecessarily through multiple layers and keep your components cleaner.
+
+
+one-liner
+Props in React are used to pass data from a parent component to a child component, allowing for dynamic and reusable components.
+
+Prop Drilling refers to the process of passing props through multiple layers of components, even when intermediate components don't need them, which can lead to complex and harder-to-maintain code.
+
+
+
+
+
+
+Question 
+Cloudfront
+
+CloudFront is AWS's Content Delivery Network (CDN) service that accelerates the delivery of web content (such as images, videos, scripts, and APIs) by caching content at global edge locations. It reduces latency by serving content from the closest server to the user, ensuring faster load times and a better user experience.
+
+Key Points to Discuss in an Interview:
+Global Distribution: CloudFront uses a network of edge locations worldwide to ensure that content is delivered from the server closest to the user, minimizing latency.
+
+Caching: It caches content at edge locations to reduce load on the origin server and improve speed by serving frequently accessed data from the cache.
+
+Security Features: CloudFront supports SSL/TLS encryption, AWS WAF integration, and signed URLs/cookies for secure access to content.
+
+Integration with AWS Services: CloudFront works seamlessly with Amazon S3, EC2, Elastic Load Balancers, and other AWS services for easy setup and scaling.
+
+Use Cases:
+
+Static Website Hosting: Distribute static assets like HTML, CSS, and images globally.
+
+Streaming Media: Supports video streaming (HLS/DASH) to deliver video content with low latency.
+
+Software Distribution: CloudFront ensures fast and reliable delivery of large software files.
+
+Configurable Cache Settings: You can define TTL (Time-to-Live), cache behaviors, and forwarding of headers or query strings to control how content is cached.
+
+Interview Example:
+"Amazon CloudFront is an essential service in the AWS ecosystem, used primarily for delivering content with minimal latency and higher availability. By caching content at edge locations, CloudFront ensures that users across the globe experience faster load times. It's commonly integrated with other AWS services like S3 for storing static assets, EC2 for dynamic content, and can be combined with AWS WAF to enhance security for applications."
+
+
+
+
+
+
+Question
+How to provide latest build to client if its fetching it from CDN
+
+"In order to ensure clients always receive the latest build from CloudFront, versioning the assets with unique hashes in the filenames is one of the most effective methods. By including a unique version identifier (e.g., a hash), CloudFront will fetch the updated assets, bypassing cached versions. Additionally, Cache-Control headers allow us to control how long content is cached at CloudFront edge locations. If needed, cache invalidation can be triggered for specific files to ensure clients get the most up-to-date content. To streamline the process, it's ideal to automate these steps through a CI/CD pipeline."
+
+This explanation highlights how to manage content freshness and optimize cache usage in a scalable, efficient way.
+
+
+
+
+
+
+Question
+React webpacks, bundlers 
+memo vs useMemo
+useCallbacks
+
+| Feature          | `React.memo`                                | `useMemo`                                    | `useCallback`                                       |
+| ---------------- | ------------------------------------------- | -------------------------------------------- | --------------------------------------------------- |
+| **Purpose**      | Memoizes a component to avoid re-renders    | Memoizes the result of a computation         | Memoizes a function to avoid re-creation            |
+| **Use Case**     | Prevent re-renders of functional components | Optimize expensive calculations              | Prevent re-creation of functions passed to children |
+| **Dependencies** | Checks if the props have changed            | Recomputes when dependencies change          | Recreates the callback when dependencies change     |
+| **Example**      | `React.memo(MyComponent)`                   | `useMemo(() => computeExpensive(), [value])` | `useCallback(() => callback(), [callback])`         |
+
+
+
+When to Use:
+React.memo: Use for functional components that receive props and don’t need to re-render if props haven't changed.
+
+useMemo: Use for expensive computations that need to be recalculated only when specific dependencies change.
+
+useCallback: Use when passing a function to a child component to prevent unnecessary re-creations of the function on every render.
+
+These hooks and utilities are essential for optimizing performance in React, particularly in large applications with complex render cycles.
+
+

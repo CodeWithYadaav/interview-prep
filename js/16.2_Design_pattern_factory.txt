@@ -1,0 +1,155 @@
+🏗️ Factory Pattern (Creational Pattern)
+This is another must-know interview question.
+
+📦 What Problem Does Factory Solve?
+Sometimes you want to create objects, but:
+
+You don’t want to expose the logic of how they’re created.
+
+You want to centralize object creation and let subclasses or config decide what type to create.
+
+So instead of using new ClassA() everywhere, you use a Factory that decides what to return.
+
+
+🧠 Real-World Analogy:
+Imagine a Car Factory. You don’t build a car yourself. You just ask the factory:
+
+“Give me a sedan” or “Give me an SUV”
+The factory figures out how to build that and returns the correct model.
+
+class Car {
+  constructor(name) {
+    this.name = name;
+  }
+
+  drive() {
+    console.log(`${this.name} is driving`);
+  }
+}
+
+class CarFactory {
+  createCar(type) {
+    if (type === "sedan") {
+      return new Car("Sedan");
+    } else if (type === "suv") {
+      return new Car("SUV");
+    } else {
+      return new Car("Default Car");
+    }
+  }
+}
+
+const factory = new CarFactory();
+const car1 = factory.createCar("sedan");
+const car2 = factory.createCar("suv");
+
+car1.drive(); // Sedan is driving
+car2.drive(); // SUV is driving
+
+
+
+🛠️ What Problem Does It Solve?
+Encapsulation: Creation logic is hidden inside the factory.
+
+Flexibility: You can easily add new car types.
+
+Consistency: Central point of object creation.
+
+
+
+📌 Real-World Use Cases:
+UI Component Factories – Create buttons, modals, etc., based on config or theme.
+
+Database Drivers – Create a different DB connection based on environment (Mongo, MySQL).
+
+Notification System – Based on type, send Email, SMS, or Push.
+
+Game Objects – Generate enemies, powerups, weapons from config.
+
+
+
+
+🔥 Advanced Factory Pattern (with Subclasses)
+🧱 Goal:
+Instead of having the factory return a basic object with type as a string, let it return specific subclasses that behave differently.
+
+📦 Example: Notification System
+You want to send different types of notifications:
+
+Email
+
+SMS
+
+Push Notification
+
+Each type should have its own implementation, but you want the user of the class to call a generic method like send() without caring what type it is.
+
+
+
+// Base class (acts like an interface)
+class Notification {
+  send(message) {
+    throw new Error("send() must be implemented by subclass");
+  }
+}
+
+// Subclass: Email
+class EmailNotification extends Notification {
+  send(message) {
+    console.log(`Sending EMAIL with message: ${message}`);
+  }
+}
+
+// Subclass: SMS
+class SMSNotification extends Notification {
+  send(message) {
+    console.log(`Sending SMS with message: ${message}`);
+  }
+}
+
+// Subclass: Push
+class PushNotification extends Notification {
+  send(message) {
+    console.log(`Sending PUSH notification: ${message}`);
+  }
+}
+
+// Factory class
+class NotificationFactory {
+  createNotification(type) {
+    switch (type) {
+      case "email":
+        return new EmailNotification();
+      case "sms":
+        return new SMSNotification();
+      case "push":
+        return new PushNotification();
+      default:
+        throw new Error("Invalid notification type");
+    }
+  }
+}
+
+
+const factory = new NotificationFactory();
+
+const emailNotif = factory.createNotification("email");
+emailNotif.send("Hello from Email");
+
+const smsNotif = factory.createNotification("sms");
+smsNotif.send("Hello from SMS");
+
+const pushNotif = factory.createNotification("push");
+pushNotif.send("Hello from Push");
+
+// Output:
+// Sending EMAIL with message: Hello from Email
+// Sending SMS with message: Hello from SMS
+// Sending PUSH notification: Hello from Push
+
+
+✅ Interview Tip:
+💬 "Why is this better than using a switch/case in the main code?"
+You answer:
+"It separates the object creation logic from usage logic. So the client doesn't care if it's sending an Email, SMS, or Push. This makes the code easier to extend, test, and maintain."
+

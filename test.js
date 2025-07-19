@@ -118,8 +118,35 @@
 // obj.a = 20
 // console.log(obj.age)
 
-{
-  var names = "ko";
-}
+// {
+//   var names = "ko";
+// }
+// names = "kool";
 
-console.log(names);
+// console.log(names);
+
+
+
+//two sum
+
+// const sum = [1, 2, 4, 5, 9, 8]
+// const target = 6
+
+
+// function twoSum(sum, target) {
+//     const seen = {}
+
+//     for (let i = 0; i < sum.length - 1; i++) {
+//         const num = sum[i]
+//         const compliment = target - num
+//         if (seen[compliment] !== undefined) {
+//             return [seen[compliment], i]
+//         }
+//         seen[num] = i
+//     }
+//     return 'no valid'
+
+// }
+
+// console.log(twoSum(sum, target))
+
