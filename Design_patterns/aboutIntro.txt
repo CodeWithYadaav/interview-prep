@@ -1,0 +1,50 @@
+🌱 What Are Design Patterns?
+Design patterns are reusable solutions to common problems in software design. They are like templates that help you write code that is:
+
+Easier to understand
+More maintainable
+Scalable and testable
+
+
+
+They're not code you copy-paste, but ideas or approaches you adapt to your situation. Think of them like tried-and-tested blueprints.
+
+
+
+There are 3 main categories:
+
+Creational Patterns – How objects are created.
+Structural Patterns – How objects are composed/connected.
+Behavioral Patterns – How objects interact and behave.
+
+So below the series going with 
+
+| Pattern       | Category   | Where It’s Used                                    | What to Know                               |
+| ------------- | ---------- | -------------------------------------------------- | ------------------------------------------ |
+| **Singleton** | Creational | Database connection, logging, configuration        | How to create one global instance          |
+| **Factory**   | Creational | Object creation, dependency injection              | How to delegate object creation            |
+| **Strategy**  | Behavioral | Pluggable algorithms (e.g., payment, validation)   | Use interface + interchangeable strategies |
+| **Observer**  | Behavioral | Event-driven architecture, pub-sub, webhooks       | Understand how to notify subscribers       |
+| **Decorator** | Structural | Add extra behavior (e.g., middleware, logging)     | Wrap object to enhance functionality       |
+| **Adapter**   | Structural | API response transformation, 3rd-party integration | Convert one interface to another           |
+| **Proxy**     | Structural | Lazy loading, access control, caching              | Handle real object access                  |
+| **Builder**   | Creational | Complex object creation with many options          | Fluent interfaces, chaining                |
+
+
+
+🎯 Node.js-Relevant Use Cases:
+
+Middleware in Express → Decorator
+Database connection pool (Mongo/SQL) →    Singleton
+Strategy →                                 Used in authentication providers (JWT, OAuth, etc.)
+Observer →                                 Used in EventEmitter, or Pub/Sub in Redis, Kafka
+Proxy →                                    Used in API Gateway, service stubs for microservices
+
+
+| Day   | Focus                                                                           |
+| ----- | ------------------------------------------------------------------------------- |
+| Day 1 | Singleton, Factory                                                              |
+| Day 2 | Strategy, Observer                                                              |
+| Day 3 | Decorator, Adapter                                                              |
+| Day 4 | Builder, Proxy                                                                  |
+| Day 5 | Revise with real-life Node.js examples and code one small app using 3+ patterns |

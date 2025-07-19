@@ -1,0 +1,80 @@
+Tell me about Amazon Cognito" — Sample Answer
+
+Amazon Cognito is a user authentication, authorization, and user management service provided by AWS. It allows you to easily add sign-up, sign-in, and access control to your applications — both web and mobile.
+
+In my projects, I’ve used Cognito to manage user pools for handling login/sign-up and identity pools to grant users temporary AWS credentials to access services like S3, DynamoDB securely.
+
+Cognito also supports features like MFA, OAuth2, SAML, federated identities (Google, Facebook, Apple, etc.), and custom authentication flows, making it highly scalable and secure without building a full auth system from scratch.
+
+
+
+
+| Concept                  | Meaning                                                             |
+| ------------------------ | ------------------------------------------------------------------- |
+| **User Pool**            | A user directory for handling sign-up/sign-in, password reset, etc. |
+| **Identity Pool**        | Grants temporary AWS credentials to access AWS services.            |
+| **Federated Identities** | Sign-in via Google, Facebook, Apple, SAML, etc.                     |
+| **Hosted UI**            | Cognito-hosted login/signup UI (optional)                           |
+| **Tokens**               | Returns **ID token, Access token, and Refresh token** in JWT format |
+| **MFA**                  | Multi-Factor Authentication support (SMS, TOTP apps)                |
+
+
+
+
+❓ 1. What's the difference between User Pool and Identity Pool?
+User Pool is for authentication — handling sign-up, sign-in, user management.
+
+Identity Pool is for authorization — granting users temporary access to AWS resources like S3, DynamoDB.
+Often, both are used together — first authenticate with the User Pool, then use the token to get AWS credentials from the Identity Pool.
+
+
+
+❓ 2. How does Cognito handle tokens?
+Cognito returns 3 types of tokens in JWT format:
+
+ID token: User identity claims (like email, sub, name)
+Access token: Used for securing APIs (e.g., via API Gateway / Lambda)
+Refresh token: Used to refresh ID & access tokens without re-login
+These tokens are signed (usually with RS256) and can be verified by your backend or API Gateway.
+
+
+❓ 3. How do you secure your APIs using Cognito?
+Answer:
+I integrated Cognito User Pools with API Gateway, using authorizers to verify the JWT access token.
+On Lambda or backend APIs, I verify the token manually using public keys from Cognito's JWKS endpoint.
+This ensures only authenticated users can access secured routes.
+
+
+
+❓ 4. Can Cognito work with social logins (Google, Facebook)?
+Answer:
+Yes, using federated identity or user pool federation, Cognito supports Google, Facebook, Apple, and even enterprise SAML providers. After authentication, Cognito issues standard tokens that can be used like any normal login.
+
+
+
+
+❓ 5. How do you customize authentication flows in Cognito?
+Answer:
+Cognito provides Lambda triggers, like:
+PreSignUp: For custom validations
+PostConfirmation: After user signs up
+DefineAuthChallenge: For custom auth challenges
+I’ve used them to implement OTP-based login instead of passwords by overriding default challenge flows.
+
+
+
+
+
+❓ 6. What are the limitations of Cognito?
+Answer:
+UI customization is limited unless you build your own.
+Limited analytics unless integrated with CloudWatch or Pinpoint.
+Sometimes complex to debug due to multiple trigger points and token flows.
+But for most use cases, it’s a powerful and scalable auth solution out of the box.
+
+
+
+
+✅ Bonus: When to Use Cognito vs Auth0 or Firebase?
+Cognito is ideal when you're already using AWS and want tight integration with IAM/S3/DynamoDB.
+If you want better developer UX and UI customization out of the box, Auth0 or Firebase Auth might be preferred.

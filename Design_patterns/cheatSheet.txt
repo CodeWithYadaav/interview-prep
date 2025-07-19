@@ -1,0 +1,94 @@
+Design Patterns Cheat Sheet for Node.js Interviews
+
+1. Singleton Pattern
+Use Case: Reuse a single shared instance (e.g., DB connection, Logger)
+Real Example: MongoDB Connection Singleton
+Explanation: Prevents creating multiple database connections.
+Only one connection is created and reused across services/routes.
+Code Sketch:
+let instance = null;
+function connectToDB() {
+ if (instance) return instance;
+ instance = createMongoConnection();
+ return instance;
+}
+
+
+
+2. Factory Pattern
+Use Case: Create objects dynamically based on type (e.g., Notification system)
+Real Example: Email/SMS/Push Notification Factory
+Explanation: Factory returns the appropriate notifier based on type.
+Easily extendable without modifying core logic.
+Code Sketch:
+function NotificationFactory(type) {
+ switch(type) {
+ case 'email': return new Email();
+ case 'sms': return new SMS();
+ }
+}
+
+
+
+
+
+
+3. Strategy Pattern
+Use Case: Runtime selection of algorithms (e.g., Payment strategies)
+Real Example: UPI, Wallet, Credit Card payment logic
+Explanation: Different logic encapsulated in separate strategy files.
+Chosen dynamically at runtime.
+Code Sketch:
+strategies = { 'upi': upiPay, 'wallet': walletPay }
+strategies[method](amount)
+
+
+
+
+
+
+
+
+4. Observer Pattern
+Use Case: Event-driven architecture (e.g., Notifications on order placement)
+Design Patterns Cheat Sheet for Node.js Interviews
+Real Example: Send Email/SMS/Webhook after order is placed
+Explanation: Listeners (observers) are notified via EventEmitter.
+Promotes loose coupling and scalable event handling.
+Code Sketch:
+eventBus.on('orderPlaced', handleEmail);
+eventBus.emit('orderPlaced', order)
+
+
+
+
+
+5. Decorator Pattern
+Use Case: Add functionality to objects (e.g., Logging, Auth middleware)
+Real Example: Express.js middleware (logging, auth, validation)
+Explanation: Wrap a function to enhance its behavior without modifying it directly.
+Code Sketch:
+function loggerMiddleware(req, res, next) {
+console.log('Request:', req.path);
+next();
+}
+app.use(loggerMiddleware);
+
+
+
+
+
+
+
+
+6. Adapter Pattern
+Use Case: Make incompatible interfaces work together (e.g., external API format)
+Real Example: Transform third-party API response to internal model
+Explanation: An adapter sits between systems to translate data/requests.
+Code Sketch:
+function paymentAdapter(apiResponse) {
+return {
+id: apiResponse.transaction_id,
+amount: apiResponse.total,
+};
+}

@@ -1,45 +1,91 @@
-1. Lambda Timeout
-2. Lambda Max memory
-3. Lambda layer
-4. Lambda coldstart
-5. Lambda invocation types
-6. Lambda Alias
+✅ "Tell me about AWS Lambda" — Sample Interview Answer
+AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers. You just upload your code, and Lambda runs it in response to events like HTTP requests (via API Gateway), S3 uploads, DynamoDB updates, or scheduled jobs.
+I’ve used Lambda primarily for building microservices, data processing, and event-driven architecture, where code needs to run on-demand with auto-scaling, and billing is done only per execution time.
 
 
 
-1. Lambda Timeout
-Definition: The Lambda timeout is the maximum duration for which a Lambda function can run before AWS automatically terminates it.
-Default Setting: The default timeout is 3 seconds, but it can be configured up to a maximum of 15 minutes.
-Importance: Setting an appropriate timeout is crucial to prevent unnecessary charges for idle resources and to ensure that long-running processes are properly managed.
+| Concept                   | Description                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| **Trigger-based**         | Runs in response to events from S3, API Gateway, DynamoDB, etc.                    |
+| **Stateless**             | Each invocation is isolated; no persistence unless stored externally (e.g. S3, DB) |
+| **Cold Start**            | Delay during first invocation or after idle period                                 |
+| **IAM Roles**             | Lambda uses execution roles to access AWS services                                 |
+| **Timeout & Memory**      | Configurable (max 15 minutes, 10 GB memory)                                        |
+| **Environment Variables** | For configuration management                                                       |
+| **Layers**                | Share common dependencies across Lambdas                                           |
+| **Concurrency**           | Supports provisioned and reserved concurrency for scaling control                  |
 
 
-2. Lambda Max Memory
-Definition: The maximum memory setting defines the amount of memory allocated to a Lambda function. This memory can range from 128 MB to 10,240 MB.
-Impact on Performance: More memory not only provides more storage but also increases CPU power and network bandwidth allocated to the function, potentially leading to improved performance.
-Cost Consideration: AWS charges for Lambda based on the amount of memory allocated and the execution duration, so it’s important to find the right balance for your use case.
+
+❓ 1. What are the main use cases of Lambda?
+
+REST APIs via API Gateway
+File processing when files are uploaded to S3
+Cron jobs using EventBridge
+Real-time data processing from DynamoDB or Kinesis streams
+Backend logic for mobile/web apps (using Cognito + API Gateway + Lambda)
 
 
-3. Lambda Layer
-Definition: Lambda layers are a way to package and manage common code and dependencies that can be shared across multiple Lambda functions.
-Usage: Layers can include libraries, custom runtimes, and other dependencies, allowing for better organization and easier updates.
-Advantages: By using layers, developers can avoid code duplication and simplify deployment processes.
+
+❓ 2. What is a cold start in Lambda and how do you handle it?
+Answer:
+A cold start happens when Lambda starts a new instance — it loads the runtime and code before executing, causing delay (100ms to seconds).
+To reduce cold starts:
+Use smaller packages and minimal initialization code
+Use provisioned concurrency
+Prefer lighter runtimes like Node.js or Go
 
 
-4. Lambda Cold Start
-Definition: A cold start occurs when a Lambda function is invoked for the first time or after a period of inactivity. AWS needs to initialize a new execution environment, leading to a delay.
-Impact: Cold starts can introduce latency, especially for functions that require additional libraries or have complex initialization processes.
-Mitigation Strategies: To reduce cold start times, consider keeping functions warm with scheduled invocations or using provisioned concurrency.
 
 
-5. Lambda Invocation Types
-Types:
-Synchronous Invocation: The caller waits for the function to process the event and return a response. This is typical for API Gateway requests.
-Asynchronous Invocation: The caller does not wait for a response; instead, the function is invoked, and AWS manages retries. This is often used for event-driven architectures (e.g., S3 events).
-Stream Invocation: Lambda can also be invoked in response to changes in data streams (e.g., Kinesis or DynamoDB Streams).
-Choosing the Right Type: Understanding the invocation type is crucial for building efficient and responsive applications.
 
 
-6. Lambda Alias
-Definition: An alias is a pointer to a specific version of a Lambda function. It allows you to manage and control which version of a function is invoked without changing the client code.
-Usage: Aliases can be used to implement blue-green deployments or canary releases by directing a portion of traffic to a new function version.
-Benefits: This provides a way to safely test new versions of a function in production while maintaining the ability to quickly roll back to the previous version if needed.
+❓ 3. How do you secure a Lambda function?
+
+Use IAM roles to give least privilege access to AWS services.
+For API Gateway-triggered Lambdas, use:
+Cognito authorizers or
+JWT validation in code.
+Store secrets in AWS Secrets Manager or Parameter Store, not in environment variables directly.
+
+
+
+❓ 4. How do you handle deployments and versioning?
+
+I use CI/CD pipelines (e.g., GitHub Actions or CodePipeline) to deploy.
+Lambda supports versions and aliases — making it easy to roll back or do canary deployments using aliases like dev, prod.
+
+
+
+
+
+❓ 6. What’s the difference between Lambda and Fargate?
+| Feature  | Lambda                    | Fargate                                 |
+| -------- | ------------------------- | --------------------------------------- |
+| Type     | Serverless Functions      | Serverless Containers                   |
+| Duration | Max 15 min                | Long-running supported                  |
+| Use Case | Event-driven, short tasks | Container-based apps, background jobs   |
+| Control  | Fully managed             | More flexibility (e.g., Docker support) |
+
+
+
+
+❓ 7. How do you handle errors and retries in Lambda?
+
+For async invocations, Lambda retries twice by default.
+You can use:
+Dead Letter Queues (DLQ) with SNS or SQS
+Lambda Destinations for success/failure
+Structured logs in CloudWatch for debugging
+
+
+❓ 8. What are Lambda Layers?
+Lambda Layers let you package shared code or libraries (e.g., node_modules, Python packages) and reuse them across multiple functions — reducing duplication and deployment size.
+
+
+
+
+
+❓ 9. How do you test Lambda functions locally?
+I use AWS SAM CLI or Serverless Framework.
+Also test using Postman or curl via deployed API Gateway routes.
