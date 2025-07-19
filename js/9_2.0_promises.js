@@ -325,3 +325,106 @@
 // })
 
 // console.log("end")
+
+
+// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved. So the output will be start, 1, end, 2   
+
+// -------------------------O/P Based Que------------------------------------------------------------   
+// Q2
+// console.log("start")
+// const promise1 = new Promise((resolve, reject) => {
+//     console.log(1)
+//     resolve(2)
+//     console.log(3)
+// })
+
+// promise1.then((res) => {
+//     console.log(res)
+// })
+
+// console.log('end')
+// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved. So the output will be start, 1, 3, end, 2
+
+
+// -------------------------O/P Based Que------------------------------------------------------------
+// Q3
+
+// console.log("start")
+// const fn =() => {
+//     return new Promise((resolve, reject) => {
+//         console.log(1)
+//         resolve("success")
+//     })
+// }
+
+// console.log("middle")
+
+// fn().then((res) => {
+//     console.log(res)
+// }   )
+
+
+// console.log("end")
+
+
+//fxn is called after the middle so the output will be start, middle, 1, end, success
+
+// -------------------------O/P Based Que------------------------------------------------------------
+// Q4
+
+
+// function job() {
+//     return new Promise((resolve, reject) => {
+//        reject()
+// })
+// }
+
+// let promise = job()
+
+// promise.then(function(){
+//     console.log("Success 1")
+// })
+// .then(function(){
+//     console.log("Success 2")
+// })
+// .then(function(){
+//     console.log("Success 3")
+// })
+// .catch(function(){
+//     console.log("Error 1")
+// })
+// .then(function(){
+//     console.log("Success 4")
+// })  
+
+
+
+// -------------------------O/P Based Que------------------------------------------------------------
+// Q5
+// function job() {
+//     return new Promise((resolve, reject) => {
+//         if(state){
+//             resolve("Success")
+//         }else{
+//             reject("Error")
+//         }
+//     })
+// }
+
+// let promise = job(true)
+
+// promise.then(function (data) {
+//     console.log(data)
+//     return job(false)
+// })
+// .catch(function (err) {
+//     console.log(err)
+//     return "Error handled"
+// }) 
+// .then(function (data) {
+//     console.log(data)
+//     return job(true)
+// })
+// .catch(function (err) {
+//     console.log(err)
+// })
