@@ -150,3 +150,40 @@
 
 // console.log(twoSum(sum, target))
 
+
+
+
+//observer sideeffects
+
+//event.js
+const EventEmiiter = require('events')
+const eventBus = new EventEmiiter()
+module.exports = eventBus
+
+
+//emitter.js
+import eventBus from ('./event')
+
+function placeOrder(order) {
+    console.log('order place ${order.id}')
+    eventBus.emit('orderPlaced', order)
+}
+
+module.exports = placeOrder
+
+
+//lisner
+import eventBus from ('./event')
+
+
+eventBus.on('orderPlace', (order) => {
+    console.log(`Email sent to ${order.user} and order is ${order.id}`)
+})
+
+
+//app.js
+
+require('./event')
+import placeOrder from ('./emitter')
+
+placeOrder({ id: '123', user: "praveen@gmail.com" })

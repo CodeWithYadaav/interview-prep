@@ -9,50 +9,50 @@
 
 
 
-// eventBus.js ----------------------------------------------------------------------------------------------------
-// const EventEmitter = require('events');
-// const eventBus = new EventEmitter();
-// module.exports = eventBus;
+// eventBus.js ----------------------------------------------------------------x------------------------------------
+const EventEmitter = require('events');
+const eventBus = new EventEmitter();
+module.exports = eventBus;
 
 
 
 // orderService.js
-// const eventBus = require('./eventBus');
+const eventBus = require('./eventBus');
 
-// function placeOrder(order) {
-//   console.log(`✅ Order placed: ${order.id}`);
-//   eventBus.emit('orderPlaced', order);
-// }
+function placeOrder(order) {
+    console.log(`✅ Order placed: ${order.id}`);
+    eventBus.emit('orderPlaced', order);
+}
 
-// module.exports = placeOrder;
+module.exports = placeOrder;
 
 
 
 // listeners/emailNotifier.js
-// const eventBus = require('../eventBus');
+const eventBus = require('../eventBus');
 
-// eventBus.on('orderPlaced', (order) => {
-//   console.log(`📧 Email sent to ${order.user}: Your order ${order.id} is confirmed`);
-// });
+eventBus.on('orderPlaced', (order) => {
+    console.log(`📧 Email sent to ${order.user}: Your order ${order.id} is confirmed`);
+});
 
 
 
 // listeners/smsNotifier.js
-// const eventBus = require('../eventBus');
+const eventBus = require('../eventBus');
 
-// eventBus.on('orderPlaced', (order) => {
-//   console.log(`📱 SMS sent: Order ${order.id} placed successfully`);
-// });
+eventBus.on('orderPlaced', (order) => {
+    console.log(`📱 SMS sent: Order ${order.id} placed successfully`);
+});
 
 
 
 // // app.js
-// require('./listeners/emailNotifier');
-// require('./listeners/smsNotifier');
+require('./listeners/emailNotifier');
+require('./listeners/smsNotifier');
 
-// const placeOrder = require('./orderService');
+const placeOrder = require('./orderService');
 
-// placeOrder({ id: 'ORD123', user: 'praveen@yadav.com' });
+placeOrder({ id: 'ORD123', user: 'praveen@yadav.com' });
 
 
 

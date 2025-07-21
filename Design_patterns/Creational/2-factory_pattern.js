@@ -26,7 +26,7 @@ function NotificationFactory(type) {
     case 'email':
       return new EmailNotification();
     case 'sms':
-      return new SMSNotification();
+      return new SMSNotification();     
     case 'push':
       return new PushNotification();
     default:

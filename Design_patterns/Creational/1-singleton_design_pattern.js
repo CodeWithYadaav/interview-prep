@@ -1,5 +1,6 @@
 // 🎯 Interview Tip:
 // If asked “Why not just use a normal class?”
+
 // You answer:
 // "Because with a normal class, every new call creates a new instance, which can cause data inconsistency or unnecessary resource usage. Singleton solves this by returning the same instance every time."
 

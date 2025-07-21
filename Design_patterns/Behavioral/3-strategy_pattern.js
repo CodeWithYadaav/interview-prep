@@ -9,61 +9,61 @@
 
 // Code Snippet: Strategy Pattern in Node.js
 
-// strategies/creditCard.js
-// module.exports = {
-//   pay: (amount) => {
-//     console.log(`💳 Paid ₹${amount} via Credit Card`);
-//   }
-// };
+// strategies / creditCard.js
+module.exports = {
+    pay: (amount) => {
+        console.log(`💳 Paid ₹${amount} via Credit Card`);
+    }
+};
 
 
-// strategies/upi.js
-// module.exports = {
-//   pay: (amount) => {
-//     console.log(`📲 Paid ₹${amount} via UPI`);
-//   }
-// };
+// strategies / upi.js
+module.exports = {
+    pay: (amount) => {
+        console.log(`📲 Paid ₹${amount} via UPI`);
+    }
+};
 
 
 
-// strategies/wallet.js
-// module.exports = {
-//   pay: (amount) => {
-//     console.log(`👛 Paid ₹${amount} via Wallet`);
-//   }
-// };
+// strategies / wallet.js
+module.exports = {
+    pay: (amount) => {
+        console.log(`👛 Paid ₹${amount} via Wallet`);
+    }
+};
 
 
 
 
 // paymentContext.js
-// const creditCard = require('./strategies/creditCard');
-// const upi = require('./strategies/upi');
-// const wallet = require('./strategies/wallet');
+const creditCard = require('./strategies/creditCard');
+const upi = require('./strategies/upi');
+const wallet = require('./strategies/wallet');
 
-// const strategies = {
-//   creditcard: creditCard,
-//   upi: upi,
-//   wallet: wallet,
-// };
+const strategies = {
+    creditcard: creditCard,
+    upi: upi,
+    wallet: wallet,
+};
 
-// function processPayment(method, amount) {
-//   const strategy = strategies[method.toLowerCase()];
-//   if (!strategy) throw new Error('❌ Unsupported payment method');
-//   strategy.pay(amount);
-// }
+function processPayment(mode, amount) {
+    const strategy = strategies[mode.toLowerCase()];
+    if (!strategy) throw new Error('❌ Unsupported payment method');
+    strategy.pay(amount);
+}
 
-// module.exports = processPayment;
+module.exports = processPayment;
 
 
 
 
 // index.js
-// const processPayment = require('./paymentContext');
+const processPayment = require('./paymentContext');
 
-// processPayment('creditcard', 500);
-// processPayment('upi', 200);
-// processPayment('wallet', 100);
+processPayment('creditcard', 500);
+processPayment('upi', 200);
+processPayment('wallet', 100);
 
 
 
