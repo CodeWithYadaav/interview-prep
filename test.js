@@ -153,34 +153,54 @@
 
 
 
-function flattenObject(obj, parentKey = '', res = {}) {
-    for (let key in obj) {
-        let value = obj[key]
-        const fullKey = parentKey ? `${parentKey}.${key}` : key
-        if (typeof value == 'object ' && value !== null && !Array.isArray(value)) {
-            flattenObject(value, fullKey, res)
-        } else {
-            res[fullKey] = value
-        }
-    }
-    return res
+// function flattenObject(obj, parentKey = '', res = {}) {
+//     for (let key in obj) {
+//         let value = obj[key]
+//         const fullKey = parentKey ? `${parentKey}.${key}` : key
+//         if (typeof value == 'object ' && value !== null && !Array.isArray(value)) {
+//             flattenObject(value, fullKey, res)
+//         } else {
+//             res[fullKey] = value
+//         }
+//     }
+//     return res
 
-}
-
-
+// }
 
 
 
-const input = {
-    a: { b: { c: 1 } },
-    d: 2,
-    e: {
-        f: 3,
-        g: {
-            h: 4
-        }
-    }
-};
 
-console.log(flattenObject(input));
 
+// const input = {
+//     a: { b: { c: 1 } },
+//     d: 2,
+//     e: {
+//         f: 3,
+//         g: {
+//             h: 4
+//         }
+//     }
+// };
+
+// console.log(flattenObject(input));
+
+
+// console.log(typeof null);
+
+// console.log([] + {});
+// console.log({} + []);
+
+// console.log(NaN === NaN);
+
+// console.log(true + true);
+
+// console.log(0.1 + 0.2 === 0.3);
+
+// console.log(!![] + !![]);
+
+// console.log([] == ![]);
+
+// console.log(typeof NaN);
+
+
+// console.log(typeof ("5" - - "2"))
