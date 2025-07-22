@@ -1,6 +1,8 @@
 ✅ "Tell me about AWS Lambda" — Sample Interview Answer
-AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers. You just upload your code, and Lambda runs it in response to events like HTTP requests (via API Gateway), S3 uploads, DynamoDB updates, or scheduled jobs.
-I’ve used Lambda primarily for building microservices, data processing, and event-driven architecture, where code needs to run on-demand with auto-scaling, and billing is done only per execution time.
+AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers. 
+You just upload your code, and Lambda runs it in response to events like HTTP requests (via API Gateway), S3 uploads, DynamoDB updates, or scheduled jobs.
+I’ve used Lambda primarily for building microservices, data processing, and event-driven architecture,
+ where code needs to run on-demand with auto-scaling, and billing is done only per execution time.
 
 
 

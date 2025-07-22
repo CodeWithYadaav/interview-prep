@@ -1,7 +1,8 @@
 // In JavaScript, deep copy and shallow copy refer to ways of copying objects or arrays, but they handle nested objects differently.
 
 // Shallow Copy:
-// A shallow copy creates a new object or array, but it only copies the references of nested objects or arrays, not the actual data. So, if the original or copied object is modified, changes in the nested parts affect both copies.
+// A shallow copy creates a new object or array, but it only copies the references of nested objects or arrays, not the actual data.
+//  So, if the original or copied object is modified, changes in the nested parts affect both copies.
 
 
 const original = { name: "Alice", details: { age: 25 } };

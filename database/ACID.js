@@ -24,7 +24,8 @@ function transferMoney(from, to, amount) {
 // 2.  Consistency = Data Always Makes Sense
 // ===============================
 
-// - Definition: Guarantees that a transaction will bring the database from one valid state to another, maintaining database integrity. This means all rules, such as constraints, are enforced, ensuring that only valid data is saved.
+// - Definition: Guarantees that a transaction will bring the database from one valid state to another, maintaining database integrity. This means all rules, 
+// such as constraints, are enforced, ensuring that only valid data is saved.
 // - Example: Ensuring that bank accounts don't go into negative values during a transfer.
 
 function debit(account, amount) {
@@ -43,7 +44,8 @@ function debit(account, amount) {
 // Transactions don’t mess with each other, even if run at the same time.
 // ===============================
 
-// - Definition: Ensures that the execution of a transaction is independent of other concurrent transactions. Each transaction behaves as if it is the only one happening, avoiding conflicts from simultaneous operations.
+// - Definition: Ensures that the execution of a transaction is independent of other concurrent transactions.
+//  Each transaction behaves as if it is the only one happening, avoiding conflicts from simultaneous operations.
 // - Example: Two users withdrawing money from the same account at the same time should not cause inconsistent balance updates.
 
 async function withdraw(account, amount) {

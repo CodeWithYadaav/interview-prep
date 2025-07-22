@@ -1,7 +1,8 @@
 // Callbacks and callback hell are important concepts in JavaScript, particularly when dealing with asynchronous programming. Here’s a breakdown of both concepts:
 
 // Callbacks
-// A callback is a function that is passed as an argument to another function and is executed after some operation is completed. This is commonly used in asynchronous programming to handle the results of operations like fetching data or performing computations.
+// A callback is a function that is passed as an argument to another function and is executed after some operation is completed. 
+// This is commonly used in asynchronous programming to handle the results of operations like fetching data or performing computations.
 
 // Example of a Callback:
 
@@ -22,7 +23,8 @@ fetchData(handleData); // Passing handleData as a callback
 
 
 //   Callback Hell
-// Callback hell refers to a situation where multiple nested callbacks are used, leading to code that is difficult to read and maintain. This often occurs when dealing with multiple asynchronous operations that depend on each other.
+// Callback hell refers to a situation where multiple nested callbacks are used, leading to code that is difficult to read and maintain.
+//  This often occurs when dealing with multiple asynchronous operations that depend on each other.
 
 
 

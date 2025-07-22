@@ -238,7 +238,8 @@
 // })
 
 
-// Promise.allSettled it will same as Promsie.all as if one of promsie fails it will fail all the promise but in this if any of the Promise gets fullfilled or reject it will give the resolve as well as reject promsies as well   
+// Promise.allSettled it will same as Promsie.all as if one of promsie fails it will fail all the promise 
+// but in this if any of the Promise gets fullfilled or reject it will give the resolve as well as reject promsies as well   
 
 
 // Promise.allSettled([
@@ -252,7 +253,8 @@
 // })
 
 
-// Promise.any it will same as Promsie.race but it will ignores all the failed promise and return the fullfill resolve promise if any of promsie resolve and if all the promises fails then only gave rejected promises
+// Promise.any it will same as Promsie.race but it will ignores all the failed promise and return the fullfill resolve promise 
+// if any of promsie resolve and if all the promises fails then only gave rejected promises
 
 
 // Promise.any([
@@ -327,7 +329,8 @@
 // console.log("end")
 
 
-// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved. So the output will be start, 1, end, 2   
+// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved.
+//  So the output will be start, 1, end, 2   
 
 // -------------------------O/P Based Que------------------------------------------------------------   
 // Q2
@@ -343,7 +346,8 @@
 // })
 
 // console.log('end')
-// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved. So the output will be start, 1, 3, end, 2
+// when the promise is initialized it will execute the code inside the promise immediately and then it will go to the then block when the promise is resolved.
+//  So the output will be start, 1, 3, end, 2
 
 
 // -------------------------O/P Based Que------------------------------------------------------------

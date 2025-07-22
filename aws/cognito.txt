@@ -1,10 +1,12 @@
 Tell me about Amazon Cognito" — Sample Answer
 
-Amazon Cognito is a user authentication, authorization, and user management service provided by AWS. It allows you to easily add sign-up, sign-in, and access control to your applications — both web and mobile.
+Amazon Cognito is a user authentication, authorization, and user management service provided by AWS. It allows you to easily add sign-up, sign-in, 
+and access control to your applications — both web and mobile.
 
 In my projects, I’ve used Cognito to manage user pools for handling login/sign-up and identity pools to grant users temporary AWS credentials to access services like S3, DynamoDB securely.
 
-Cognito also supports features like MFA, OAuth2, SAML, federated identities (Google, Facebook, Apple, etc.), and custom authentication flows, making it highly scalable and secure without building a full auth system from scratch.
+Cognito also supports features like MFA, OAuth2, SAML, federated identities (Google, Facebook, Apple, etc.), 
+and custom authentication flows, making it highly scalable and secure without building a full auth system from scratch.
 
 
 
@@ -48,7 +50,8 @@ This ensures only authenticated users can access secured routes.
 
 ❓ 4. Can Cognito work with social logins (Google, Facebook)?
 Answer:
-Yes, using federated identity or user pool federation, Cognito supports Google, Facebook, Apple, and even enterprise SAML providers. After authentication, Cognito issues standard tokens that can be used like any normal login.
+Yes, using federated identity or user pool federation, Cognito supports Google, Facebook, Apple, and even enterprise SAML providers.
+ After authentication, Cognito issues standard tokens that can be used like any normal login.
 
 
 
