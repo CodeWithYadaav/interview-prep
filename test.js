@@ -153,37 +153,34 @@
 
 
 
-
-function threeSumTarget(arr, target) {
-    arr.sort((a, b) => a - b)
-
-    let res = []
-    for (let i = 0; i < arr.length - 2; i++) {
-        if (i > 0 && arr[i] === arr[i - 1]) continue;
-
-        let left = i + 1
-        let right = arr.length - 1
-
-        while (left < right) {
-            const sum = arr[i] + arr[left] + arr[right]
-            if (sum === target) {
-                res.push([arr[i], arr[left], arr[right]])
-                left++
-                right--
-                while (left < right && arr[left] === arr[left - 1]) left++
-                while (left < right && arr[right] === arr[right + 1]) right--
-            }
-            else if (sum < target) {
-                left++
-            } else {
-                right--
-            }
-
+function flattenObject(obj, parentKey = '', res = {}) {
+    for (let key in obj) {
+        let value = obj[key]
+        const fullKey = parentKey ? `${parentKey}.${key}` : key
+        if (typeof value == 'object ' && value !== null && !Array.isArray(value)) {
+            flattenObject(value, fullKey, res)
+        } else {
+            res[fullKey] = value
         }
-
     }
     return res
 
 }
 
-console.log(threeSumTarget([1, 0, -1, 2, -2, 3], 4));
+
+
+
+
+const input = {
+    a: { b: { c: 1 } },
+    d: 2,
+    e: {
+        f: 3,
+        g: {
+            h: 4
+        }
+    }
+};
+
+console.log(flattenObject(input));
+

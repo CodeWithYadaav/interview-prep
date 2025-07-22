@@ -71,6 +71,7 @@
 // Saves resources and avoids memory leaks.
 
 // ✅ What to Say in Interview:
-// In my last project, I was building a microservice that interacts with MongoDB. Initially, we were accidentally creating new DB connections in multiple service files. This caused high memory usage and poor performance under load.
+// In my last project, I was building a microservice that interacts with MongoDB. Initially, we were accidentally creating new DB connections in multiple service files. 
+// This caused high memory usage and poor performance under load.
 
 // I solved it by implementing the Singleton pattern for the MongoDB client — so that only one connection is created and reused across the app.

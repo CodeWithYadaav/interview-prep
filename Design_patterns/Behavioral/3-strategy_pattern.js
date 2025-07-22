@@ -1,14 +1,15 @@
 // 🔧 Scenario:
-// You're building a payment gateway module that supports multiple payment methods: Credit Card, UPI, Wallet, etc. You want to choose the algorithm (strategy) at runtime without writing if-else chains
+// You're building a payment gateway module that supports multiple payment methods: Credit Card, UPI, Wallet, etc. 
+// You want to choose the algorithm (strategy) at runtime without writing if-else chains
 
 // ✅ What to Say in Interview:
-// In a project where we handled multiple payment types (Credit Card, UPI, Wallet), each with different validation and processing logic, we implemented the Strategy Pattern to keep the logic clean and extensible.
+// In a project where we handled multiple payment types (Credit Card, UPI, Wallet), each with different validation and processing logic, 
+// we implemented the Strategy Pattern to keep the logic clean and extensible.
 
 // We created a strategy interface, and each method had its own implementation. The system selected the strategy at runtime based on user input or API request.
 
 
 // Code Snippet: Strategy Pattern in Node.js
-
 // strategies / creditCard.js
 module.exports = {
     pay: (amount) => {

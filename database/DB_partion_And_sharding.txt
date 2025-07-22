@@ -1,0 +1,240 @@
+🔷 DATABASE SCALING, PARTITIONING, POOLING, SHARDING & QUERY ROUTING
+
+
+🧱 1. What is Database Connection Pooling?
+When your backend (e.g., NestJS/Express) talks to the DB, each interaction uses a connection.
+
+// Without pooling - every request opens a new connection
+const client = new Client();
+await client.connect();
+
+That’s slow and heavy. Imagine 1000 users = 1000 sockets = crash 😵
+
+
+✅ With Pooling:
+
+const pool = new Pool({ max: 20 }); // Create pool of 20 connections
+const client = await pool.connect(); // Reuse connections
+
+Think of pooling like an Uber carpool. Clients reuse DB connections, no need to start a new one every time.
+
+
+
+🔥 What Happens if Pooling is Disabled?
+High latency per query
+Increased memory/CPU on DB
+Connection limit errors
+Scalability issues on high traffic
+
+💥 If 10,000 users hit your API → 10,000 sockets to DB = boom!
+
+
+
+🌊 What if Large Number of Requests Come?
+Even with pooling:
+If max pool size = 20 and 100 requests come → 80 must wait
+
+Solution:
+    Increase pool size (max)
+    Scale DB vertically or horizontally (explained below)
+
+
+🪜 2. Scaling Databases: Vertical vs Horizontal
+
+    | Type       | Meaning                            | Example              |
+| ---------- | ---------------------------------- | -------------------- |
+| Vertical   | Bigger single DB server            | 32→64 GB RAM upgrade |
+| Horizontal | Multiple DB servers with same data | Master-slave setup   |
+
+
+
+
+
+📚 3. What is Partitioning?
+Breaking a big table into smaller pieces, based on column value.
+
+
+Types:
+Range (e.g., order_date)
+List (e.g., region)
+Hash (e.g., user_id % 4)
+
+
+🧾 Example: Orders Partitioned by Year
+CREATE TABLE orders (
+  id SERIAL,
+  order_date DATE,
+  ...
+) PARTITION BY RANGE (order_date);
+
+CREATE TABLE orders_2022 PARTITION OF orders
+  FOR VALUES FROM ('2022-01-01') TO ('2023-01-01');
+
+
+✅ Query Example
+SELECT * FROM orders WHERE order_date BETWEEN '2022-01-01' AND '2022-12-31';
+
+
+🔍 PostgreSQL will prune and hit only orders_2022.
+    You don’t tell which partition — DB is smart.
+
+
+
+
+🌐 4. What is Sharding?
+
+Split data across multiple servers, each holding only a portion of the data.
+
+Sharding = Horizontal splitting of data across multiple databases (servers).
+
+🔧 Analogy:
+Imagine Flipkart has 10 crore users. Instead of storing all in one DB:
+    Shard 1: Users with ID 1 to 1 crore
+    Shard 2: 1 crore to 2 crore
+    … and so on.
+
+
+| Customer ID | Shard   |
+| ----------- | ------- |
+| 1–10M       | Shard 1 |
+| 10M–20M     | Shard 2 |
+| 20M–30M     | Shard 3 |
+
+
+🧠 Routing in Code
+function getShard(customerId: number) {
+  if (customerId <= 10_000_000) return 'shard1';
+  if (customerId <= 20_000_000) return 'shard2';
+  return 'shard3';
+}
+
+const db = connectTo(getShard(customerId));
+const orders = await db.query('SELECT * FROM orders WHERE customer_id = $1', [customerId]);
+
+🔁 App logic must know the sharding key to decide which shard to hit.
+
+
+🤔 Sharding vs Partitioning
+
+
+| Feature     | Partitioning (Postgres) | Sharding (Across DBs)      |
+| ----------- | ----------------------- | -------------------------- |
+| Managed by  | DB engine               | App or sharding middleware |
+| Data stored | In same DB              | On multiple DBs            |
+| Routing     | Auto by DB              | Manual in app logic        |
+| Example Key | `order_date`            | `user_id`, `customer_id`   |
+
+
+
+
+🤔 Views vs Stored Procedures
+View = virtual table (just saved query)
+CREATE VIEW active_users AS SELECT * FROM users WHERE active = true;
+
+
+Stored Procedure (SP) = a function saved in DB
+CREATE PROCEDURE reset_users() LANGUAGE SQL AS $$
+  UPDATE users SET active = false;
+$$;
+
+Used for:
+    Logic in DB
+    Multi-step batch operations
+    Avoiding repeated logic in app
+
+
+
+
+
+
+
+🧩 How to Query Partitioned or Sharded Data?
+
+🔹 If Partitioned:
+    SELECT * FROM orders WHERE order_date = '2023-02-01';
+-- Auto-routed to orders_2023
+
+
+
+🔸 If Sharded:
+const shard = getShard(userId); // You decide!
+const db = connectTo(shard);
+
+⚠️ Without sharding key, you’d have to query all shards = slow
+
+
+| Concept      | Key Idea                                      | Handled By            |
+| ------------ | --------------------------------------------- | --------------------- |
+| Pooling      | Reuse DB connections                          | App (pg-pool, knex)   |
+| Partitioning | Break table into small pieces                 | Postgres DB itself    |
+| Sharding     | Split data to multiple DBs                    | Your app / middleware |
+| Views        | Read-only virtual tables                      | DB                    |
+| Stored Proc  | DB-side function                              | DB                    |
+| Scaling      | Vertical = bigger, Horizontal = more machines | Infra/devops          |
+
+
+
+
+
+🧩 Scenario:
+You're in India, your data is in Shard1.
+Your friend is in the USA, their data is in Shard2.
+You both use the same app (let’s say, an e-commerce or social media app).
+Database is sharded by region or user_id range.
+
+
+
+Sharding is the process of splitting data horizontally into multiple databases or collections, called shards, based on some key like region, user_id, etc.
+
+
+🎯 How Data Is Accessed in a Sharded Setup?
+You don’t manually select the shard — your application or shard router (like MongoDB’s mongos or custom app logic in PostgreSQL) does that for you.
+
+
+🔑 How the Router Knows Which Shard to Query?
+Let’s say the shard key is user_id. Here’s how it works:
+
+| User        | Location | `user_id` | Shard  | Query Routing  |
+| ----------- | -------- | --------- | ------ | -------------- |
+| You         | India    | 10001     | Shard1 | Goes to Shard1 |
+| Your Friend | USA      | 90001     | Shard2 | Goes to Shard2 |
+
+
+
+🧠 Application Logic Example:
+Let’s simulate it with a simple example in Node.js + PostgreSQL (or MongoDB).
+1. ✅ You know the user_id or region
+
+const userId = 10001; // From India
+
+// Decide which shard to query
+const db = userId < 50000 ? shard1DB : shard2DB;
+
+// Run query on correct shard
+const result = await db.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+
+🔐 The app logic is determining the shard based on the user ID range.
+
+
+
+
+
+🔁 But What if I Need Cross-Shard Data?
+
+Example: You want to message your USA friend from India. You need data from Shard1 (you) and Shard2 (your friend).
+❌ Option 1: Cross-shard JOIN (not supported easily)
+                Not ideal. Expensive.
+                Most sharded databases don’t allow joins across shards directly.
+
+
+
+
+Summary
+
+| Question                                  | Answer                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| Can I access data from another shard?     | Yes, via application logic or `mongos`                                          |
+| How is shard selected?                    | Based on shard key (`user_id`, `region`, etc.)                                  |
+| What if I need data from multiple shards? | Use **fan-out queries** or **application-level joins**                          |
+| Can I query across all shards at once?    | ❌ JOINs across shards are tricky, but `broadcast` or `manual fetch` is possible |
+| Do I choose the shard manually?           | ❌ No — handled by app logic or a router (like `mongos`)                         |

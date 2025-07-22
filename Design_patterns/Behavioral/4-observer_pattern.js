@@ -3,7 +3,8 @@
 
 
 // ✅ What to Say in Interview:
-// In our order management system, we needed to trigger multiple side-effects like email, SMS, and push notifications after an order is created. Instead of writing these inside the order logic, I used the Observer pattern.
+// In our order management system, we needed to trigger multiple side-effects like email, SMS, and push notifications after an order is created.
+//  Instead of writing these inside the order logic, I used the Observer pattern.
 
 // I implemented a pub-sub model using Node.js EventEmitter, where each listener handled its responsibility independently. It improved code modularity and testability.
 

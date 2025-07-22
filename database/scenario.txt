@@ -43,6 +43,8 @@ async function insertBatch(rows) {
 Problem: Opening new DB connection for every request is slow and wasteful.
 ✅ Solution: Use connection pooling
 
+Connection Pooling is a technique where a pool (cache) of database connections is maintained and reused, instead of creating and closing DB connections on every request.
+
 const { Pool } = require('pg');
 const pool = new Pool({ max: 10 });
 
@@ -64,6 +66,33 @@ In NestJS
     })
   ],
 })
+
+
+
+❌ What Happens If Pooling is NOT Used?
+🔁 New DB Connection for Every Request
+Every API call creates a fresh DB connection, which:
+Takes time to authenticate
+Consumes DB server resources
+Increases latency
+
+
+💣 High Resource Consumption
+      Opening/closing DB connections repeatedly is expensive.
+      Without pooling, CPU and memory usage on both app & DB servers can spike.
+
+⏳ Performance Bottlenecks
+      Your app might slow down or even hang under load.
+      Creating a DB connection is 5x to 20x slower than reusing an existing one.
+
+📛 Hitting Connection Limits
+      Most DBs (e.g., PostgreSQL, MySQL) have a max connection limit.
+      Without pooling, you may exhaust DB connections, causing:
+              Timeout errors
+              Refused connections
+              Crashes
+
+
 
 
 
@@ -91,6 +120,13 @@ SELECT * FROM users ORDER BY id LIMIT 10 OFFSET 100;
         Useful when single DB hits vertical limits.
 
 
+
+
+
+
+
+
+
 5. Normalisation
 
 Goal: Avoid duplicate data, make updates consistent.
@@ -106,11 +142,20 @@ Instead of storing category_name inside every product row.
 
 
 
+
+
+
+
+
 6. Second Largest Salary (SQL Query)
 
     SELECT MAX(salary) AS second_highest
 FROM employees
 WHERE salary < (SELECT MAX(salary) FROM employees);
+
+
+
+
 
 
 
@@ -120,6 +165,11 @@ WHERE salary < (SELECT MAX(salary) FROM employees);
 | -------------- | ------------------------------------------- |
 | **LEFT JOIN**  | All records from left + matching from right |
 | **RIGHT JOIN** | All records from right + matching from left |
+
+
+
+
+
 
 
 8. Column Join and DB Join in NestJS
@@ -137,6 +187,10 @@ export class Order {
 
 
 
+
+
+
+
 9. SQL Injection and Security Without ORM
 
 Avoid:
@@ -145,6 +199,12 @@ Avoid:
 ✅ Use parameterized queries:
 
         db.query('SELECT * FROM users WHERE email = $1', [input]);
+
+
+
+
+
+
 
 
 10. Database Migrations
@@ -161,6 +221,13 @@ npx sequelize-cli migration:generate --name create-users
 
 
 
+
+
+
+
+
+
+
 11. Reading Large Datasets with Streams
 
 
@@ -168,6 +235,9 @@ Use Node.js streams to avoid memory overload:
 const stream = db.query(new Cursor('SELECT * FROM large_table'));
 stream.read(1000, (err, rows) => { /* handle rows */ });
 ✅ Use pg-cursor for PostgreSQL.
+
+
+
 
 
 
@@ -182,6 +252,11 @@ Avoid SELECT *, fetch only needed fields
 Avoid functions on indexed columns (WHERE UPPER(name) breaks index)
 
 
+
+
+
+
+
 13. Comparison of TypeORM vs Sequelize
 
 | Feature        | **TypeORM**               | **Sequelize**                     |
@@ -192,6 +267,11 @@ Avoid functions on indexed columns (WHERE UPPER(name) breaks index)
 | Migrations     | Powerful (built-in)       | CLI based                         |
 | Community      | Large in NestJS ecosystem | Popular in JS-only apps           |
 | Learning Curve | Medium                    | Easier to get started             |
+
+
+
+
+
 
 
 14. Table Design for Categories, Subcategories, etc.
@@ -210,12 +290,30 @@ Nested subcategories (parent_id = category_id)
 
 
 
+
+
 ##How indexing works in mysql/postgres
 
 An index is like a book's table of contents. It speeds up data retrieval by avoiding full table scans.
 
 🧠 Simple Analogy:
 Imagine a phonebook 📕 with names in alphabetical order. To find "Ravi", you don't flip every page — you jump directly to "R". That’s what an index does.
+
+🧠 How It Works Behind the Scenes
+
+1. What is stored?
+  When you index a column (name, id, etc.), the DB engine:
+      Creates a sorted copy of that column (usually using a B-Tree or Hash Table depending on the index type).
+      Stores a pointer to the full row where that data lives.
+
+
+
+2. What happens when you run a query?
+If your query uses a WHERE, JOIN, or ORDER BY on an indexed column:
+      It uses the index tree to directly locate rows.
+      Skips scanning unneeded rows.
+
+
 
 
 ⚙️ Internals: How It Works
@@ -259,7 +357,6 @@ If the table is small — index doesn’t add value
 
 🧪 Example in MySQL/Postgres
 📦 Create Index
-
 CREATE INDEX idx_email ON users(email);
 
 
