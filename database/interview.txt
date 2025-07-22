@@ -165,7 +165,6 @@ BEGIN
 END;
 
 
-
 To call this
 CALL GetEmployeeByDept('HR');
 
@@ -177,6 +176,33 @@ CALL GetEmployeeByDept('HR');
 | ✅ Performance             | Precompiled, so faster execution.                         |
 | ✅ Maintenance             | Business logic encapsulated in DB, easier to manage.      |
 | ✅ Reduced network traffic | Send a single `CALL` instead of multiple SQLs.            |
+
+
+
+ Question:🔹 How It Works Internally
+When you create a stored procedure using CREATE PROCEDURE or CREATE FUNCTION, the code is:
+            Parsed
+            Validated
+            Stored in the system metadata with references to the database and objects it touches.
+
+
+
+ Question: When the procedure is executed, the DB engine:
+            Fetches the code from the system catalog
+            Parses/caches (if not already cached)
+            Executes the logic in its query planner/executor pipeline
+
+
+
+
+ Question:  Where are Stored Procedures Stored?
+Stored Procedures are saved in the system catalog or metadata tables of the database engine.
+✅ Examples:
+PostgreSQL: Stored procedures and functions are stored in the pg_proc system catalog.
+MySQL: Stored in the mysql.proc table.
+SQL Server: Stored in the sys.procedures and sys.sql_modules.
+
+
 
 
 22.✅ What is a View in SQL?
