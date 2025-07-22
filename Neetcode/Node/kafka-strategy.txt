@@ -1,0 +1,168 @@
+✅ 1. Producer Strategies
+
+🔹 Keyed Messages
+Kafka partitions messages based on key hash.
+Same key → same partition → ordered delivery.
+
+await producer.send({
+  topic: 'orders',
+  messages: [{ key: 'user_123', value: 'Order placed' }]
+});
+
+
+✅ Use Case: You want all messages from user_123 to go to the same partition and be consumed in order.
+
+🔹 Retries & Acknowledgments
+Use acks=all to ensure the leader + replicas all get the message.
+Set retry count + backoff time for reliability.
+
+const producer = kafka.producer({
+  retry: { retries: 5, initialRetryTime: 300 }
+});
+
+
+
+✅ 2. Consumer Strategies
+
+🔹 Consumer Groups
+    Each group gets a copy of each message once.
+    Kafka handles partition assignment across consumers in the group.
+
+✅ Use Case: Scaling horizontally — multiple workers for same task.
+
+
+
+🔹 Offset Management
+    Kafka tracks offset per topic-partition-consumer-group.
+    You can auto-commit or manually commit when you're done processing.
+
+await consumer.commitOffsets([
+  { topic, partition, offset: (parseInt(offset) + 1).toString() }
+]);
+
+✅ Manual commit is safer for at-least-once delivery.
+
+
+
+
+🔹 Delivery Semantics
+
+| Semantics     | Meaning                | Notes                           |
+| ------------- | ---------------------- | ------------------------------- |
+| At-most-once  | May lose messages      | Fast, not reliable              |
+| At-least-once | May duplicate          | Most common, must deduplicate   |
+| Exactly-once  | No loss, no duplicates | Complex; needs idempotent logic |
+
+
+
+
+
+✅ 3. Partitioning Strategies
+
+🔹 Default Hash-based Partitioning
+Kafka uses hash(key) % partitionCount.
+
+✅ Ensures ordering per key.
+
+
+🔹 Custom Partitioners
+Implement custom logic to route messages (e.g., VIP users always go to partition 0).
+
+✅ Rare but useful when data distribution needs tight control.
+
+
+
+✅ 4. Topic Design Strategies
+
+🔹 One Event Type per Topic
+✅ Keeps schema simple, makes consumers easier to scale.
+
+user-signups, order-created, payment-failed
+
+
+
+🔹 Use Schema Registry (Avro/Protobuf/JSON Schema)
+✅ Keeps producer/consumer in sync on message format.
+
+
+🔹 Dead Letter Topics (DLT)
+Unprocessable messages are sent to a separate topic for inspection.
+
+✅ Avoid crashes due to bad payloads.
+
+
+
+
+✅ 5. Message Size & Batching Strategies
+
+🔹 Batch Messages
+Group multiple messages in one batch to reduce I/O overhead.
+
+await producer.send({
+  topic: 'bulk-events',
+  messages: [...Array(1000)].map(() => ({ value: 'something' }))
+});
+
+✅ Increases throughput.
+
+
+
+🔹 Compression
+Use gzip or snappy to reduce payload size.
+
+await producer.send({
+  topic,
+  compression: CompressionTypes.GZIP,
+  messages: [...]
+});
+
+
+
+✅ 6. Idempotency + Duplicate Handling
+
+
+Idempotent producers prevent duplicates even during retries.
+Add idempotent: true in producer config (KafkaJS does not support this yet, but Java does).
+Consumers must implement deduplication based on message key/ID.
+
+✅ Store processed message IDs in Redis or DB.
+
+
+
+✅ 7. Scaling Strategies
+
+
+| Strategy                      | Benefit                    |
+| ----------------------------- | -------------------------- |
+| More partitions               | More parallelism           |
+| More consumer instances       | Better horizontal scaling  |
+| Use compacted topics          | Keep only latest state     |
+| Kafka Connect + Kafka Streams | For ETL or transformations |
+
+
+✅ 8. Monitoring & Reliability
+
+
+Monitor lag per consumer group (high lag = slow consumer).
+Track broker health, replication failures, under-replicated partitions.
+
+Use tools like:
+    Kafka Manager, Confluent Control Center
+    Prometheus + Grafana dashboards
+    Burrow for consumer lag monitoring
+
+
+
+🔥 Interview Questions Based on This
+
+
+| Question                                     | What they look for                              |
+| -------------------------------------------- | ----------------------------------------------- |
+| How does Kafka ensure ordering?              | Per-partition ordering                          |
+| What is the role of a key in Kafka messages? | Partition assignment                            |
+| How do you guarantee at-least-once delivery? | Manual offset commits + idempotency             |
+| How do you handle failed messages?           | Dead-letter topics                              |
+| Difference between Kafka and RabbitMQ?       | Log-based vs queue-based                        |
+| When would you use Kafka?                    | High throughput, durability, event sourcing     |
+| How do you handle slow consumers?            | Monitor lag + scale consumers                   |
+| What happens if a consumer crashes?          | Offset tracking ensures restart from last point |

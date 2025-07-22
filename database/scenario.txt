@@ -1,4 +1,4 @@
-Finding Duplicates from a Table (SQL)
+1.Finding Duplicates from a Table (SQL)
 
 SELECT email, COUNT(*) as count
 FROM users
@@ -6,56 +6,288 @@ GROUP BY email
 HAVING COUNT(*) > 1;
 
 
-Read Large Sets of Data from CSV and Insert into DB
-Pooling in Databases
-Handling Slow Queries (Indexing Best Practices,limit/offset ,sharding)
-Normalisation
-Second Largest Salary (SQL Query)
-LEFT JOIN vs RIGHT JOIN
-Column Join and DB Join in NestJS
-SQL Injection and Security Without ORM
-Database Migrations
+2. Read Large Sets of Data from CSV and Insert into DB
 
-Reading Large Datasets with Streams
-Database Query Optimization (Indexing)
-Comparison of TypeORM vs Sequelize
+Problem: Loading a huge CSV (e.g., 1M rows) can crash memory.
+✅ Solution: Use streams + batch inserts:
 
-Table Design for Categories, Subcategories, etc.
+const fs = require('fs');
+const csv = require('csv-parser');
+const pool = require('./db'); // use pg or mysql2
 
-2nd hisghest salery
-select name,Salary from Users where salery= (select Max(salery) from users < (select Max(salery) from users))
+const stream = fs.createReadStream('bigfile.csv').pipe(csv());
+let batch = [];
 
-SELECT name, MAX(salary) AS salary 
-FROM Users 
-WHERE salary < (SELECT MAX(salary) FROM Users);
+stream.on('data', async (row) => {
+  batch.push(row);
+  if (batch.length === 1000) {
+    await insertBatch(batch);
+    batch = [];
+  }
+});
+
+stream.on('end', async () => {
+  if (batch.length) await insertBatch(batch);
+  console.log('✅ Done inserting');
+});
+
+async function insertBatch(rows) {
+  // use bulk insert query here
+}
+
+
+
+
+3. Pooling in Databases
+
+Problem: Opening new DB connection for every request is slow and wasteful.
+✅ Solution: Use connection pooling
+
+const { Pool } = require('pg');
+const pool = new Pool({ max: 10 });
+
+const result = await pool.query('SELECT * FROM users');
+
+
+In NestJS
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'user',
+      password: 'pass',
+      database: 'mydb',
+      synchronize: true,
+      poolSize: 10
+    })
+  ],
+})
+
+
+
+
+
+4. Handling Slow Queries (Indexing Best Practices,limit/offset ,sharding)
+
+🔸 a. Indexing Best Practices
+        Index columns used in WHERE, JOIN, ORDER BY.
+        Don’t over-index (writes get slower).
+        Composite indexes: (status, created_at)
+
+->CREATE INDEX idx_status_created ON orders(status, created_at);
+
+
+🔸 b. Limit/Offset
+        Use LIMIT + OFFSET for pagination but not for large data (slow at high offsets).
+
+SELECT * FROM users ORDER BY id LIMIT 10 OFFSET 100;
+
+✅ Prefer cursor-based pagination for better performance.
+
+🔸 c. Sharding
+        Split data across DBs by user_id % 2 or regions.
+        Useful when single DB hits vertical limits.
+
+
+5. Normalisation
+
+Goal: Avoid duplicate data, make updates consistent.
+Example: Product and Category
+            Product table: id, name, category_id
+            Category table: id, name
+Instead of storing category_name inside every product row.
+
+✅ Use 3rd Normal Form (3NF):
+    Every non-key depends only on the key.
+
+
+
+
+
+6. Second Largest Salary (SQL Query)
+
+    SELECT MAX(salary) AS second_highest
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+
+
+7. LEFT JOIN vs RIGHT JOIN
+
+| JOIN Type      | Meaning                                     |
+| -------------- | ------------------------------------------- |
+| **LEFT JOIN**  | All records from left + matching from right |
+| **RIGHT JOIN** | All records from right + matching from left |
+
+
+8. Column Join and DB Join in NestJS
+
+Column Join: Fetch related data manually (2 queries)
+DB Join: Use ORM relation decorators (@ManyToOne, @JoinColumn)
+
+    @Entity()
+export class Order {
+  @ManyToOne(() => User, user => user.orders)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+}
+
+
+
+
+9. SQL Injection and Security Without ORM
+
+Avoid:
+        db.query(`SELECT * FROM users WHERE email = '${input}'`); // ❌ injection risk
+
+✅ Use parameterized queries:
+
+        db.query('SELECT * FROM users WHERE email = $1', [input]);
+
+
+10. Database Migrations
+
+Used to version your schema and track changes.
+✅ With TypeORM:
+
+npm run typeorm migration:generate -- -n CreateUsers
+npm run typeorm migration:run
+
+✅ With Sequelize:
+
+npx sequelize-cli migration:generate --name create-users
+
+
+
+11. Reading Large Datasets with Streams
+
+
+Use Node.js streams to avoid memory overload:
+const stream = db.query(new Cursor('SELECT * FROM large_table'));
+stream.read(1000, (err, rows) => { /* handle rows */ });
+✅ Use pg-cursor for PostgreSQL.
+
+
+
+
+
+
+12. Database Query Optimization (Indexing)
+
+Use EXPLAIN ANALYZE to check slow queries
+Use covering indexes
+Avoid SELECT *, fetch only needed fields
+Avoid functions on indexed columns (WHERE UPPER(name) breaks index)
+
+
+13. Comparison of TypeORM vs Sequelize
+
+| Feature        | **TypeORM**               | **Sequelize**                     |
+| -------------- | ------------------------- | --------------------------------- |
+| Language       | TypeScript-first          | JS-first (TS support via typings) |
+| Decorators     | ✅ Native support          | ❌ Needs manual setup              |
+| Query Builder  | Strong                    | Moderate                          |
+| Migrations     | Powerful (built-in)       | CLI based                         |
+| Community      | Large in NestJS ecosystem | Popular in JS-only apps           |
+| Learning Curve | Medium                    | Easier to get started             |
+
+
+14. Table Design for Categories, Subcategories, etc.
+
+    CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT,
+  parent_id INT REFERENCES categories(id)
+);
+
+✅ This supports:
+Top-level categories (parent_id = NULL)
+Nested subcategories (parent_id = category_id)
+
+
+
+
 
 ##How indexing works in mysql/postgres
-In both MySQL and PostgreSQL, indexes improve query performance by reducing the amount of data that must be scanned. However, indexing strategies should be carefully planned to balance the speed of reads versus the overhead on writes.
+
+An index is like a book's table of contents. It speeds up data retrieval by avoiding full table scans.
+
+🧠 Simple Analogy:
+Imagine a phonebook 📕 with names in alphabetical order. To find "Ravi", you don't flip every page — you jump directly to "R". That’s what an index does.
+
+
+⚙️ Internals: How It Works
+🔹 MySQL (InnoDB) and PostgreSQL both use:
+        B-Tree (Balanced Tree) for most indexing
+        Allows log(n) search time
+        Maintains sorted order of keys
+
+📍When We Query:
+SELECT * FROM users WHERE email = 'x@example.com';
+
+
+Without index:
+            Full table scan (check every row)
+
+With index:
+            Jumps directly to the row via B-Tree
+            Skips unrelated rows
+
+
+
+🔍 Index Types (Basics):
+            | Index Type          | Use Case                             |
+| ------------------- | ------------------------------------ |
+| **Primary Index**   | Automatically created on primary key |
+| **Unique Index**    | Ensures uniqueness of a column       |
+| **Composite Index** | Index on multiple columns            |
+| **Partial Index**   | (Postgres only) Index subset of rows |
+| **Full-Text Index** | For fast text search                 |
+| **GIN/Hash**        | (Postgres) for JSONB, arrays, etc.   |
+
+
+
+⚠️ When Not to Use Index:
+
+For columns with lots of duplicate values (like gender, isActive)
+On frequently updated columns (because index maintenance is costly)
+If the table is small — index doesn’t add value
+
+
+
+🧪 Example in MySQL/Postgres
+📦 Create Index
+
+CREATE INDEX idx_email ON users(email);
+
+
+📊 View Indexes
+
+-- MySQL
+SHOW INDEXES FROM users;
+
+-- PostgreSQL
+SELECT * FROM pg_indexes WHERE tablename = 'users';
+
+
+⚡ Performance Comparison
+
+| Without Index   | With Index       |
+| --------------- | ---------------- |
+| 100,000 rows    | 100,000 rows     |
+| Query took 4.2s | Query took 0.05s |
 
 
 
 
-###postgres and sql diffrence
+✅ Real-world Advice
+Always index columns used in:
+                WHERE
+                    JOIN ON
+                        ORDER BY
+                            GROUP BY
 
-
-Type of Database:
-
-PostgreSQL: An open-source, object-relational database known for its extensibility and standards compliance.
-SQL Server (Microsoft): A relational database management system (RDBMS) developed by Microsoft, focused on enterprise solutions.
-
-Language Support:
-PostgreSQL: Supports SQL but also extends it with additional features like custom data types, arrays, and full-text search.
-SQL Server: Primarily supports T-SQL (Transact-SQL), which is Microsoft’s proprietary extension of SQL.
-
-Platform Support:
-PostgreSQL: Cross-platform, available on Windows, macOS, and Linux.
-SQL Server: Mostly used in Windows environments, though recent versions support Linux.
-
-Licensing:
-PostgreSQL: Completely free and open-source under the PostgreSQL License.
-SQL Server: Commercial with licensing fees, though there is a free "Express" edition for small-scale applications.
-
-Performance Tuning:
-PostgreSQL: Offers more advanced features like parallel query execution and optimization for read-heavy workloads.
-SQL Server: Highly optimized for enterprise-level applications with a strong focus on write-heavy operations.
-For interviews, the key differences focus on extensibility, cross-platform availability, and open-source nature (PostgreSQL) vs. enterprise features and commercial licensing (SQL Server).
+Use composite index if multiple filters used together
+Monitor with EXPLAIN or EXPLAIN ANALYZE to see index usage

@@ -1,0 +1,96 @@
+✅ What is Caching?
+Caching is storing frequently accessed data in a fast, in-memory store (like Redis) to reduce DB/API calls, improve performance, and decrease latency.
+
+
+Q1. What are the types of caching?
+
+In-Memory Cache (Local):
+E.g., Node.js app using Map, LRU Cache.
+Fast but not shared across multiple instances.
+
+Distributed Cache (External):
+E.g., Redis, Memcached.
+Shared across services, suitable for scaling.
+
+
+
+Q2. Where can caching be applied?
+
+Client-side (e.g., browser HTTP cache, localStorage)
+CDN Layer (e.g., Cloudflare, Akamai) — Static assets
+Reverse Proxy Cache (e.g., NGINX, Varnish)
+Application-level (e.g., Redis cache middleware)
+Database-level (e.g., PostgreSQL query result cache)
+ORM-level (TypeORM/Sequelize with cache plugin)
+
+
+Q3. What is Cache Invalidation?
+
+When data in the DB changes, the cache must also be updated/removed. Invalidation strategies:
+Write-through: Update cache and DB at the same time.
+Write-behind: Write to cache first, then asynchronously update DB.
+Cache-aside (Lazy loading): App checks cache → if not found, fetch from DB and populate cache.
+
+
+Q4. What is Cache Stampede and how to avoid it?
+
+Happens when many clients hit the DB at once because the cache is expired/missing.
+
+Solution:
+Add random expiration jitter to TTLs.
+Use locking/mutex when populating missing cache entries (only 1 request hits DB).
+
+
+
+
+Q5. How do you implement caching in Node.js?
+
+
+const redis = require('redis');
+const client = redis.createClient();
+
+async function getUser(id) {
+  const cacheKey = `user:${id}`;
+  const cached = await client.get(cacheKey);
+  
+  if (cached) return JSON.parse(cached);
+
+  const user = await db.findUserById(id);
+  await client.setEx(cacheKey, 60, JSON.stringify(user)); // TTL 60s
+  return user;
+}
+
+
+
+Q6. What data should NOT be cached?
+
+Sensitive data (e.g., tokens, passwords)
+Frequently changing data (like stock prices, real-time chats)
+Personalised/private content per user unless segregated properly
+
+
+Q7. Redis vs Memcached?
+
+| Feature     | Redis                        | Memcached        |
+| ----------- | ---------------------------- | ---------------- |
+| Data Types  | Strings, Lists, Sets, Hashes | Strings only     |
+| Persistence | Yes                          | No               |
+| Pub/Sub     | Yes                          | No               |
+| Use Case    | Complex app data             | Simple key-value |
+
+
+
+Q8. Can you cache POST requests or only GET?
+
+Mostly GET requests are cached.
+But you can cache POST responses for idempotent or computational-heavy calls if the input (body) is used as a key.
+
+
+
+🧠 Real-world caching scenarios
+
+Product search results
+User profile info
+Geo-location API
+Access tokens (short-lived)
+

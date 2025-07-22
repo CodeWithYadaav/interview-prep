@@ -1,42 +1,271 @@
-Basics of Kafka
-What is Apache Kafka, and what are its key use cases?
-Discuss real-time data pipelines, stream processing, messaging, etc.
-What are the core components of Kafka?
-Explain topics, partitions, producers, consumers, brokers, and zookeeper.
-How does Kafka ensure durability and fault tolerance of messages?
-What is a Kafka topic, and how does Kafka manage partitions?
-How does Kafka handle message ordering and delivery guarantees?
-Explain at-most-once, at-least-once, and exactly-once delivery semantics.
-How do Kafka producers and consumers work?
-Talk about producing messages, consuming them, and consumer groups.
-What is the role of Zookeeper in Kafka?
-What are Kafka brokers, and how do they work together to form a cluster?
-What is the difference between Kafka and traditional message brokers (e.g., RabbitMQ, ActiveMQ)?
-Kafka Architecture and Concepts
-Explain how Kafka handles data replication across brokers.
-What is ISR (In-Sync Replica)?
-What are Kafka partitions, and why are they important for scalability?
-How do Kafka consumers handle partition assignments, and what is consumer group rebalancing?
-What happens if a Kafka broker goes down? How does Kafka handle failures?
-How does Kafka handle offset management, and why is it important?
-Discuss how consumers commit offsets.
-What are Kafka connectors, and how do they fit into Kafka's ecosystem?
-Discuss Kafka Connect for data ingestion and integration.
-What is Kafka Streams, and how does it enable real-time stream processing?
-Performance and Scaling Kafka
-How do you ensure that Kafka can handle high throughput?
-Discuss tuning configurations like batch size, compression, and partitioning.
-How do you scale Kafka horizontally and vertically?
-What are the best practices for partitioning topics in Kafka for optimal performance?
-How do you monitor and troubleshoot Kafka performance issues?
-Kafka Advanced Concepts
-What is the difference between compacted topics and regular topics in Kafka?
-What is Kafka exactly-once semantics, and how is it achieved?
-How does Kafka ensure data consistency across distributed systems?
-What are Kafka inter-broker replication and cross-cluster replication, and when are they used?
-How do you secure a Kafka cluster?
-Discuss SSL, Kerberos, and SASL authentication.
-How does Kafka handle large messages, and what is the maximum size of a message?
-How would you design a Kafka-based architecture for a large-scale, high-availability system?
-Explain the role of Kafka retention policies and log compaction.
-What is Kafka Consumer Lag, and how do you monitor and minimize it?
+✅ 1. What is Kafka and how does it work?
+
+Apache Kafka is a distributed, fault-tolerant streaming platform used to build real-time data pipelines and event-driven systems.
+Producer sends messages to topics.
+Each topic is split into partitions.
+Brokers manage partitions.
+Consumers read messages from partitions.
+Consumer groups enable parallel processing
+
+
+✅ 2. When would you use Kafka in a backend system?
+
+To decouple microservices (event-driven architecture)
+For high-throughput data ingestion (logs, analytics)
+To ensure durability and replay of events
+For building a distributed queue with horizontal scalability
+Real-time notification systems, audit logs, fraud detection
+
+
+✅ 3. What are Kafka partitions and why are they important?
+
+Partitions allow a topic to scale horizontally.
+Each partition is append-only and ordered.
+Parallelism: Each partition can be processed by a separate consumer.
+Offset is the index of a message in a partition; clients track offsets to resume processing.
+
+
+
+✅ 4. What is the difference between Kafka and a traditional message queue like RabbitMQ?
+
+| Feature                | **Kafka**                         | **RabbitMQ**                        |
+| ---------------------- | --------------------------------- | ----------------------------------- |
+| **Model**              | Log-based, pub/sub                | Broker-based queue                  |
+| **Message Ordering**   | Per partition                     | FIFO per queue (can vary)           |
+| **Retention**          | Time/size-based (default: 7 days) | Deletes message after it's read     |
+| **Replay**             | Yes (via offset)                  | No native replay (unless persisted) |
+| **Throughput**         | High                              | Moderate                            |
+| **Message Durability** | Highly durable (log-structured)   | Durable but slower                  |
+| **Use Case**           | Event streaming                   | Task/work queues                    |
+
+
+
+✅ 5. When would you choose RabbitMQ over Kafka and vice versa?
+
+📌 Use Kafka when:
+You need high throughput, event replay, and real-time analytics
+Use cases: event sourcing, stream processing, audit trails
+
+
+📌 Use RabbitMQ when:
+You need complex routing, acknowledgements, or priority queues
+Use cases: job/task queues, RPC, per-request processing
+
+
+✅ 6. How do you ensure message durability in Kafka?
+
+Set acks=all in the producer to wait for all ISR (in-sync replicas)
+Use replication (e.g., replication.factor = 3)
+Enable log persistence
+Use reliable disks (SSD), avoid acks=0 or acks=1 for critical data
+
+
+✅ 7. How do you handle message failures or retries in Kafka consumers?
+
+Use manual offset commits (process → success → commit)
+Implement DLQs (Dead Letter Queues) manually (Kafka doesn’t provide natively)
+Track retry attempts in payload or headers
+Retry via:
+    Separate retry topic
+    Backoff strategies (e.g., exponential)
+
+
+✅ 8. What happens if a Kafka consumer crashes before committing the offset?
+
+Upon restart, it will reprocess messages from the last committed offset.
+This ensures at-least-once delivery (could lead to duplicates).
+Idempotent consumers help prevent side effects on reprocessing.
+
+
+
+✅ 9. How does Kafka achieve fault tolerance and high availability?
+
+Replication: Each partition is replicated across brokers.
+Leader election: One broker is the leader for each partition.
+ZooKeeper (or KRaft mode in new Kafka) manages broker metadata.
+Consumers can reconnect to available brokers if one goes down.
+
+
+
+✅ 10. How do you monitor and scale Kafka in production?
+
+Metrics:
+    Lag (using Kafka Exporter + Prometheus + Grafana)
+    Throughput (bytes/sec), active consumers, ISR count
+Scaling:
+    Increase partition count (for more parallelism)
+    Add brokers (for better fault tolerance & storage)
+    Reassign partitions across brokers if needed
+
+
+
+✅ 11. What are Kafka Consumer Groups and how do they work?
+
+Consumers in the same group ID divide partitions amongst themselves.
+Only one consumer per group reads from a partition.
+Enables scalable parallel processing.
+Kafka tracks offsets per group + topic + partition.
+
+
+
+✅ 12. How would you integrate Kafka into a Node.js backend?
+
+Use libraries like:
+    kafkajs
+    node-rdkafka (bindings to C/C++ Kafka client)
+Setup producer and consumer services
+Use batching or compression for performance
+
+
+
+✅ 13. How do you ensure exactly-once delivery in Kafka?
+
+Producer: Use enable.idempotence=true
+Consumer: Must be idempotent (no side effects on retries)
+Kafka 0.11+ supports exactly-once semantics when used with:
+    Transactions (both producer + consumer are transaction-aware)
+    External systems need 2-phase commit or compensating logic
+
+
+
+
+
+🆚 Kafka vs RabbitMQ Summary Cheat Sheet
+
+| Criteria             | Kafka                          | RabbitMQ                          |
+| -------------------- | ------------------------------ | --------------------------------- |
+| **Best for**         | Event streams, logs, analytics | Task queues, RPC, real-time jobs  |
+| **Replay**           | Yes                            | No                                |
+| **Ordering**         | Per partition                  | Per queue                         |
+| **Persistence**      | Durable (log + replication)    | Durable (but heavier per message) |
+| **Throughput**       | Very high                      | Moderate                          |
+| **Consumer Scaling** | Consumer groups                | Queues + prefetch                 |
+| **Native Delay/TTL** | No                             | Yes                               |
+| **Setup**            | Requires Kafka + Zookeeper     | Lightweight, simple               |
+
+
+
+
+
+Here’s a minimal working example of Kafka with Node.js using the popular kafkajs library. It includes:
+
+✅ Kafka Producer
+✅ Kafka Consumer
+✅ Docker-based Kafka setup
+
+
+📦 Step 1: Kafka Docker Setup (with Zookeeper)
+# docker-compose.yml
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+docker-compose up -d
+
+
+
+📦 Step 2: Install Dependencies
+
+npm init -y
+npm install kafkajs
+
+
+
+
+🧑‍💻 Step 3: Kafka Producer (producer.js)
+
+// producer.js
+const { Kafka } = require('kafkajs');
+
+const kafka = new Kafka({
+  clientId: 'my-producer',
+  brokers: ['localhost:9092']
+});
+
+const producer = kafka.producer();
+
+const run = async () => {
+  await producer.connect();
+
+  for (let i = 0; i < 5; i++) {
+    const result = await producer.send({
+      topic: 'demo-topic',
+      messages: [
+        { value: `Hello Kafka ${i}` },
+      ],
+    });
+
+    console.log('Sent:', result);
+  }
+
+  await producer.disconnect();
+};
+
+run().catch(console.error);
+
+
+
+
+🧑‍💻 Step 4: Kafka Consumer (consumer.js)
+
+// consumer.js
+const { Kafka } = require('kafkajs');
+
+const kafka = new Kafka({
+  clientId: 'my-consumer',
+  brokers: ['localhost:9092']
+});
+
+const consumer = kafka.consumer({ groupId: 'demo-group' });
+
+const run = async () => {
+  await consumer.connect();
+  await consumer.subscribe({ topic: 'demo-topic', fromBeginning: true });
+
+  await consumer.run({
+    eachMessage: async ({ topic, partition, message }) => {
+      console.log({
+        value: message.value.toString(),
+        partition,
+        offset: message.offset,
+      });
+    },
+  });
+};
+
+run().catch(console.error);
+
+
+
+▶️ Step 5: Run Everything
+Start Kafka (if not already):
+docker-compose up -d
+
+Start the consumer:
+node consumer.js
+
+
+Start the producer (in a new terminal):
+
+node producer.js
+
+
+You’ll see the consumer logging messages as they are produced.
+

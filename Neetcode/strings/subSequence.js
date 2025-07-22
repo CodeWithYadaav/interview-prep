@@ -1,14 +1,13 @@
 //Write a function called isSubsequence which takes in two strings and checks whether the characters in the first string form a subsequence of the characters in the second string. In other words, the function should check whether the characters in the first string appear somewhere in the second string, without their order changing.
-function isSubsequence(str1, str2) {
-    var i = 0;
-
-    if (!str1) return true;
-    for (let j = 0; j < str2.length; j++) {
-        if (str2[j] === str1[i]) i++;
-        if (i === str1.length) return true;
+function isSubsequence(small, big) {
+    let i = 0;
+    for (let char of big) {
+        if (char === small[i]) i++;
+        if (i === small.length) return true;
     }
-    return false;
+    return small.length === 0;
 }
+
 
 console.log(isSubsequence("hello", "gejdejfehellojkmmkkm")); // true
 console.log(isSubsequence("sing", "sting")); // true

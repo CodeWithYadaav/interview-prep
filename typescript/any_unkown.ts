@@ -1,44 +1,32 @@
-// What is the difference between the any and unknown types in TypeScript? When would you use one over the other?
-// Provide examples where any and unknown behave differently in TypeScript.
+// 🆚 any vs unknown in TypeScript
+// Both any and unknown are used when you don't know the type of a variable — but they behave differently.
 
-
-
-// In TypeScript, any and unknown are both used to describe variables whose types are not known at the time of writing the code, but they behave quite differently in terms of safety and usage.
-
-// 1. any:
-// Behavior: When a variable is of type any, TypeScript essentially turns off type checking for that variable. You can perform any operation on it without getting type errors.
-// Use Case: It's often used for backward compatibility or when you don’t want TypeScript to check types.
-// Downside: Using any can be unsafe because it allows you to perform operations without any restrictions, leading to potential runtime errors.
-
+// ✅ any – Do anything, but not safe
+// You can do anything with a variable typed as any.
+// TypeScript won’t stop you, even if the code is wrong.
+// It’s like turning off type checking.
 
 let value: any = "Hello";
-value = 10;  // No type errors
-value.toUpperCase();  // No error, but it can crash at runtime if 'value' isn't a string.
+value = 10;
+value.toUpperCase(); // ✅ No error, ❌ but could crash if value isn't a string
 
+// 🔸 Use any when:
+//     You're working with old JS code
+//     You want zero restrictions (but be careful)
 
+// -----------------------------------------------------------------------------------------------------
 
-
-// unknown:
-// Behavior: unknown is a safer alternative to any. It still represents a value with an unknown type, but you must check its type before performing any operation on it. TypeScript will prevent you from directly using it unless you narrow the type.
-// Use Case: It's a good choice when you're unsure about a value’s type but want to enforce type safety.
-// Benefit: Ensures type checks, making your code less error-prone.
-
-
+// ✅ unknown – Must check type first, safer
+// unknown means: “I don’t know the type, but I want safety.”
+// You can’t use it directly — TypeScript forces you to check the type first.
 
 let values: unknown = "Hello";
-value = 10;  // No error
+// value.toUpperCase(); ❌ Error: You must check type
 
-// Cannot directly call methods without a type check
-// value.toUpperCase(); // Error: Object is of type 'unknown'
-
-// Type checking
-if (typeof values === 'string') {
-    value.toUpperCase();  // Safe now
+if (typeof values === "string") {
+  values.toUpperCase(); // ✅ Safe
 }
 
-
-
-// Key Differences:
-// any: No type checking. You can do anything with it, but it's unsafe.
-// unknown: You must check the type before using it. It’s safer and encourages better practices.
-// Using unknown is recommended when the type isn’t known but you still want to enforce safe type handling.
+// 🔸 Use unknown when:
+// The type is unclear (e.g., from user input, APIs)
+// You want to enforce type checking

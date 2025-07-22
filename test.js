@@ -153,37 +153,37 @@
 
 
 
-//observer sideeffects
 
-//event.js
-const EventEmiiter = require('events')
-const eventBus = new EventEmiiter()
-module.exports = eventBus
+function threeSumTarget(arr, target) {
+    arr.sort((a, b) => a - b)
 
+    let res = []
+    for (let i = 0; i < arr.length - 2; i++) {
+        if (i > 0 && arr[i] === arr[i - 1]) continue;
 
-//emitter.js
-import eventBus from ('./event')
+        let left = i + 1
+        let right = arr.length - 1
 
-function placeOrder(order) {
-    console.log('order place ${order.id}')
-    eventBus.emit('orderPlaced', order)
+        while (left < right) {
+            const sum = arr[i] + arr[left] + arr[right]
+            if (sum === target) {
+                res.push([arr[i], arr[left], arr[right]])
+                left++
+                right--
+                while (left < right && arr[left] === arr[left - 1]) left++
+                while (left < right && arr[right] === arr[right + 1]) right--
+            }
+            else if (sum < target) {
+                left++
+            } else {
+                right--
+            }
+
+        }
+
+    }
+    return res
+
 }
 
-module.exports = placeOrder
-
-
-//lisner
-import eventBus from ('./event')
-
-
-eventBus.on('orderPlace', (order) => {
-    console.log(`Email sent to ${order.user} and order is ${order.id}`)
-})
-
-
-//app.js
-
-require('./event')
-import placeOrder from ('./emitter')
-
-placeOrder({ id: '123', user: "praveen@gmail.com" })
+console.log(threeSumTarget([1, 0, -1, 2, -2, 3], 4));

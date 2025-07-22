@@ -1,0 +1,94 @@
+Authentication strategies
+
+
+🔐 1. Session-Based Authentication
+💡 What it is:
+    Traditional login system using server-stored sessions (usually in memory, Redis, or DB).
+    A session ID is stored in a cookie on the client.
+
+✅ Use When:
+    Server-rendered apps (e.g., Express + EJS).
+    Need to easily invalidate sessions.
+    Lower concurrency or horizontal scaling.
+
+🧠 Interview Notes:
+Sessions are stored on the server → scaling requires sticky sessions or shared storage (like Redis).
+Vulnerable to CSRF if not handled carefully.
+
+
+
+🔐 2. Token-Based Authentication (JWT)
+💡 What it is:
+    After login, server returns a JWT signed with a secret/private key.
+    Stateless – server doesn’t store session.
+
+✅ Use When:
+        SPA/Frontend-heavy apps (React, Angular).
+        Mobile or public API-based systems.
+        Need to scale horizontally without worrying about sessions.
+
+🧠 Interview Notes:
+    JWT is self-contained (includes user info, expiry).
+    Store access tokens in memory or secure cookies; never in localStorage.
+    Refresh tokens are longer-lived and should be stored securely (e.g., httpOnly cookies or DB).
+
+
+
+
+
+
+
+🔐 3. OAuth2
+💡 What it is:
+    Delegate login/auth from external providers like Google, GitHub, etc.
+
+✅ Use When:
+    You don’t want to manage credentials (3rd-party login).
+    Apps integrating with other systems (Slack bots, Gmail APIs).
+
+🧠 Interview Notes:
+    Know the Authorization Code Flow (used for secure, server-side apps).
+    Understand scopes, access tokens, and refresh tokens.
+    You may use Passport.js strategies like passport-google-oauth20.
+
+
+
+    🔐 4. API Key Authentication
+💡 What it is:
+    Clients send a static API key with each request.
+    Used for simple, machine-to-machine auth.
+
+✅ Use When:
+    Internal services.
+    Limited usage with low security requirements.
+
+🧠 Interview Notes:
+Not ideal for user-based auth.
+Easy to revoke or rotate, but less secure than OAuth or JWT.
+
+
+
+
+🔐 5. Basic Auth (Base64-encoded credentials)
+💡 What it is:
+    Username and password sent with each request (often Base64-encoded).
+
+✅ Use When:
+    Internal tools or development environments.
+    Simple testing or prototyping.
+
+🧠 Interview Notes:
+    Should always be used with HTTPS.
+    Very rarely used in production for end-users.
+
+
+
+
+| Concept                        | Quick Tip                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| **CSRF vs. XSS**               | Know how cookies make you vulnerable to CSRF and how tokens prevent it.   |
+| **httpOnly Cookies**           | Protect refresh tokens from JS access (XSS protection).                   |
+| **Token Blacklisting**         | Required when using JWTs for logout or revoking access.                   |
+| **2FA/MFA**                    | Add layer via OTP or authenticator apps (TOTP).                           |
+| **Role-Based Access**          | Attach roles/permissions in JWT or DB; enforce on route/middleware level. |
+| **Rate Limiting + Throttling** | Prevent abuse using tools like `express-rate-limit` or Redis counters.    |

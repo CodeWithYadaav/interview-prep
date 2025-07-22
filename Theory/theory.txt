@@ -1,32 +1,21 @@
 Q1
 ✅ What is JavaScript?
 JavaScript is a high-level, interpreted programming language that is:
-
 Primarily used for web development — it adds interactivity, logic, and dynamic content to websites.
-
 Runs in the browser (like Chrome, Firefox) and on the server (via Node.js).
-
 Single-threaded, but asynchronous thanks to the event loop (more on this if needed).
-
 Dynamically typed — variable types are determined at runtime.
-
 Prototype-based object-oriented — uses prototypes instead of classical classes (though ES6 introduced class syntax as sugar).
+
 
 ✅ Core Uses of JavaScript:
 Client-side scripting (running in the browser):
-
 DOM manipulation (e.g., updating HTML content)
-
 Form validation
-
 Handling user events (clicks, keypresses)
-
 Server-side scripting (via Node.js):
-
 Building APIs
-
 Handling file systems, databases
-
 Real-time applications (e.g., chat apps)
 
 
@@ -45,9 +34,7 @@ Uses npm	Node Package Manager (npm) hosts thousands of libraries and modules.
 
 🧠 Why Use Node.js?
 To build fast, scalable network applications (e.g., REST APIs, real-time chat apps).
-
 To reuse JavaScript across frontend and backend.
-
 Excellent for event-driven applications like real-time messaging or streaming.
 
 // server.js
@@ -97,13 +84,10 @@ greet('praveen',message)
 
 ✅ 2. Promise
 A Promise is an object that represents the eventual completion (or failure) of an async operation.
-
 It has 3 states:
 
 pending
-
 fulfilled
-
 rejected
 
 🔸 Example:
@@ -122,6 +106,10 @@ fetchData().then((result) => {
   console.error(error);
 });
 🧠 Promises help flatten nested code and handle errors better than callbacks.
+
+
+
+
 
 ✅ 3. async/await (introduced in ES2017)
 async/await is syntactic sugar over promises — makes asynchronous code look like synchronous.
@@ -178,7 +166,6 @@ value.nonExistent(); // ✅ OK, no error from TypeScript
 🔸 Example with unknown:
 
 let value: unknown = "hello";
-
 value.toUpperCase(); // ❌ Error: Object is of type 'unknown'
 
 if (typeof value === "string") {
@@ -186,9 +173,11 @@ if (typeof value === "string") {
 }
 ✅ Forces you to narrow the type (e.g., with typeof, instanceof, or custom guards) before using it.
 
+
+
+
 ✅ When to Use
 Use any if you want to opt out of type checking temporarily.
-
 Use unknown when you don’t yet know the type, but want type safety and force proper checks before using the value.
 
 🔐 Interview Tip
@@ -254,11 +243,8 @@ setImmediate
 ✅ Explanation:
 
 Main runs first (synchronous).
-
 Promise (microtask) runs next — before timers.
-
 Then setTimeout (in the timers phase).
-
 Then setImmediate (in the check phase).
 
 🧠 Interview Tip:
@@ -271,13 +257,9 @@ The event loop lets Node.js handle many connections and I/O operations without b
 
 Q6
 ✅ What is error handling?
-
 ✅ How it works in JavaScript/TypeScript
-
 ✅ Common error types
-
 ✅ Exceptional cases (real-world scenarios)
-
 ✅ Best practices
 
 ✅ 1. What is Error Handling?
@@ -348,15 +330,10 @@ try {
 }
 ✅ 5. Best Practices
 ✅ Always handle async errors with try/catch or .catch()
-
 ✅ Never ignore errors (don’t leave empty catch blocks)
-
 ✅ Use custom error classes for better error types
-
 ✅ Log errors with enough context (timestamp, userId, etc.)
-
 ✅ Avoid exposing raw errors to users (security risk)
-
 ✅ Use Error Boundaries in React for rendering errors
 
 🧠 In Interviews Say:
@@ -430,11 +407,8 @@ Question
 Logging and Monitoring for Errors
 ✅ Logging and Monitoring for Errors — Interview-Ready Explanation
 Logging and monitoring are essential in real-world apps to:
-
 Detect and debug errors in production
-
 Track usage patterns and performance bottlenecks
-
 Alert developers when something breaks
 
 ✅ 1. What is Logging?
@@ -474,13 +448,9 @@ Monitoring means continuously tracking your application’s health, performance,
 
 🔸 What you monitor:
 API error rates
-
 Request/response time
-
 CPU/memory usage
-
 Database timeouts
-
 Uncaught exceptions
 
 🔸 Popular Monitoring Tools:
@@ -502,24 +472,17 @@ try {
   Sentry.captureException(err);
 }
 ✅ Sentry shows:
-
 Stack trace
-
 Affected user
-
 Error frequency
 
 Affected environments (prod/staging)
 
 ✅ 4. Best Practices for Logging & Monitoring
 ✅ Don’t log sensitive data (passwords, tokens)
-
 ✅ Use structured logs (JSON format) for better parsing
-
 ✅ Tag logs with userId, requestId, timestamp
-
 ✅ Separate logs by environment (prod vs dev)
-
 ✅ Set up alerts (Slack, email) for error spikes
 
 🧠 Interview One-Liner:
@@ -582,7 +545,8 @@ app.post("/users", (req, res) => {
   return res.status(409).json({ error: "User already exists" });
 });
 ✅ Interview One-Liner:
-"I use HTTP status codes to signal the result of client requests clearly — 2xx for success, 4xx for client-side validation or auth errors, and 5xx for server issues. This helps frontend and backend communicate effectively."
+"I use HTTP status codes to signal the result of client requests clearly — 2xx for success, 4xx for client-side validation or auth errors, and 5xx for server issues. 
+This helps frontend and backend communicate effectively."
 
 
 

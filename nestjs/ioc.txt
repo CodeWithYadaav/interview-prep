@@ -1,0 +1,88 @@
+🔄 What is Inversion of Control (IoC) in NestJS?
+Inversion of Control (IoC) is a design principle where the control of creating and managing dependencies is shifted from the class itself to a framework — in our case, NestJS.
+
+In simple words:
+Instead of a class manually creating its dependencies, the framework provides them.
+
+🧠 Real-world analogy:
+Imagine a restaurant kitchen.
+A chef (your class) doesn’t go out to buy ingredients (dependencies).
+The kitchen staff (NestJS IoC container) provides them.
+
+
+
+
+🔍 Without IoC (bad practice):
+class UserService {
+  private db = new Database(); // tightly coupled
+}
+
+Here, UserService is responsible for creating Database — not flexible or testable.
+
+
+
+✅ With IoC in NestJS (good practice):
+
+@Injectable()
+class UserService {
+  constructor(private readonly db: Database) {}
+}
+
+Now NestJS (IoC container) creates and injects Database when it creates UserService.
+
+
+
+🚀 How NestJS implements IoC:
+Decorator @Injectable() tells Nest: this class can be managed (instantiated, injected).
+Module providers array tells Nest what dependencies it can inject.
+Constructor injection pulls dependencies in automatically.
+
+
+
+
+
+// database.service.ts
+@Injectable()
+export class DatabaseService {
+  query(sql: string) {
+    return `Querying: ${sql}`;
+  }
+}
+
+// user.service.ts
+@Injectable()
+export class UserService {
+  constructor(private readonly db: DatabaseService) {}
+
+  getUser() {
+    return this.db.query('SELECT * FROM users');
+  }
+}
+
+
+ts filter// app.module.ts
+@Module({
+  providers: [DatabaseService, UserService],
+})
+export class AppModule {}
+
+
+
+
+💡 Why is IoC important?
+
+| Benefit        | Description                                             |
+| -------------- | ------------------------------------------------------- |
+| 🔌 Decoupling  | Classes don’t need to know how dependencies are created |
+| 🧪 Testability | Easy to mock dependencies in tests                      |
+| ♻️ Reusability | Dependencies can be shared                              |
+| 📈 Scalability | Great for growing apps with many modules                |
+
+
+
+
+🟢 Summary
+IoC = Framework controls object creation and injection.
+DI (Dependency Injection) = A way to implement IoC.
+In NestJS, IoC is powered by DI + decorators + modules.
+Makes your app modular, testable, and clean.

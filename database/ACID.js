@@ -2,27 +2,26 @@
 
 // ###################################################ACID########################################################
 // ===============================
-// 1. Atomicity:
+// 1. Atomicity = All or Nothing
 // ===============================
 
 // - Definition: Ensures that each transaction is "all or nothing." If any part of the transaction fails, the entire transaction is rolled back, leaving the database unchanged.
 // - Example: In a bank transfer, either both the debit and credit happen, or neither does.
 
-function transferMoney(fromAccount, toAccount, amount) {
+function transferMoney(from, to, amount) {
     try {
-        // Start transaction
-        debit(fromAccount, amount);
-        credit(toAccount, amount);
-        // Commit transaction
-        console.log("Transaction successful");
-    } catch (error) {
-        // Rollback transaction if any step fails
-        console.error("Transaction failed, rolling back...");
+        debit(from, amount);    // Take money from sender
+        credit(to, amount);     // Add money to receiver
+        console.log("✅ Transfer successful");
+    } catch (e) {
+        console.log("❌ Transfer failed — rolling back");
     }
 }
+//   🧠 Example: If the debit works but credit fails, we undo the whole thing.
+
 
 // ===============================
-// 2. Consistency:
+// 2.  Consistency = Data Always Makes Sense
 // ===============================
 
 // - Definition: Guarantees that a transaction will bring the database from one valid state to another, maintaining database integrity. This means all rules, such as constraints, are enforced, ensuring that only valid data is saved.
@@ -30,56 +29,58 @@ function transferMoney(fromAccount, toAccount, amount) {
 
 function debit(account, amount) {
     if (account.balance < amount) {
-        throw new Error("Insufficient balance");
+        throw new Error("Not enough money");
     }
     account.balance -= amount;
-    save(account);  // Save only valid states of account
+    save(account); // Save only valid data
 }
 
+// 🧠 Example: You can’t have ₹-500 in your account if rules don’t allow it.
+
+
 // ===============================
-// 3. Isolation:
+// 3.  Isolation = No Interference
+// Transactions don’t mess with each other, even if run at the same time.
 // ===============================
 
 // - Definition: Ensures that the execution of a transaction is independent of other concurrent transactions. Each transaction behaves as if it is the only one happening, avoiding conflicts from simultaneous operations.
 // - Example: Two users withdrawing money from the same account at the same time should not cause inconsistent balance updates.
 
 async function withdraw(account, amount) {
-    await lockAccount(account);  // Lock the account to prevent concurrent operations
+    await lock(account); // Prevent others from using it now
     try {
         if (account.balance >= amount) {
             account.balance -= amount;
             save(account);
         } else {
-            throw new Error("Insufficient balance");
+            throw new Error("Insufficient funds");
         }
     } finally {
-        unlockAccount(account);  // Unlock the account after operation completes
+        unlock(account); // Allow others after we're done
     }
 }
 
-// ===============================
-// 4. Durability:
-// ===============================
+// 🧠 Example: Two people withdrawing at once won’t break the balance.
 
-// - Definition: Ensures that once a transaction is committed, it remains permanent, even in the event of a system crash or failure. The changes made by the transaction will persist.
-// - Example: After a successful transfer, even if the server crashes, the transaction should not be lost.
+
+
+// ===============================
+// 4.  Durability = Changes Stay Saved
+// Once a transaction is saved, it stays — even after a crash.
+// ===============================
 
 function commitTransaction() {
-    // Data is persisted to permanent storage
-    persistToDatabase();
-    console.log("Transaction committed and durable.");
+    saveToDisk();  // Save to permanent storage
+    console.log("✅ Changes saved forever");
 }
+//   🧠 Example: If money was transferred, it stays transferred even after a power cut.
 
-// Example usage (Test the above functions)
+
+
+// ----------------------------------------------------------------------------------------------------------------------------
+// 🔁 Test it Out
 const accountA = { balance: 1000 };
 const accountB = { balance: 500 };
 
-// Simulate a transfer from account A to account B
-transferMoney(accountA, accountB, 200); // Successful transaction
-
-// Try to debit an amount larger than the balance
-try {
-    debit(accountA, 1200);  // Should throw an error
-} catch (error) {
-    console.error(error.message);  // "Insufficient balance"
-}
+transferMoney(accountA, accountB, 200); // ✅ works
+transferMoney(accountA, accountB, 2000); // ❌ fails, not enough money

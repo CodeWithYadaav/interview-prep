@@ -1,0 +1,53 @@
+✅ API Security – Key Concepts Asked in Interviews
+
+1. Authentication
+
+What: Verifies who the user is.
+How:
+    JWT (JSON Web Token) – widely used in stateless APIs
+    OAuth 2.0 – token-based, third-party login
+    API Keys – simple, used in internal/low-risk APIs
+
+
+
+2. Authorization
+What: Verifies if a user has permission to access a resource.
+How:
+    Role-based Access Control (RBAC) – Admin, User, Editor, etc.
+    Attribute-based Access Control (ABAC) – Based on user/device/context
+
+3. Rate Limiting
+What: Prevents abuse (DoS, brute force)
+How:
+    Tools like Nginx, API Gateway, or Redis-based leaky bucket
+
+
+
+4. Input Validation
+What: Prevents malicious payloads
+How:
+    Use validation libraries (Joi, Zod)
+    Sanitize inputs to avoid SQL Injection, XSS, etc.
+
+
+
+5. HTTPS Everywhere
+    Enforce SSL/TLS (HTTPS) to encrypt data in transit.
+
+
+
+6. Logging & Monitoring
+    Use structured logs, alert on anomalies (spikes, repeated 401s).
+    Tools: ELK, Prometheus, Datadog
+
+
+
+7. CORS Policies
+Define who can call your API from the browser (Frontend origin)
+
+
+
+8. Security Headers
+Set headers like:
+    X-Frame-Options, Content-Security-Policy, Strict-Transport-Security
+

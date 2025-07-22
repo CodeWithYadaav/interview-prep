@@ -1,0 +1,54 @@
+🧠 Q1: What is V8 in Node.js?
+
+V8 is the JavaScript engine developed by Google (used in Chrome and Node.js) that compiles JavaScript directly to machine code, making it fast and efficient.
+
+
+
+💡 Key Points to Mention in Interviews:
+Written in C++ and used in Chrome and Node.js
+Compiles JS to machine code using Just-In-Time (JIT) compilation
+Manages memory, garbage collection, and execution stack
+Does not include APIs like fs, http — Node.js provides those
+
+
+Sample Answer
+V8 is the high-performance JavaScript engine that powers Node.js. It compiles JavaScript code to native machine code using JIT compilation.
+ While V8 executes JS, Node.js wraps it with C++ bindings and APIs like file system or networking.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+⚖️ V8 vs Worker Threads
+
+ | Feature    | V8                       | Worker Threads                 |
+| ---------- | ------------------------ | ------------------------------ |
+| Purpose    | JS execution engine      | Multithreading for heavy tasks |
+| Built by   | Google                   | Node.js (on top of V8)         |
+| Handles    | JS execution, memory, GC | CPU-bound parallel operations  |
+| Blocking   | No                       | Prevents blocking main thread  |
+| API Access | No Node APIs             | Limited, has messaging only    |

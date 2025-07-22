@@ -1,29 +1,106 @@
-Basics of Docker
-What is Docker, and how does it differ from a virtual machine?
-What are the main components of Docker architecture?
-Explain Docker Engine, Docker Image, Docker Container, and Docker Registry.
-What is a Docker image, and how is it different from a container?
-What are the Dockerfile instructions, and how are they used to build Docker images?
-What is the purpose of the docker-compose tool, and how is it different from docker run?
-How do you create, start, stop, and remove Docker containers?
-Use commands like docker run, docker stop, docker rm, docker ps, etc.
-How do you handle persistent data in Docker containers?
-Discuss Docker volumes and bind mounts.
+🔹 1. What is Docker and why is it used?
+
+Docker is a platform for developing, shipping, and running applications in isolated environments called containers.
+It allows developers to package applications along with their dependencies, ensuring consistency across environments (dev, test, prod).
 
 
-Intermediate to Advanced Docker
-How do you optimize Docker images for faster build times and smaller size?
-What is the difference between CMD and ENTRYPOINT in Docker?
-How does Docker handle networking, and what are the different types of Docker networks?
-Bridge, host, overlay, etc.
-How can you connect multiple containers in a Docker environment using docker-compose?
-What is the difference between Docker copy and Docker volume?
-How do you manage multiple environments (development, testing, production) using Docker?
-What is a multi-stage build in Docker, and how does it work?
-How do you troubleshoot slow performance in a Docker container?
-What security best practices should be followed when using Docker containers?
-Docker Orchestration
-What is Docker Swarm, and how is it different from Kubernetes?
-How do you scale Docker containers using Docker Swarm or Kubernetes?
-How do you ensure high availability and fault tolerance in a Docker Swarm cluster?
-What are Docker services and stacks, and how do they work in Docker Swarm?
+🔹 2. What is the difference between Docker containers and virtual machines (VMs)?
+| Docker Container      | Virtual Machine         |
+| --------------------- | ----------------------- |
+| Lightweight           | Heavyweight             |
+| Shares host OS kernel | Has its own OS          |
+| Starts in seconds     | Takes minutes to boot   |
+| Uses less memory      | Requires more resources |
+
+
+
+🔹 3. What are the basic Docker components?
+
+Dockerfile: Instructions to build a Docker image.
+Docker Image: Blueprint of the application environment.
+Docker Container: Running instance of an image.
+Docker Hub: Registry of Docker images.
+Docker Compose: Tool to run multi-container applications.
+
+
+🔹 4. How do you create a Docker image for a Node.js app?
+
+# Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "index.js"]
+
+
+Then build and run:
+docker build -t my-node-app .
+docker run -p 3000:3000 my-node-app
+
+
+
+🔹 5. How do you persist data in Docker containers?
+
+----->Use volumes or bind mounts.
+docker run -v mydata:/app/data my-node-app
+
+This persists /app/data even if the container is destroyed.
+
+
+
+🔹 6. What is the difference between COPY and ADD in Dockerfile?
+
+COPY: Copies files/directories from the host.
+ADD: Same as COPY + can unpack .tar files and download URLs.
+Prefer COPY unless you specifically need ADD's extra features.
+
+
+
+ 7. How do you connect containers together?
+
+Via a Docker network.
+With Docker Compose, it's easier.
+
+Example (docker-compose.yml):
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: example
+
+
+In the Node.js code, you can access DB via db:5432.
+
+
+🔹 8. How do you reduce Docker image size?
+
+Use multi-stage builds.
+Use lightweight base images (e.g., node:alpine).
+Remove unnecessary files.
+Use .dockerignore to skip copying files like node_modules.
+
+
+🔹 9. What happens when you run docker-compose up?
+
+Reads docker-compose.yml.
+Builds images if needed.
+Creates a default network.
+Starts all defined containers.
+Attaches logs to your terminal.
+
+
+
+🔹 10. How do you debug a running container?
+
+docker exec -it <container_id> /bin/sh
+
+docker logs <container_id>
