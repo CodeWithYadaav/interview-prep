@@ -8,14 +8,18 @@ function rateLimiter(req, res, next) {
     const window = 60 * 1000; // 1 minute
     const limit = 40;
 
+    // Check if the current IP is already in our map. If not, initialize it with an empty array to start tracking requests.
     if (!ipRequests.has(ip)) {
         ipRequests.set(ip, []);
     }
 
+    // Retrieve the array of request timestamps for this IP.
     const requests = ipRequests.get(ip);
 
-    // Remove old requests and check limit
+    // Filter out timestamps older than 60 seconds from now to keep only those within our rate limit window.
     const recent = requests.filter(time => now - time < window);
+
+    // Update the map with only the relevant, recent timestamps for this IP.
     ipRequests.set(ip, recent);
 
     if (recent.length >= limit) {
