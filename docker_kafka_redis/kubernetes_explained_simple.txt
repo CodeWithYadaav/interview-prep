@@ -1,0 +1,2531 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// KUBERNETES (K8s) EXPLAINED - The Simplest Way Possible
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 1: WHAT IS KUBERNETES? (Real-World Analogy)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Kubernetes as an ORCHESTRA CONDUCTOR for containers:
+
+Without Kubernetes (Manual Management):
+┌─────────────────────────────────────────────────────┐
+│  You (DevOps Engineer)                              │
+│  - Manually start 10 containers                     │
+│  - Monitor health of each container                 │
+│  - Restart crashed containers                       │
+│  - Distribute traffic manually                      │
+│  - Scale up/down manually                           │
+│  - Update containers one by one                     │
+│  - Manage networking between containers             │
+│  "I'm exhausted!" 😫                                │
+└─────────────────────────────────────────────────────┘
+
+With Kubernetes (Automated Orchestration):
+┌─────────────────────────────────────────────────────┐
+│  You (DevOps Engineer)                              │
+│  "I want 10 replicas of my app, please"            │
+└─────────────────┬───────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│  KUBERNETES (Conductor)                             │
+│  ✅ Automatically starts 10 containers              │
+│  ✅ Monitors health constantly                      │
+│  ✅ Restarts crashed containers automatically       │
+│  ✅ Distributes traffic (load balancing)            │
+│  ✅ Scales up/down automatically                    │
+│  ✅ Rolling updates with zero downtime              │
+│  ✅ Manages all networking                          │
+│  "Everything handled!" 🎵                           │
+└─────────────────────────────────────────────────────┘
+
+ORCHESTRA ANALOGY:
+
+Without Conductor:
+🎻 Violinist plays whenever they want
+🎺 Trumpet player too loud
+🥁 Drummer out of sync
+🎹 Pianist playing wrong tempo
+= Chaos! 😵
+
+With Conductor (Kubernetes):
+🎵 Conductor (K8s) coordinates everyone
+🎻 Violins play in harmony
+🎺 Brass section balanced
+🥁 Drummer in perfect rhythm
+🎹 Piano complements others
+= Beautiful music! 🎶
+
+Kubernetes = Conductor for your containers!
+
+KEY BENEFITS:
+✅ Automatic container deployment
+✅ Self-healing (auto-restart crashed containers)
+✅ Automatic scaling (more traffic = more containers)
+✅ Load balancing (distribute traffic)
+✅ Zero-downtime deployments
+✅ Service discovery (containers find each other)
+✅ Secret management
+✅ Resource optimization
+
+WHY "K8s"?
+Kubernetes → K + 8 letters + s = K8s (short form)
+Like: Internationalization → i18n
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 2: KUBERNETES CORE CONCEPTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+KUBERNETES ARCHITECTURE:
+
+┌──────────────────────────────────────────────────────────────────────┐
+│                       KUBERNETES CLUSTER                             │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌────────────────────────────────────────────────────┐            │
+│  │           CONTROL PLANE (Master Node)              │            │
+│  │                                                    │            │
+│  │  ┌──────────────┐  ┌───────────────┐             │            │
+│  │  │  API Server  │  │   Scheduler   │             │            │
+│  │  │  (Brain)     │  │  (Placement)  │             │            │
+│  │  └──────────────┘  └───────────────┘             │            │
+│  │                                                    │            │
+│  │  ┌──────────────┐  ┌───────────────┐             │            │
+│  │  │   etcd       │  │  Controller   │             │            │
+│  │  │  (Database)  │  │   Manager     │             │            │
+│  │  └──────────────┘  └───────────────┘             │            │
+│  └────────────────────────────────────────────────────┘            │
+│                           │                                         │
+│                           │ Manages                                 │
+│                           ▼                                         │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │                    WORKER NODES                              │  │
+│  │                                                              │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │  │
+│  │  │   Node 1     │  │   Node 2     │  │   Node 3     │      │  │
+│  │  │              │  │              │  │              │      │  │
+│  │  │ ┌──────────┐ │  │ ┌──────────┐ │  │ ┌──────────┐ │      │  │
+│  │  │ │   Pod    │ │  │ │   Pod    │ │  │ │   Pod    │ │      │  │
+│  │  │ │ ┌──────┐ │ │  │ │ ┌──────┐ │ │  │ │ ┌──────┐ │ │      │  │
+│  │  │ │ │ App  │ │ │  │ │ │ App  │ │ │  │ │ │ App  │ │ │      │  │
+│  │  │ │ └──────┘ │ │  │ │ └──────┘ │ │  │ │ └──────┘ │ │      │  │
+│  │  │ └──────────┘ │  │ └──────────┘ │  │ └──────────┘ │      │  │
+│  │  │              │  │              │  │              │      │  │
+│  │  │  kubelet     │  │  kubelet     │  │  kubelet     │      │  │
+│  │  │  kube-proxy  │  │  kube-proxy  │  │  kube-proxy  │      │  │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘      │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+
+1. CLUSTER = Entire Kubernetes Setup
+
+Think: Like a data center
+
+A cluster contains:
+- 1 Control Plane (Master)
+- Multiple Worker Nodes (Servers)
+
+2. CONTROL PLANE (Master Node) = Brain
+
+Components:
+- **API Server**: Front door to Kubernetes (all commands go here)
+- **Scheduler**: Decides which node runs which pod
+- **Controller Manager**: Ensures desired state (keeps things running)
+- **etcd**: Database storing cluster state
+
+Analogy: CEO and management team
+
+3. WORKER NODE = Physical/Virtual Server
+
+Each node contains:
+- **kubelet**: Agent that manages pods on this node
+- **kube-proxy**: Network proxy for services
+- **Container Runtime**: Docker/containerd (runs containers)
+
+Analogy: Factory worker
+
+4. POD = Smallest Deployable Unit ⭐ MOST IMPORTANT
+
+Think: Pod is a wrapper around container(s)
+
+┌────────────────────────┐
+│        POD             │
+│  ┌──────────────────┐  │
+│  │   Container 1    │  │ Main app
+│  │   (nginx)        │  │
+│  └──────────────────┘  │
+│                        │
+│  ┌──────────────────┐  │
+│  │   Container 2    │  │ Sidecar (logging)
+│  │   (fluentd)      │  │
+│  └──────────────────┘  │
+│                        │
+│  Shared:               │
+│  - Network (localhost) │
+│  - Storage volumes     │
+│  - Lifecycle           │
+└────────────────────────┘
+
+Key Points:
+- Pod = One or more containers
+- Containers in pod share IP address
+- Typically: 1 container per pod
+- Pod is ephemeral (can die and restart)
+
+5. DEPLOYMENT = Manages Pods ⭐ SUPER IMPORTANT
+
+Think: Deployment is your desired state
+
+```yaml
+# I want 3 replicas of nginx
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3  # I want 3 pods
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+```
+
+Kubernetes ensures:
+✅ Always 3 pods running
+✅ Auto-restart if pod crashes
+✅ Rolling updates (zero downtime)
+✅ Rollback if update fails
+
+VISUAL:
+┌────────────────────────────────────┐
+│      Deployment: nginx             │
+│      Desired: 3 replicas           │
+└────────┬───────────────────────────┘
+         │ Creates/Manages
+         ▼
+    ┌────┴────┬─────────┐
+    ▼         ▼         ▼
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │
+│ nginx  │ │ nginx  │ │ nginx  │
+└────────┘ └────────┘ └────────┘
+
+If Pod 2 crashes:
+Kubernetes: "I need 3 pods, only 2 running, creating new one..."
+→ Automatically creates Pod 4 ✅
+
+6. SERVICE = Stable Network Endpoint
+
+Think: Like a load balancer
+
+PROBLEM: Pods have dynamic IPs (change when restarted)
+
+┌────────┐  IP: 10.0.1.5
+│ Pod 1  │  Crashes and restarts...
+└────────┘  IP: 10.0.1.8  (Changed!)
+
+How do other apps connect? 🤔
+
+SOLUTION: Service (stable IP + DNS name)
+
+┌────────────────────────────────┐
+│   Service: nginx-service       │
+│   IP: 10.0.100.50 (stable)    │
+│   DNS: nginx-service.default  │
+└────────┬───────────────────────┘
+         │ Load balances to
+    ┌────┴────┬─────────┐
+    ▼         ▼         ▼
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │
+└────────┘ └────────┘ └────────┘
+
+Pods can die/restart, Service IP stays same!
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx  # Targets pods with label app=nginx
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer  # Expose externally
+```
+
+Service Types:
+- **ClusterIP**: Internal only (default)
+- **NodePort**: Expose on node's port
+- **LoadBalancer**: Cloud load balancer (AWS ELB, GCP LB)
+- **ExternalName**: DNS alias
+
+7. NAMESPACE = Virtual Cluster
+
+Think: Like folders for organization
+
+┌──────────────────────────────────────┐
+│        Kubernetes Cluster            │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  Namespace: development        │  │
+│  │  - nginx-deployment            │  │
+│  │  - postgres-deployment         │  │
+│  └────────────────────────────────┘  │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  Namespace: production         │  │
+│  │  - nginx-deployment (separate!)│  │
+│  │  - postgres-deployment         │  │
+│  └────────────────────────────────┘  │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  Namespace: testing            │  │
+│  │  - nginx-deployment            │  │
+│  └────────────────────────────────┘  │
+└──────────────────────────────────────┘
+
+Benefits:
+✅ Environment separation (dev/staging/prod)
+✅ Team isolation (team-a/team-b)
+✅ Resource quotas per namespace
+✅ Access control per namespace
+
+8. ConfigMap & Secret = Configuration
+
+**ConfigMap**: Non-sensitive configuration
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  API_URL: "https://api.example.com"
+  LOG_LEVEL: "info"
+  MAX_CONNECTIONS: "100"
+```
+
+**Secret**: Sensitive data (passwords, keys)
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  password: cGFzc3dvcmQxMjM=  # base64 encoded
+  username: YWRtaW4=
+```
+
+Use in Pod:
+```yaml
+spec:
+  containers:
+  - name: app
+    image: myapp
+    env:
+    - name: API_URL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: API_URL
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+```
+
+9. VOLUME = Persistent Storage
+
+Types:
+- **emptyDir**: Temporary (dies with pod)
+- **hostPath**: Node's filesystem
+- **PersistentVolume (PV)**: Cluster-wide storage
+- **PersistentVolumeClaim (PVC)**: Request for storage
+
+Example:
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+Use in Pod:
+```yaml
+spec:
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: db-storage
+  containers:
+  - name: postgres
+    image: postgres:14
+    volumeMounts:
+    - name: data
+      mountPath: /var/lib/postgresql/data
+```
+
+10. INGRESS = HTTP/HTTPS Router
+
+Think: Like Nginx reverse proxy
+
+┌────────────────────────────────────────┐
+│            Internet                    │
+└────────────┬───────────────────────────┘
+             │
+             ▼
+┌────────────────────────────────────────┐
+│         Ingress Controller             │
+│         (Nginx/Traefik)                │
+└────────┬────────────────┬──────────────┘
+         │                │
+         │ /api           │ /web
+         ▼                ▼
+    ┌─────────┐      ┌──────────┐
+    │ API     │      │ Frontend │
+    │ Service │      │ Service  │
+    └─────────┘      └──────────┘
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+spec:
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 80
+      - path: /web
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 3: HOW KUBERNETES WORKS (Step by Step)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+SCENARIO: Deploying an Application
+
+STEP 1: You create a deployment
+
+```bash
+kubectl create deployment nginx --image=nginx:1.21 --replicas=3
+```
+
+Or using YAML:
+```yaml
+# nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+```
+
+```bash
+kubectl apply -f nginx-deployment.yaml
+```
+
+STEP 2: Request goes to API Server
+
+┌──────────┐
+│   You    │  kubectl apply
+└────┬─────┘
+     │
+     ▼
+┌──────────────┐
+│  API Server  │  "New deployment request received"
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│    etcd      │  Save desired state: 3 nginx pods
+└──────────────┘
+
+STEP 3: Scheduler assigns pods to nodes
+
+┌──────────────┐
+│  Scheduler   │  "Which nodes have resources?"
+└──────┬───────┘
+       │ Checks: CPU, memory, affinity rules
+       │
+       ▼
+┌──────────────────────────────────┐
+│  Decision:                       │
+│  - Pod 1 → Node 1 (has 2GB RAM) │
+│  - Pod 2 → Node 2 (has 2GB RAM) │
+│  - Pod 3 → Node 3 (has 2GB RAM) │
+└──────────────────────────────────┘
+
+STEP 4: kubelet on each node creates containers
+
+Node 1:
+┌────────────────┐
+│   kubelet      │  "I need to create nginx pod"
+└────┬───────────┘
+     │
+     ▼
+┌────────────────┐
+│ Container      │  Pull nginx:1.21 image
+│ Runtime        │  Create container
+│ (Docker)       │  Start container
+└────────────────┘
+
+STEP 5: Controller Manager monitors state
+
+┌──────────────────────┐
+│ Controller Manager   │  "Are 3 pods running?"
+└──────┬───────────────┘
+       │ Continuously checks
+       │
+       ▼
+Current state: 3 pods running ✅
+Desired state: 3 pods
+Status: OK ✅
+
+If Pod crashes:
+Current state: 2 pods running ❌
+Desired state: 3 pods
+Action: Create new pod ✅
+
+COMPLETE FLOW VISUAL:
+
+1. You: kubectl apply
+         │
+         ▼
+2. API Server: Save to etcd
+         │
+         ▼
+3. Scheduler: Assign to nodes
+         │
+         ▼
+4. kubelet: Create containers
+         │
+         ▼
+5. Controller: Monitor & maintain
+         │
+         ▼
+6. ✅ 3 pods running!
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 4: KUBERNETES SELF-HEALING (The Magic!)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: Pod Crashes
+
+10:00 AM - Everything running:
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │ ✅ All healthy
+└────────┘ └────────┘ └────────┘
+
+10:05 AM - Pod 2 crashes! 💥
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │
+│  ✅    │ │  ❌💥  │ │  ✅    │
+└────────┘ └────────┘ └────────┘
+
+10:05:05 AM - Controller Manager notices:
+"Desired: 3 pods, Current: 2 pods → CREATE NEW POD!"
+
+10:05:10 AM - New pod created:
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 4  │ │ Pod 3  │ ✅ Self-healed!
+└────────┘ └────────┘ └────────┘
+
+Total downtime: 5-10 seconds ✅
+
+SCENARIO 2: Node Fails
+
+Before:
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Node 1     │  │   Node 2     │  │   Node 3     │
+│  ┌────────┐  │  │  ┌────────┐  │  │  ┌────────┐  │
+│  │ Pod 1  │  │  │  │ Pod 2  │  │  │  │ Pod 3  │  │
+│  └────────┘  │  │  └────────┘  │  │  └────────┘  │
+└──────────────┘  └──────────────┘  └──────────────┘
+
+Node 2 crashes! 💥
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Node 1     │  │   Node 2     │  │   Node 3     │
+│  ┌────────┐  │  │     ❌💥    │  │  ┌────────┐  │
+│  │ Pod 1  │  │  │              │  │  │ Pod 3  │  │
+│  └────────┘  │  │              │  │  └────────┘  │
+└──────────────┘  └──────────────┘  └──────────────┘
+
+Kubernetes detects (after ~40 seconds):
+"Node 2 is down, Pod 2 lost!"
+
+Recreates pods on healthy nodes:
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Node 1     │  │   Node 2     │  │   Node 3     │
+│  ┌────────┐  │  │     ❌       │  │  ┌────────┐  │
+│  │ Pod 1  │  │  │              │  │  │ Pod 3  │  │
+│  └────────┘  │  │              │  │  └────────┘  │
+│  ┌────────┐  │  │              │  │  ┌────────┐  │
+│  │ Pod 4  │  │  │              │  │  │ Pod 5  │  │ New pods!
+│  └────────┘  │  │              │  │  └────────┘  │
+└──────────────┘  └──────────────┘  └──────────────┘
+
+Recovery time: ~40-60 seconds ✅
+
+SCENARIO 3: Health Check Failures
+
+Define health checks:
+```yaml
+spec:
+  containers:
+  - name: app
+    image: myapp
+    livenessProbe:   # Is container alive?
+      httpGet:
+        path: /health
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:  # Is container ready for traffic?
+      httpGet:
+        path: /ready
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+Timeline:
+10:00 - App starts, health check: ✅
+10:01 - Health check: ✅
+10:02 - App hangs, health check: ❌
+10:02:10 - Health check: ❌ (2nd failure)
+10:02:20 - Health check: ❌ (3rd failure)
+10:02:21 - Kubernetes: "Container unhealthy, RESTARTING!"
+10:02:25 - New container started ✅
+
+SCENARIO 4: Resource Exhaustion
+
+```yaml
+spec:
+  containers:
+  - name: app
+    resources:
+      requests:    # Minimum needed
+        cpu: "100m"
+        memory: "128Mi"
+      limits:      # Maximum allowed
+        cpu: "500m"
+        memory: "512Mi"
+```
+
+App tries to use 1GB memory:
+┌────────────────────────────────┐
+│         Pod                    │
+│  Memory usage: 512MB → 1GB     │
+│  Limit: 512MB                  │
+│  Status: OOMKilled (killed!)   │
+└────────────────────────────────┘
+
+Kubernetes: "Pod killed due to OOM, restarting..."
+
+New pod starts with fresh memory ✅
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 5: KUBERNETES SCALING
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. MANUAL SCALING
+
+```bash
+# Scale to 5 replicas
+kubectl scale deployment nginx --replicas=5
+
+# Scale down to 2
+kubectl scale deployment nginx --replicas=2
+```
+
+VISUAL:
+Before (3 replicas):
+┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │
+└────────┘ └────────┘ └────────┘
+
+Scale to 5:
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │ │ Pod 4  │ │ Pod 5  │
+└────────┘ └────────┘ └────────┘ └────────┘ └────────┘
+
+2. HORIZONTAL POD AUTOSCALER (HPA) ⭐ AUTOMATIC
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Keep CPU at 70%
+```
+
+How it works:
+
+Normal traffic (CPU: 30%):
+┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │  2 pods (minimum)
+└────────┘ └────────┘
+
+Traffic increases (CPU: 80%):
+HPA: "CPU is 80%, above 70% target, SCALING UP!"
+
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │ │ Pod 3  │ │ Pod 4  │  4 pods
+└────────┘ └────────┘ └────────┘ └────────┘
+CPU now: 40% ✅
+
+Traffic decreases (CPU: 20%):
+HPA: "CPU is 20%, below 70% target, SCALING DOWN!"
+
+┌────────┐ ┌────────┐
+│ Pod 1  │ │ Pod 2  │  Back to 2 pods
+└────────┘ └────────┘
+
+3. VERTICAL POD AUTOSCALER (VPA)
+
+Adjusts CPU/memory requests automatically
+
+```yaml
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: nginx-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx
+  updatePolicy:
+    updateMode: "Auto"
+```
+
+Before:
+┌─────────────────┐
+│      Pod        │
+│  CPU: 100m      │  Too small, pod throttled
+│  Memory: 128Mi  │
+└─────────────────┘
+
+VPA adjusts:
+┌─────────────────┐
+│      Pod        │
+│  CPU: 500m      │  Better resources!
+│  Memory: 512Mi  │
+└─────────────────┘
+
+4. CLUSTER AUTOSCALER
+
+Adds/removes nodes based on demand
+
+Scenario:
+┌────────┐ ┌────────┐
+│ Node 1 │ │ Node 2 │  2 nodes, 4 pods running
+└────────┘ └────────┘
+
+Scale to 20 pods:
+"Not enough resources on existing nodes!"
+
+Cluster Autoscaler: "Adding new nodes..."
+
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│ Node 1 │ │ Node 2 │ │ Node 3 │ │ Node 4 │  4 nodes!
+└────────┘ └────────┘ └────────┘ └────────┘
+
+Now 20 pods can run ✅
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 6: KUBERNETES DEPLOYMENTS & ROLLOUTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. ROLLING UPDATE (Default) ⭐ ZERO DOWNTIME
+
+Scenario: Update nginx:1.21 → nginx:1.22
+
+```bash
+kubectl set image deployment/nginx nginx=nginx:1.22
+```
+
+Process:
+Step 1: 3 pods running v1.21
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 1   │ │ Pod 2   │ │ Pod 3   │
+│ v1.21   │ │ v1.21   │ │ v1.21   │
+└─────────┘ └─────────┘ └─────────┘
+
+Step 2: Create 1 new pod (v1.22)
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 1   │ │ Pod 2   │ │ Pod 3   │ │ Pod 4   │
+│ v1.21   │ │ v1.21   │ │ v1.21   │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘ └─────────┘
+
+Step 3: Terminate 1 old pod
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 2   │ │ Pod 3   │ │ Pod 4   │
+│ v1.21   │ │ v1.21   │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘
+
+Step 4: Create another new pod
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 2   │ │ Pod 3   │ │ Pod 4   │ │ Pod 5   │
+│ v1.21   │ │ v1.21   │ │ v1.22✨ │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘ └─────────┘
+
+Step 5: Terminate old pod
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 3   │ │ Pod 4   │ │ Pod 5   │
+│ v1.21   │ │ v1.22✨ │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘
+
+Step 6: Final pod
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 4   │ │ Pod 5   │ │ Pod 6   │
+│ v1.22✨ │ │ v1.22✨ │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘
+
+All updated! Zero downtime! ✅
+
+Control rolling update:
+```yaml
+spec:
+  replicas: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2        # Max 2 extra pods during update
+      maxUnavailable: 1  # Max 1 pod can be down
+```
+
+2. RECREATE STRATEGY (Downtime)
+
+```yaml
+spec:
+  strategy:
+    type: Recreate
+```
+
+Process:
+Step 1: Kill ALL old pods
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ ❌      │ │ ❌      │ │ ❌      │  All killed!
+└─────────┘ └─────────┘ └─────────┘
+
+Step 2: Create ALL new pods
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Pod 4   │ │ Pod 5   │ │ Pod 6   │
+│ v1.22✨ │ │ v1.22✨ │ │ v1.22✨ │
+└─────────┘ └─────────┘ └─────────┘
+
+Downtime: 10-30 seconds ❌
+Use case: Database migrations, incompatible versions
+
+3. ROLLBACK
+
+New version has bugs? Rollback!
+
+```bash
+# View rollout history
+kubectl rollout history deployment/nginx
+
+# Output:
+# REVISION  CHANGE-CAUSE
+# 1         nginx:1.21
+# 2         nginx:1.22  (current - has bugs!)
+
+# Rollback to previous version
+kubectl rollout undo deployment/nginx
+
+# Rollback to specific revision
+kubectl rollout undo deployment/nginx --to-revision=1
+```
+
+VISUAL:
+Current (buggy):
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ v1.22🐛 │ │ v1.22🐛 │ │ v1.22🐛 │  Bugs!
+└─────────┘ └─────────┘ └─────────┘
+
+After rollback:
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ v1.21✅ │ │ v1.21✅ │ │ v1.21✅ │  Stable again!
+└─────────┘ └─────────┘ └─────────┘
+
+4. CANARY DEPLOYMENT (Advanced)
+
+Test new version with small % of traffic
+
+```yaml
+# Stable version (90% traffic)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-stable
+spec:
+  replicas: 9
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: stable
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+---
+# Canary version (10% traffic)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-canary
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: canary
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.22
+---
+# Service routes to both
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx  # Both stable and canary
+```
+
+VISUAL:
+┌───────────────────────────────────────┐
+│          100 Requests                 │
+└───────────┬───────────────────────────┘
+            │
+            ▼
+┌───────────────────────────────────────┐
+│         Service: nginx                │
+└─────┬──────────────────────┬──────────┘
+      │ 90%                  │ 10%
+      ▼                      ▼
+┌─────────────┐        ┌─────────────┐
+│   Stable    │        │   Canary    │
+│  9 pods     │        │   1 pod     │
+│  v1.21 ✅   │        │  v1.22 🧪   │
+└─────────────┘        └─────────────┘
+
+If canary works well:
+- Gradually increase canary replicas
+- Eventually replace all stable pods
+
+If canary has issues:
+- Delete canary deployment
+- 100% traffic back to stable ✅
+
+5. BLUE-GREEN DEPLOYMENT
+
+Two identical environments, switch instantly
+
+```yaml
+# Blue (current production)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-blue
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: blue
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+---
+# Green (new version)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-green
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: green
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.22
+---
+# Service (initially points to blue)
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+    version: blue  # Currently routing to blue
+```
+
+Process:
+Step 1: Blue is live
+┌──────────────────┐
+│   Service        │ → Points to blue
+└────┬─────────────┘
+     ▼
+┌─────────────┐     ┌─────────────┐
+│    Blue     │     │    Green    │
+│  3 pods     │     │  3 pods     │
+│  v1.21 ✅   │     │  v1.22      │ (idle)
+│  (LIVE)     │     │             │
+└─────────────┘     └─────────────┘
+
+Step 2: Test green (internal)
+- Verify green works
+- Run tests
+- Check logs
+
+Step 3: Switch service to green
+```bash
+kubectl patch service nginx -p '{"spec":{"selector":{"version":"green"}}}'
+```
+
+┌──────────────────┐
+│   Service        │ → Now points to green!
+└────┬─────────────┘
+     ▼
+┌─────────────┐     ┌─────────────┐
+│    Blue     │     │    Green    │
+│  3 pods     │     │  3 pods     │
+│  v1.21      │     │  v1.22 ✅   │
+│             │     │  (LIVE)     │
+└─────────────┘     └─────────────┘
+
+Instant switch! If issues, switch back to blue instantly!
+
+Step 4: Delete blue (after confidence)
+```bash
+kubectl delete deployment nginx-blue
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 7: KUBERNETES COMMANDS (kubectl)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. CLUSTER MANAGEMENT
+
+```bash
+# Cluster info
+kubectl cluster-info
+
+# View nodes
+kubectl get nodes
+
+# Node details
+kubectl describe node node-1
+
+# Node resource usage
+kubectl top nodes
+```
+
+2. POD COMMANDS
+
+```bash
+# List pods
+kubectl get pods
+
+# List pods in all namespaces
+kubectl get pods -A
+kubectl get pods --all-namespaces
+
+# List pods with more details
+kubectl get pods -o wide
+
+# Pod details
+kubectl describe pod nginx-abc123
+
+# Pod logs
+kubectl logs nginx-abc123
+
+# Follow logs (live)
+kubectl logs -f nginx-abc123
+
+# Logs from specific container in pod
+kubectl logs nginx-abc123 -c sidecar
+
+# Previous pod logs (if crashed)
+kubectl logs nginx-abc123 --previous
+
+# Execute command in pod
+kubectl exec nginx-abc123 -- ls /app
+
+# Interactive shell
+kubectl exec -it nginx-abc123 -- bash
+kubectl exec -it nginx-abc123 -- sh  # For alpine
+
+# Port forward (access pod locally)
+kubectl port-forward nginx-abc123 8080:80
+# Access: http://localhost:8080
+
+# Copy files to/from pod
+kubectl cp file.txt nginx-abc123:/app/file.txt
+kubectl cp nginx-abc123:/app/logs.txt ./logs.txt
+
+# Delete pod
+kubectl delete pod nginx-abc123
+
+# Resource usage
+kubectl top pod nginx-abc123
+```
+
+3. DEPLOYMENT COMMANDS
+
+```bash
+# Create deployment
+kubectl create deployment nginx --image=nginx:1.21 --replicas=3
+
+# List deployments
+kubectl get deployments
+kubectl get deploy
+
+# Deployment details
+kubectl describe deployment nginx
+
+# Scale deployment
+kubectl scale deployment nginx --replicas=5
+
+# Update image (rolling update)
+kubectl set image deployment/nginx nginx=nginx:1.22
+
+# Edit deployment (opens editor)
+kubectl edit deployment nginx
+
+# Rollout status
+kubectl rollout status deployment/nginx
+
+# Rollout history
+kubectl rollout history deployment/nginx
+
+# Pause rollout
+kubectl rollout pause deployment/nginx
+
+# Resume rollout
+kubectl rollout resume deployment/nginx
+
+# Rollback
+kubectl rollout undo deployment/nginx
+
+# Rollback to specific revision
+kubectl rollout undo deployment/nginx --to-revision=2
+
+# Restart deployment (recreate all pods)
+kubectl rollout restart deployment/nginx
+
+# Delete deployment
+kubectl delete deployment nginx
+```
+
+4. SERVICE COMMANDS
+
+```bash
+# List services
+kubectl get services
+kubectl get svc
+
+# Service details
+kubectl describe service nginx
+
+# Create service
+kubectl expose deployment nginx --port=80 --target-port=80 --type=LoadBalancer
+
+# Delete service
+kubectl delete service nginx
+
+# Get service endpoints
+kubectl get endpoints nginx
+```
+
+5. CONFIGMAP & SECRET
+
+```bash
+# Create ConfigMap from literal
+kubectl create configmap app-config \
+  --from-literal=API_URL=https://api.example.com \
+  --from-literal=LOG_LEVEL=info
+
+# Create ConfigMap from file
+kubectl create configmap app-config --from-file=config.yaml
+
+# List ConfigMaps
+kubectl get configmaps
+kubectl get cm
+
+# View ConfigMap
+kubectl describe configmap app-config
+
+# Create Secret
+kubectl create secret generic db-secret \
+  --from-literal=username=admin \
+  --from-literal=password=secret123
+
+# Create Secret from file
+kubectl create secret generic tls-secret \
+  --from-file=tls.crt=cert.pem \
+  --from-file=tls.key=key.pem
+
+# List Secrets
+kubectl get secrets
+
+# View Secret (values are hidden)
+kubectl describe secret db-secret
+
+# View Secret values (base64 encoded)
+kubectl get secret db-secret -o yaml
+
+# Delete
+kubectl delete configmap app-config
+kubectl delete secret db-secret
+```
+
+6. NAMESPACE COMMANDS
+
+```bash
+# List namespaces
+kubectl get namespaces
+kubectl get ns
+
+# Create namespace
+kubectl create namespace development
+
+# Set default namespace
+kubectl config set-context --current --namespace=development
+
+# View resources in specific namespace
+kubectl get pods -n production
+kubectl get all -n production
+
+# Delete namespace (deletes all resources inside!)
+kubectl delete namespace development
+```
+
+7. APPLY & DELETE (YAML Files)
+
+```bash
+# Apply single file
+kubectl apply -f deployment.yaml
+
+# Apply multiple files
+kubectl apply -f deployment.yaml -f service.yaml
+
+# Apply all files in directory
+kubectl apply -f ./manifests/
+
+# Apply from URL
+kubectl apply -f https://example.com/deployment.yaml
+
+# Delete resources from file
+kubectl delete -f deployment.yaml
+
+# Dry run (see what would happen)
+kubectl apply -f deployment.yaml --dry-run=client
+
+# Server-side dry run
+kubectl apply -f deployment.yaml --dry-run=server
+```
+
+8. DEBUGGING COMMANDS
+
+```bash
+# Events (recent cluster events)
+kubectl get events
+
+# Events sorted by time
+kubectl get events --sort-by=.metadata.creationTimestamp
+
+# Describe (shows events at bottom)
+kubectl describe pod nginx-abc123
+
+# Pod resource usage
+kubectl top pod nginx-abc123
+
+# All pods resource usage
+kubectl top pods
+
+# Run temporary debugging pod
+kubectl run debug --image=busybox -it --rm -- sh
+
+# Debug specific node
+kubectl debug node/node-1 -it --image=ubuntu
+
+# Create debug copy of pod
+kubectl debug nginx-abc123 -it --image=ubuntu --copy-to=nginx-debug
+```
+
+9. LABELS & SELECTORS
+
+```bash
+# Show labels
+kubectl get pods --show-labels
+
+# Filter by label
+kubectl get pods -l app=nginx
+kubectl get pods -l environment=production
+
+# Add label
+kubectl label pod nginx-abc123 tier=frontend
+
+# Remove label
+kubectl label pod nginx-abc123 tier-
+
+# Update label
+kubectl label pod nginx-abc123 tier=backend --overwrite
+```
+
+10. OUTPUT FORMATS
+
+```bash
+# YAML output
+kubectl get pod nginx-abc123 -o yaml
+
+# JSON output
+kubectl get pod nginx-abc123 -o json
+
+# Wide output (more columns)
+kubectl get pods -o wide
+
+# Custom columns
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase
+
+# JSONPath
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+
+# Watch (live updates)
+kubectl get pods --watch
+kubectl get pods -w
+```
+
+11. CONTEXT & CONFIG
+
+```bash
+# View current context
+kubectl config current-context
+
+# List contexts
+kubectl config get-contexts
+
+# Switch context
+kubectl config use-context production
+
+# View config
+kubectl config view
+
+# Set namespace in context
+kubectl config set-context --current --namespace=development
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 8: REAL-WORLD EXAMPLE - COMPLETE APPLICATION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Deploy a 3-tier application (Frontend, API, Database)
+
+PROJECT STRUCTURE:
+```
+k8s/
+├── namespace.yaml
+├── database/
+│   ├── postgres-secret.yaml
+│   ├── postgres-pvc.yaml
+│   ├── postgres-deployment.yaml
+│   └── postgres-service.yaml
+├── api/
+│   ├── api-configmap.yaml
+│   ├── api-deployment.yaml
+│   └── api-service.yaml
+├── frontend/
+│   ├── frontend-deployment.yaml
+│   └── frontend-service.yaml
+└── ingress.yaml
+```
+
+1. NAMESPACE
+```yaml
+# namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myapp
+```
+
+2. DATABASE (PostgreSQL)
+
+```yaml
+# postgres-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: myapp
+type: Opaque
+stringData:
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: secretpassword123
+  POSTGRES_DB: myappdb
+---
+# postgres-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: myapp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# postgres-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14-alpine
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - admin
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - admin
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+# postgres-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: myapp
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+```
+
+3. API (Node.js)
+
+```yaml
+# api-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: myapp
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "3000"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+---
+# api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: mycompany/api:v1.0.0
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: api-config
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# api-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: myapp
+spec:
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP
+```
+
+4. FRONTEND (React)
+
+```yaml
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: myapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: mycompany/frontend:v1.0.0
+        ports:
+        - containerPort: 80
+        env:
+        - name: API_URL
+          value: "http://api"
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: myapp
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+```
+
+5. INGRESS (External Access)
+
+```yaml
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  namespace: myapp
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - myapp.example.com
+    secretName: myapp-tls
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+```
+
+6. HORIZONTAL POD AUTOSCALER
+
+```yaml
+# hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+  namespace: myapp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+DEPLOY EVERYTHING:
+
+```bash
+# Create namespace
+kubectl apply -f namespace.yaml
+
+# Deploy database
+kubectl apply -f database/
+
+# Deploy API
+kubectl apply -f api/
+
+# Deploy frontend
+kubectl apply -f frontend/
+
+# Deploy ingress
+kubectl apply -f ingress.yaml
+
+# Deploy autoscaler
+kubectl apply -f hpa.yaml
+
+# Verify deployment
+kubectl get all -n myapp
+kubectl get ingress -n myapp
+```
+
+VISUAL ARCHITECTURE:
+
+┌─────────────────────────────────────────────────────┐
+│                   Internet                          │
+└───────────────────┬─────────────────────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────────────────┐
+│              Ingress Controller                   │
+│         myapp.example.com                         │
+└────────┬──────────────────────┬───────────────────┘
+         │ /api                 │ /
+         ▼                      ▼
+┌─────────────────┐    ┌──────────────────┐
+│  API Service    │    │ Frontend Service │
+│  (ClusterIP)    │    │   (ClusterIP)    │
+└────────┬────────┘    └─────────┬────────┘
+         │                       │
+    ┌────┴────┬────┐            ▼
+    ▼         ▼    ▼      ┌──────────┐ ┌──────────┐
+┌───────┐ ┌───────┐ ┌───────┐│Frontend│ │Frontend│
+│ API 1 │ │ API 2 │ │ API 3 ││  Pod   │ │  Pod   │
+└───┬───┘ └───┬───┘ └───┬───┘└──────────┘ └──────────┘
+    │         │         │
+    └─────────┴─────────┘
+              │
+              ▼
+    ┌──────────────────┐
+    │ Postgres Service │
+    │   (ClusterIP)    │
+    └────────┬─────────┘
+             │
+             ▼
+       ┌──────────┐
+       │ Postgres │
+       │   Pod    │
+       └────┬─────┘
+            │
+            ▼
+       ┌──────────┐
+       │   PVC    │
+       │  (10GB)  │
+       └──────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 9: COMMON INTERVIEW QUESTIONS & ANSWERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q1: What is Kubernetes and why use it?
+
+A: "Kubernetes is a container orchestration platform that automates
+    deployment, scaling, and management of containerized applications.
+    It solves the problem of managing hundreds or thousands of containers
+    across multiple servers."
+
+Benefits:
+✅ Automated deployment and scaling
+✅ Self-healing (auto-restart failed containers)
+✅ Load balancing
+✅ Zero-downtime deployments
+✅ Service discovery
+✅ Resource optimization
+✅ Multi-cloud portability
+
+Q2: What is a Pod and why not just use containers?
+
+A: "A Pod is the smallest deployable unit in Kubernetes. It's a wrapper
+    around one or more containers that share network and storage."
+
+Why Pods?
+- Containers in a pod share localhost (can communicate easily)
+- Atomic deployment (all containers start/stop together)
+- Shared volumes
+- Simplified networking
+
+Example: Main app + logging sidecar in same pod
+
+Q3: What's the difference between Deployment and StatefulSet?
+
+A: "Deployment is for stateless apps, StatefulSet is for stateful apps"
+
+┌──────────────────┬─────────────────┬──────────────────┐
+│   Feature        │  Deployment     │  StatefulSet     │
+├──────────────────┼─────────────────┼──────────────────┤
+│ Pod names        │ Random          │ Predictable      │
+│                  │ nginx-abc123    │ mysql-0, mysql-1 │
+├──────────────────┼─────────────────┼──────────────────┤
+│ Order            │ No guarantee    │ Ordered          │
+│                  │ Create/delete   │ Create: 0→1→2    │
+│                  │ any order       │ Delete: 2→1→0    │
+├──────────────────┼─────────────────┼──────────────────┤
+│ Storage          │ Shared          │ Dedicated per pod│
+├──────────────────┼─────────────────┼──────────────────┤
+│ Use case         │ Web apps, APIs  │ Databases, Kafka │
+└──────────────────┴─────────────────┴──────────────────┘
+
+Q4: How does Kubernetes handle secrets?
+
+A: "Secrets store sensitive data (passwords, tokens) encoded in base64"
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  password: cGFzc3dvcmQxMjM=  # base64 encoded
+```
+
+Best practices:
+✅ Use RBAC (limit who can read secrets)
+✅ Enable encryption at rest (in etcd)
+✅ Use external secret managers (Vault, AWS Secrets Manager)
+✅ Never commit secrets to Git
+✅ Use Sealed Secrets or External Secrets Operator
+
+Q5: What is a Service and why do we need it?
+
+A: "Service provides a stable IP and DNS name for a set of pods"
+
+Problem: Pods have dynamic IPs (change on restart)
+Solution: Service acts as a load balancer with stable endpoint
+
+Types:
+1. **ClusterIP**: Internal only (default)
+2. **NodePort**: Exposes on node's port (30000-32767)
+3. **LoadBalancer**: Cloud load balancer (AWS ELB, GCP LB)
+4. **ExternalName**: DNS alias
+
+Q6: How does Kubernetes achieve high availability?
+
+A: "Multiple control plane nodes and worker nodes across availability zones"
+
+```
+┌──────────────────────────────────────────┐
+│          Availability Zone 1             │
+│  ┌──────────────┐  ┌──────────────┐     │
+│  │ Master 1     │  │  Worker 1    │     │
+│  └──────────────┘  └──────────────┘     │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│          Availability Zone 2             │
+│  ┌──────────────┐  ┌──────────────┐     │
+│  │ Master 2     │  │  Worker 2    │     │
+│  └──────────────┘  └──────────────┘     │
+└──────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│          Availability Zone 3             │
+│  ┌──────────────┐  ┌──────────────┐     │
+│  │ Master 3     │  │  Worker 3    │     │
+│  └──────────────┘  └──────────────┘     │
+└──────────────────────────────────────────┘
+```
+
+Features:
+- etcd cluster (distributed database)
+- Multiple API servers (load balanced)
+- Controller replication
+- Pod anti-affinity (spread across nodes/zones)
+
+Q7: What are Readiness and Liveness probes?
+
+A: "Health checks that determine if container is ready and alive"
+
+**Liveness Probe**: Is container alive?
+- Failure → Restart container
+
+**Readiness Probe**: Is container ready for traffic?
+- Failure → Remove from service endpoints (no traffic)
+
+**Startup Probe**: Has container started?
+- Used for slow-starting apps
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
+```
+
+Q8: How does rolling update work?
+
+A: "Gradually replace old pods with new ones to achieve zero downtime"
+
+Process:
+1. Create 1 new pod (v2)
+2. Wait for readiness check to pass
+3. Terminate 1 old pod (v1)
+4. Repeat until all pods updated
+
+Control:
+```yaml
+rollingUpdate:
+  maxSurge: 1        # Max 1 extra pod during update
+  maxUnavailable: 0  # No pod downtime
+```
+
+Q9: What is a DaemonSet?
+
+A: "DaemonSet runs one pod on every node (or selected nodes)"
+
+Use cases:
+- Log collectors (Fluentd, Logstash)
+- Monitoring agents (Prometheus Node Exporter)
+- Network plugins (Calico, Weave)
+- Storage daemons (Ceph, GlusterFS)
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: fluentd:latest
+```
+
+Q10: How does Horizontal Pod Autoscaler (HPA) work?
+
+A: "HPA automatically scales pods based on CPU/memory/custom metrics"
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+How it works:
+1. HPA checks metrics every 15 seconds (default)
+2. If CPU > 70%, increase replicas
+3. If CPU < 70%, decrease replicas
+4. Respects min/max limits
+5. Cooldown period (prevent thrashing)
+
+Q11: What are Taints and Tolerations?
+
+A: "Taints repel pods from nodes, Tolerations allow pods on tainted nodes"
+
+Use case: Dedicated nodes for specific workloads
+
+```bash
+# Taint node (no pods allowed except with toleration)
+kubectl taint nodes node-1 gpu=true:NoSchedule
+```
+
+```yaml
+# Pod with toleration (can run on tainted node)
+spec:
+  tolerations:
+  - key: "gpu"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+```
+
+Effects:
+- **NoSchedule**: Don't schedule new pods
+- **PreferNoSchedule**: Try to avoid scheduling
+- **NoExecute**: Evict existing pods
+
+Q12: What is the difference between ConfigMap and Secret?
+
+A: "Both store configuration, but Secrets are for sensitive data"
+
+┌─────────────────┬──────────────┬────────────┐
+│   Feature       │  ConfigMap   │   Secret   │
+├─────────────────┼──────────────┼────────────┤
+│ Purpose         │ Config data  │ Sensitive  │
+├─────────────────┼──────────────┼────────────┤
+│ Encoding        │ Plain text   │ Base64     │
+├─────────────────┼──────────────┼────────────┤
+│ Storage         │ Plain in etcd│ Can encrypt│
+├─────────────────┼──────────────┼────────────┤
+│ Use case        │ API URLs     │ Passwords  │
+│                 │ Feature flags│ API keys   │
+│                 │ Settings     │ Certs      │
+└─────────────────┴──────────────┴────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 10: KUBERNETES NETWORKING
+═══════════════════════════════════════════════════════════════════════════════════════
+
+KUBERNETES NETWORKING RULES:
+
+1. Every pod gets its own IP address
+2. Pods can communicate with all other pods without NAT
+3. Agents on a node can communicate with all pods on that node
+
+NETWORK ARCHITECTURE:
+
+┌──────────────────────────────────────────────────────┐
+│                    Cluster Network                   │
+│                                                      │
+│  ┌────────────────────┐    ┌────────────────────┐   │
+│  │      Node 1        │    │      Node 2        │   │
+│  │  IP: 10.0.1.10     │    │  IP: 10.0.1.11     │   │
+│  │                    │    │                    │   │
+│  │  ┌──────────────┐  │    │  ┌──────────────┐  │   │
+│  │  │   Pod A      │  │    │  │   Pod C      │  │   │
+│  │  │ 10.244.1.5   │◄─┼────┼─►│ 10.244.2.5   │  │   │
+│  │  └──────────────┘  │    │  └──────────────┘  │   │
+│  │                    │    │                    │   │
+│  │  ┌──────────────┐  │    │  ┌──────────────┐  │   │
+│  │  │   Pod B      │  │    │  │   Pod D      │  │   │
+│  │  │ 10.244.1.6   │◄─┼────┼─►│ 10.244.2.6   │  │   │
+│  │  └──────────────┘  │    │  └──────────────┘  │   │
+│  └────────────────────┘    └────────────────────┘   │
+└──────────────────────────────────────────────────────┘
+
+Pod A can reach Pod C directly using IP 10.244.2.5
+
+NETWORK PLUGINS (CNI):
+
+Popular options:
+- **Calico**: Network policies, BGP routing
+- **Flannel**: Simple overlay network
+- **Weave**: Mesh networking
+- **Cilium**: eBPF-based, advanced features
+- **AWS VPC CNI**: Native AWS networking
+
+NETWORK POLICIES:
+
+Control traffic between pods
+
+```yaml
+# Allow only frontend to access API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-network-policy
+  namespace: myapp
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 3000
+```
+
+VISUAL:
+┌──────────────┐
+│   Frontend   │ ✅ Can access API
+└──────┬───────┘
+       │ Allowed
+       ▼
+┌──────────────┐
+│     API      │
+└──────────────┘
+       ▲
+       │ Blocked
+┌──────┴───────┐
+│   Random     │ ❌ Cannot access API
+│     Pod      │
+└──────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 11: KUBERNETES BEST PRACTICES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. RESOURCE LIMITS ⭐ CRITICAL
+
+```yaml
+resources:
+  requests:    # Minimum guaranteed
+    cpu: "100m"
+    memory: "128Mi"
+  limits:      # Maximum allowed
+    cpu: "500m"
+    memory: "512Mi"
+```
+
+Why:
+✅ Prevents resource starvation
+✅ Better scheduling decisions
+✅ Protects from runaway processes
+
+2. HEALTH CHECKS
+
+Always define:
+```yaml
+livenessProbe:   # Restart if unhealthy
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:  # Remove from service if not ready
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+3. USE NAMESPACES
+
+```bash
+# Separate environments
+kubectl create namespace development
+kubectl create namespace staging
+kubectl create namespace production
+```
+
+4. LABELS & SELECTORS
+
+```yaml
+metadata:
+  labels:
+    app: nginx
+    environment: production
+    tier: frontend
+    version: v1.0.0
+```
+
+Benefits:
+- Organize resources
+- Select with kubectl
+- Service discovery
+- Network policies
+
+5. ROLLING UPDATE STRATEGY
+
+```yaml
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0  # Zero downtime!
+```
+
+6. USE CONFIGMAP/SECRET FOR CONFIGURATION
+
+DON'T hardcode:
+```yaml
+# Bad ❌
+env:
+- name: API_URL
+  value: "https://api.example.com"
+```
+
+DO use ConfigMap:
+```yaml
+# Good ✅
+env:
+- name: API_URL
+  valueFrom:
+    configMapKeyRef:
+      name: app-config
+      key: API_URL
+```
+
+7. SECURITY
+
+```yaml
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+```
+
+8. RESOURCE QUOTAS
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dev-quota
+  namespace: development
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: 20Gi
+    persistentvolumeclaims: "10"
+    pods: "50"
+```
+
+9. POD DISRUPTION BUDGET
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-pdb
+spec:
+  minAvailable: 2  # Always keep 2 pods running
+  selector:
+    matchLabels:
+      app: api
+```
+
+10. AFFINITY & ANTI-AFFINITY
+
+Spread pods across nodes:
+```yaml
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app: api
+        topologyKey: kubernetes.io/hostname
+```
+
+This ensures API pods are on different nodes (high availability)
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 12: QUICK REFERENCE - KEY POINTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+KUBERNETES IN ONE SENTENCE:
+"Kubernetes is a container orchestration platform that automates
+deployment, scaling, and management of containerized applications
+across a cluster of servers"
+
+WHEN TO USE KUBERNETES:
+✅ Microservices architecture (multiple services)
+✅ Need automatic scaling (traffic varies)
+✅ High availability requirements
+✅ Multi-environment deployments (dev/staging/prod)
+✅ Container management at scale (10+ containers)
+✅ Zero-downtime deployments
+✅ Multi-cloud or hybrid cloud
+
+WHEN NOT TO USE KUBERNETES:
+❌ Simple applications (single container)
+❌ Small scale (1-2 servers)
+❌ Tight budget (operational complexity)
+❌ No DevOps expertise
+❌ Monolithic applications (better alternatives exist)
+
+KEY COMPONENTS:
+- **Cluster**: Entire Kubernetes setup
+- **Control Plane**: Master node (brain)
+- **Worker Node**: Server running pods
+- **Pod**: Smallest unit (1+ containers)
+- **Deployment**: Manages pods (desired state)
+- **Service**: Stable network endpoint
+- **Namespace**: Virtual cluster (isolation)
+- **ConfigMap**: Non-sensitive config
+- **Secret**: Sensitive data
+- **Volume**: Persistent storage
+- **Ingress**: HTTP/HTTPS routing
+
+COMMON COMMANDS:
+```bash
+kubectl get pods              # List pods
+kubectl describe pod <name>   # Pod details
+kubectl logs <pod>            # View logs
+kubectl exec -it <pod> bash   # Enter pod
+kubectl apply -f file.yaml    # Create resources
+kubectl delete -f file.yaml   # Delete resources
+kubectl scale deploy <name> --replicas=5  # Scale
+kubectl rollout undo deploy <name>        # Rollback
+```
+
+YAML STRUCTURE:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: production
+  labels:
+    app: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v1.0.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+MEMORIZATION TRICK
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Kubernetes as an ORCHESTRA:
+
+🎵 Orchestra = Kubernetes Cluster
+🎼 Conductor = Control Plane (coordinates everything)
+🎻 Musicians = Pods (do the actual work)
+🎪 Concert Hall = Worker Nodes (where musicians perform)
+📋 Sheet Music = YAML files (instructions)
+🎺 Sections (strings, brass) = Services (group musicians)
+👔 Stage Manager = Scheduler (assigns musicians to positions)
+🎭 Director = You (desired state: "play Beethoven's 5th")
+
+Key Points:
+- Conductor ensures everyone plays in harmony (control plane)
+- Musicians can be replaced if sick (self-healing)
+- More musicians if needed (scaling)
+- Different sections work together (services)
+- Sheet music tells what to play (YAML manifests)
+
+GOLDEN RULE FOR INTERVIEWS:
+"Kubernetes automates container orchestration by maintaining desired
+state, providing self-healing, auto-scaling, and zero-downtime
+deployments across a cluster of servers"
+
+═══════════════════════════════════════════════════════════════════════════════════════
+INTERVIEW PRO TIPS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. Always mention "desired state" vs "current state"
+2. Know the difference between Pod, Deployment, and StatefulSet
+3. Understand Services (ClusterIP, NodePort, LoadBalancer)
+4. Explain self-healing capabilities
+5. Know rolling update strategy
+6. Understand Readiness vs Liveness probes
+7. Be ready to write basic YAML
+8. Know common kubectl commands
+9. Understand Namespace for isolation
+10. Mention security (RBAC, Pod Security, Network Policies)
+
+Common follow-up: "Design a microservices deployment on Kubernetes"
+Answer structure:
+1. Namespace for environment isolation
+2. Deployments for each service
+3. Services for inter-service communication
+4. Ingress for external access
+5. ConfigMap/Secret for configuration
+6. PVC for database persistence
+7. HPA for auto-scaling
+8. Network Policies for security
+9. Resource limits for stability
+10. Health checks for reliability
+
+PRACTICE SCENARIO:
+"You have a Node.js API that needs high availability and auto-scaling"
+
+Solution:
+```yaml
+# Deployment with 3 replicas
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: api
+        image: myapi:v1.0.0
+        resources:
+          requests:
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+---
+# Service for load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  type: LoadBalancer
+---
+# HPA for auto-scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        averageUtilization: 70
+```
+
+This shows understanding of:
+✅ High availability (3 replicas)
+✅ Load balancing (Service)
+✅ Auto-scaling (HPA)
+✅ Health checks (liveness probe)
+✅ Resource management (requests)
+

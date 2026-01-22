@@ -1,0 +1,2011 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// DOCKER EXPLAINED - The Simplest Way Possible
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 1: WHAT IS DOCKER? (Real-World Analogy)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Docker as a SHIPPING CONTAINER for software:
+
+Traditional Way (Without Docker):
+┌─────────────────────────────────────────────────────┐
+│  Developer's Machine                                │
+│  - Windows 11                                       │
+│  - Node.js v16                                      │
+│  - Python 3.9                                       │
+│  - MySQL 8.0                                        │
+│  "Works on my machine!" ✅                          │
+└─────────────────────────────────────────────────────┘
+                     │
+                     │ Deploy to...
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│  Production Server                                  │
+│  - Ubuntu 20.04                                     │
+│  - Node.js v14 (different version!)                │
+│  - Python 3.7 (different version!)                 │
+│  - MySQL 5.7 (different version!)                  │
+│  "Doesn't work here!" ❌                            │
+└─────────────────────────────────────────────────────┘
+
+With Docker (Containerized):
+┌─────────────────────────────────────────────────────┐
+│  Developer's Machine                                │
+│  ┌──────────────────────────────────────┐          │
+│  │  DOCKER CONTAINER                    │          │
+│  │  - Ubuntu 20.04                      │          │
+│  │  - Node.js v16                       │          │
+│  │  - All dependencies                  │          │
+│  │  - Your application                  │          │
+│  └──────────────────────────────────────┘          │
+│  "Works in container!" ✅                           │
+└─────────────────────────────────────────────────────┘
+                     │
+                     │ Deploy same container to...
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│  Production Server                                  │
+│  ┌──────────────────────────────────────┐          │
+│  │  SAME DOCKER CONTAINER               │          │
+│  │  - Ubuntu 20.04                      │          │
+│  │  - Node.js v16                       │          │
+│  │  - All dependencies                  │          │
+│  │  - Your application                  │          │
+│  └──────────────────────────────────────┘          │
+│  "Works here too!" ✅                               │
+└─────────────────────────────────────────────────────┘
+
+REAL-WORLD SHIPPING ANALOGY:
+
+Before Containers (Traditional Shipping):
+🚢 Ship carries: loose boxes, barrels, furniture, cars...
+   - Different shapes and sizes
+   - Hard to load/unload
+   - Things get damaged
+   - Slow process
+
+With Shipping Containers:
+🚢 Ship carries: standardized containers
+   - Same size (20ft or 40ft)
+   - Easy to load/unload
+   - Protected from damage
+   - Fast process
+   - Works on ships, trucks, trains
+
+Docker = Shipping containers for software!
+
+KEY BENEFITS:
+✅ "Works on my machine" problem solved
+✅ Same environment everywhere (dev, test, production)
+✅ Isolated from other applications
+✅ Easy to share and deploy
+✅ Portable across different systems
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 2: DOCKER CORE CONCEPTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. DOCKER IMAGE = Blueprint/Recipe
+
+Think: Like a recipe book or class definition
+
+┌─────────────────────────────────┐
+│     DOCKER IMAGE                │
+│  (node:16-alpine)               │
+│                                 │
+│  Instructions:                  │
+│  1. Start with Alpine Linux     │
+│  2. Install Node.js v16         │
+│  3. Set working directory       │
+│  4. Copy application files      │
+│  5. Install npm packages        │
+│  6. Run application             │
+└─────────────────────────────────┘
+
+Like a recipe:
+- Recipe = Image (instructions)
+- Cake = Container (actual running instance)
+
+2. DOCKER CONTAINER = Running Instance
+
+Think: Like an actual running application
+
+┌─────────────────────────────────┐
+│     DOCKER IMAGE                │
+│    (Recipe/Blueprint)           │
+└────────┬────────────────────────┘
+         │ Create containers from image
+         │
+    ┌────┴────┬─────────┬──────────┐
+    ▼         ▼         ▼          ▼
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│Container│ │Container│ │Container│ │Container│
+│   #1   │ │   #2   │ │   #3   │ │   #4   │
+└────────┘ └────────┘ └────────┘ └────────┘
+
+One image → Many containers (like one recipe → many cakes)
+
+3. DOCKERFILE = Instructions File
+
+Think: Like a recipe written down
+
+Example Dockerfile:
+```dockerfile
+# Start with base image (like "start with flour")
+FROM node:16-alpine
+
+# Set working directory (like "prepare workspace")
+WORKDIR /app
+
+# Copy package files (like "gather ingredients")
+COPY package*.json ./
+
+# Install dependencies (like "mix ingredients")
+RUN npm install
+
+# Copy application code (like "add flavor")
+COPY . .
+
+# Expose port (like "set oven temperature")
+EXPOSE 3000
+
+# Run application (like "bake")
+CMD ["node", "server.js"]
+```
+
+4. DOCKER REGISTRY = Store for Images
+
+Think: Like App Store or GitHub
+
+┌─────────────────────────────────────────┐
+│       DOCKER HUB (Registry)             │
+│                                         │
+│  - node:16-alpine                       │
+│  - postgres:14                          │
+│  - nginx:latest                         │
+│  - redis:7-alpine                       │
+│  - your-company/api:v1.0                │
+└─────────────────────────────────────────┘
+              ▲          │
+              │          │
+         Push │          │ Pull
+              │          │
+              │          ▼
+      ┌───────────────────────┐
+      │   Your Computer       │
+      └───────────────────────┘
+
+5. DOCKER VOLUME = Persistent Storage
+
+Think: Like external hard drive
+
+Container without volume:
+┌────────────────────┐
+│    Container       │
+│  (Data inside)     │ ❌ Data lost when container stops!
+└────────────────────┘
+
+Container with volume:
+┌────────────────────┐
+│    Container       │
+└─────────┬──────────┘
+          │ Mount
+          ▼
+┌────────────────────┐
+│     Volume         │
+│  (Data persists)   │ ✅ Data survives container restarts!
+└────────────────────┘
+
+6. DOCKER NETWORK = Communication Between Containers
+
+Think: Like internal office network
+
+┌───────────────────────────────────────────┐
+│        Docker Network                     │
+│                                           │
+│  ┌─────────┐    ┌──────────┐            │
+│  │   API   │◄───┤ Database │            │
+│  │Container│    │ Container │            │
+│  └────┬────┘    └──────────┘            │
+│       │                                   │
+│       ▼                                   │
+│  ┌─────────┐                             │
+│  │  Redis  │                             │
+│  │Container│                             │
+│  └─────────┘                             │
+└───────────────────────────────────────────┘
+
+Containers can talk to each other by name!
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 3: DOCKER VS VIRTUAL MACHINES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+VIRTUAL MACHINES (Traditional):
+
+┌──────────────────────────────────────────────────────┐
+│              Physical Server                         │
+├──────────────────────────────────────────────────────┤
+│              Host OS (Windows/Linux)                 │
+├──────────────────────────────────────────────────────┤
+│              Hypervisor (VMware/VirtualBox)          │
+├──────────────────────────────────────────────────────┤
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │   VM 1   │  │   VM 2   │  │   VM 3   │          │
+│  ├──────────┤  ├──────────┤  ├──────────┤          │
+│  │ Guest OS │  │ Guest OS │  │ Guest OS │  (Heavy!) │
+│  │(2GB RAM) │  │(2GB RAM) │  │(2GB RAM) │          │
+│  ├──────────┤  ├──────────┤  ├──────────┤          │
+│  │   App    │  │   App    │  │   App    │          │
+│  └──────────┘  └──────────┘  └──────────┘          │
+└──────────────────────────────────────────────────────┘
+
+Total: 3 operating systems = 6GB RAM just for OS!
+
+DOCKER CONTAINERS (Modern):
+
+┌──────────────────────────────────────────────────────┐
+│              Physical Server                         │
+├──────────────────────────────────────────────────────┤
+│              Host OS (Linux)                         │
+├──────────────────────────────────────────────────────┤
+│              Docker Engine                           │
+├──────────────────────────────────────────────────────┤
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │Container │  │Container │  │Container │          │
+│  │   #1     │  │   #2     │  │   #3     │  (Light!)│
+│  │  App     │  │  App     │  │  App     │          │
+│  │(50MB)    │  │(50MB)    │  │(50MB)    │          │
+│  └──────────┘  └──────────┘  └──────────┘          │
+└──────────────────────────────────────────────────────┘
+
+Total: Shares host OS = 150MB for apps only!
+
+COMPARISON TABLE:
+
+┌──────────────────┬────────────────┬─────────────────┐
+│   Feature        │  Docker        │  Virtual Machine│
+├──────────────────┼────────────────┼─────────────────┤
+│ Startup Time     │ Seconds ⚡     │ Minutes ⏱️      │
+│ Size             │ MBs 📦         │ GBs 🗄️          │
+│ Performance      │ Native 🚀      │ Overhead 🐌     │
+│ Isolation        │ Process-level  │ Full isolation  │
+│ Resource Usage   │ Low ✅         │ High ❌         │
+│ Portability      │ High ✅        │ Medium          │
+│ Boot             │ Fast ⚡        │ Slow ⏱️         │
+└──────────────────┴────────────────┴─────────────────┘
+
+WHEN TO USE:
+
+Docker:
+✅ Microservices
+✅ CI/CD pipelines
+✅ Development environments
+✅ Scaling applications
+✅ Cloud deployments
+
+Virtual Machines:
+✅ Different OS requirements (Windows app on Linux host)
+✅ Strong isolation needed (security)
+✅ Legacy applications
+✅ Full OS testing
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 4: DOCKER COMMANDS (Practical Guide)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. IMAGE COMMANDS
+
+# Pull image from Docker Hub
+docker pull nginx:latest
+docker pull node:16-alpine
+docker pull postgres:14
+
+# List all images
+docker images
+# or
+docker image ls
+
+# Remove image
+docker rmi nginx:latest
+docker image rm node:16-alpine
+
+# Build image from Dockerfile
+docker build -t myapp:v1.0 .
+# -t = tag (name)
+# . = current directory (where Dockerfile is)
+
+# Tag image (rename/version)
+docker tag myapp:v1.0 myapp:latest
+docker tag myapp:v1.0 username/myapp:v1.0
+
+# Push image to Docker Hub
+docker push username/myapp:v1.0
+
+# Inspect image details
+docker image inspect nginx:latest
+
+# Remove unused images
+docker image prune
+
+2. CONTAINER COMMANDS
+
+# Run container (basic)
+docker run nginx
+
+# Run container (detached mode - background)
+docker run -d nginx
+# -d = detached (runs in background)
+
+# Run container with name
+docker run -d --name my-nginx nginx
+# --name = give custom name
+
+# Run container with port mapping
+docker run -d -p 8080:80 nginx
+# -p 8080:80 = map host port 8080 to container port 80
+# Access: http://localhost:8080
+
+# Run container with environment variables
+docker run -d -e MYSQL_ROOT_PASSWORD=secret123 mysql:8
+# -e = environment variable
+
+# Run container with volume
+docker run -d -v mydata:/var/lib/mysql mysql:8
+# -v = volume mount (data persists)
+
+# Run container interactively
+docker run -it ubuntu bash
+# -i = interactive
+# -t = terminal
+# Run bash shell inside Ubuntu container
+
+# Run container with auto-remove
+docker run --rm alpine echo "Hello World"
+# --rm = remove container after it stops
+
+# Run container with restart policy
+docker run -d --restart unless-stopped nginx
+# Restart automatically if it crashes
+
+# List running containers
+docker ps
+
+# List all containers (including stopped)
+docker ps -a
+
+# Stop container
+docker stop my-nginx
+docker stop container_id
+
+# Start stopped container
+docker start my-nginx
+
+# Restart container
+docker restart my-nginx
+
+# Remove container
+docker rm my-nginx
+
+# Remove running container (force)
+docker rm -f my-nginx
+
+# View container logs
+docker logs my-nginx
+
+# Follow logs (live)
+docker logs -f my-nginx
+
+# View last 100 lines
+docker logs --tail 100 my-nginx
+
+# Execute command in running container
+docker exec my-nginx ls /usr/share/nginx/html
+
+# Enter running container (interactive shell)
+docker exec -it my-nginx bash
+# Now you're inside the container!
+
+# View container stats (CPU, memory)
+docker stats
+docker stats my-nginx
+
+# Inspect container details
+docker inspect my-nginx
+
+# View container processes
+docker top my-nginx
+
+# Copy files to/from container
+docker cp file.txt my-nginx:/app/file.txt
+docker cp my-nginx:/app/logs.txt ./logs.txt
+
+# Remove all stopped containers
+docker container prune
+
+3. VOLUME COMMANDS
+
+# Create volume
+docker volume create mydata
+
+# List volumes
+docker volume ls
+
+# Inspect volume
+docker volume inspect mydata
+
+# Remove volume
+docker volume rm mydata
+
+# Remove unused volumes
+docker volume prune
+
+# Run container with volume
+docker run -d -v mydata:/data alpine
+
+4. NETWORK COMMANDS
+
+# List networks
+docker network ls
+
+# Create network
+docker network create mynetwork
+
+# Inspect network
+docker network inspect mynetwork
+
+# Connect container to network
+docker network connect mynetwork my-nginx
+
+# Disconnect container from network
+docker network disconnect mynetwork my-nginx
+
+# Remove network
+docker network rm mynetwork
+
+# Run container on specific network
+docker run -d --network mynetwork nginx
+
+5. SYSTEM COMMANDS
+
+# Show Docker info
+docker info
+
+# Show Docker version
+docker version
+
+# Show disk usage
+docker system df
+
+# Clean up everything (unused images, containers, volumes, networks)
+docker system prune
+
+# Clean up everything including volumes
+docker system prune -a --volumes
+
+# Show real-time events
+docker events
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 5: DOCKERFILE IN DEPTH
+═══════════════════════════════════════════════════════════════════════════════════════
+
+SIMPLE NODE.JS APPLICATION:
+
+Project Structure:
+```
+myapp/
+├── Dockerfile
+├── package.json
+├── package-lock.json
+└── server.js
+```
+
+Dockerfile (Basic):
+```dockerfile
+# Use Node.js 16 on Alpine Linux (small size)
+FROM node:16-alpine
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy package files first (for caching)
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy application code
+COPY . .
+
+# Expose port 3000
+EXPOSE 3000
+
+# Run application
+CMD ["node", "server.js"]
+```
+
+Build and Run:
+```bash
+# Build image
+docker build -t myapp:v1.0 .
+
+# Run container
+docker run -d -p 3000:3000 --name myapp-container myapp:v1.0
+
+# Access application
+curl http://localhost:3000
+```
+
+Dockerfile (Production-Ready):
+```dockerfile
+# ═══════════════════════════════════════════════════
+# Stage 1: Build Stage
+# ═══════════════════════════════════════════════════
+FROM node:16-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build application (if using TypeScript)
+RUN npm run build
+
+# ═══════════════════════════════════════════════════
+# Stage 2: Production Stage
+# ═══════════════════════════════════════════════════
+FROM node:16-alpine
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Change ownership to non-root user
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Run application
+CMD ["node", "dist/server.js"]
+```
+
+Key Features:
+✅ Multi-stage build (smaller final image)
+✅ Non-root user (security)
+✅ Production dependencies only
+✅ Health check
+✅ Cache optimization
+
+DOCKERFILE INSTRUCTIONS EXPLAINED:
+
+1. FROM - Base image
+```dockerfile
+FROM node:16-alpine
+FROM ubuntu:20.04
+FROM scratch  # Empty base (minimal)
+```
+
+2. WORKDIR - Set working directory
+```dockerfile
+WORKDIR /app
+# All subsequent commands run in /app
+```
+
+3. COPY - Copy files from host to container
+```dockerfile
+COPY source dest
+COPY package.json /app/
+COPY . .  # Copy everything
+```
+
+4. ADD - Like COPY but can extract tar files and download URLs
+```dockerfile
+ADD file.tar.gz /app/  # Automatically extracts
+ADD https://example.com/file.txt /app/  # Downloads file
+```
+
+5. RUN - Execute commands during build
+```dockerfile
+RUN npm install
+RUN apt-get update && apt-get install -y curl
+RUN mkdir -p /app/logs
+```
+
+6. CMD - Default command when container starts
+```dockerfile
+CMD ["node", "server.js"]
+CMD ["npm", "start"]
+# Only one CMD per Dockerfile (last one wins)
+```
+
+7. ENTRYPOINT - Command that always runs
+```dockerfile
+ENTRYPOINT ["node"]
+CMD ["server.js"]
+# Together: docker run = node server.js
+# Override CMD: docker run myapp app.js = node app.js
+```
+
+8. EXPOSE - Document which ports to expose
+```dockerfile
+EXPOSE 3000
+EXPOSE 8080 443
+```
+
+9. ENV - Set environment variables
+```dockerfile
+ENV NODE_ENV production
+ENV PORT 3000
+ENV DB_HOST localhost
+```
+
+10. ARG - Build-time variables
+```dockerfile
+ARG NODE_VERSION=16
+FROM node:${NODE_VERSION}-alpine
+
+ARG BUILD_DATE
+LABEL build_date=$BUILD_DATE
+```
+
+Build with args:
+```bash
+docker build --build-arg NODE_VERSION=18 -t myapp .
+```
+
+11. VOLUME - Create mount point
+```dockerfile
+VOLUME /app/data
+# Data persists even if container is removed
+```
+
+12. USER - Switch user
+```dockerfile
+USER nodejs
+# All subsequent commands run as this user
+```
+
+13. LABEL - Add metadata
+```dockerfile
+LABEL version="1.0.0"
+LABEL maintainer="dev@example.com"
+LABEL description="My awesome application"
+```
+
+14. HEALTHCHECK - Health monitoring
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:3000/health || exit 1
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 6: DOCKER COMPOSE (Multi-Container Applications)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: Running multiple containers manually is tedious!
+
+Without Docker Compose:
+```bash
+# Create network
+docker network create mynetwork
+
+# Run database
+docker run -d --name db --network mynetwork \
+  -e POSTGRES_PASSWORD=secret postgres:14
+
+# Run Redis
+docker run -d --name redis --network mynetwork redis:7-alpine
+
+# Run API
+docker run -d --name api --network mynetwork \
+  -e DB_HOST=db -e REDIS_HOST=redis -p 3000:3000 myapi
+
+# Run frontend
+docker run -d --name frontend --network mynetwork \
+  -e API_URL=http://api:3000 -p 8080:80 myfrontend
+```
+
+With Docker Compose:
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # Database
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: myuser
+      POSTGRES_DB: mydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    networks:
+      - backend
+
+  # API
+  api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_USER: myuser
+      DB_PASSWORD: secret
+      DB_NAME: mydb
+      REDIS_HOST: redis
+      NODE_ENV: production
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+      - frontend
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    environment:
+      API_URL: http://api:3000
+    depends_on:
+      - api
+    networks:
+      - frontend
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  db-data:
+```
+
+Commands:
+```bash
+# Start all services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
+
+# View logs
+docker-compose logs
+
+# Follow logs
+docker-compose logs -f api
+
+# Restart service
+docker-compose restart api
+
+# Build images
+docker-compose build
+
+# Build and start
+docker-compose up --build
+
+# Scale service
+docker-compose up -d --scale api=3
+
+# Execute command in service
+docker-compose exec api npm run migrate
+
+# List services
+docker-compose ps
+```
+
+VISUAL REPRESENTATION:
+
+┌─────────────────────────────────────────────────┐
+│         Docker Compose Application              │
+│                                                 │
+│  ┌──────────────┐         ┌─────────────────┐  │
+│  │   Frontend   │◄────────┤  frontend (net) │  │
+│  │  (Port 8080) │         └─────────────────┘  │
+│  └──────┬───────┘                              │
+│         │                                       │
+│         │ HTTP                                  │
+│         ▼                                       │
+│  ┌──────────────┐         ┌─────────────────┐  │
+│  │     API      │◄────────┤  backend (net)  │  │
+│  │  (Port 3000) │         │  frontend (net) │  │
+│  └──────┬───────┘         └─────────────────┘  │
+│         │                                       │
+│    ┌────┴────┐                                 │
+│    ▼         ▼                                 │
+│  ┌────┐   ┌───────┐                           │
+│  │ DB │   │ Redis │                           │
+│  └────┘   └───────┘                           │
+│    │                                           │
+│    ▼                                           │
+│  ┌────────┐                                    │
+│  │ Volume │ (Data persists)                   │
+│  └────────┘                                    │
+└─────────────────────────────────────────────────┘
+
+REAL-WORLD EXAMPLE (E-commerce):
+
+```yaml
+version: '3.8'
+
+services:
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - web
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    networks:
+      - web
+
+  # API (Node.js)
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - web
+      - backend
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  # From .env file
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+
+  # Kafka (Message Queue)
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
+    networks:
+      - backend
+
+  # Zookeeper (Kafka dependency)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - backend
+
+  # Worker (Background Jobs)
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=postgres
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - backend
+
+networks:
+  web:
+  backend:
+
+volumes:
+  postgres-data:
+  redis-data:
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 7: DOCKER BEST PRACTICES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. OPTIMIZE IMAGE SIZE ⭐ CRITICAL
+
+BAD (Large Image):
+```dockerfile
+FROM node:16
+WORKDIR /app
+COPY . .
+RUN npm install
+CMD ["node", "server.js"]
+# Result: ~900MB
+```
+
+GOOD (Small Image):
+```dockerfile
+FROM node:16-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+CMD ["node", "server.js"]
+# Result: ~100MB
+```
+
+BEST (Multi-stage):
+```dockerfile
+FROM node:16-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:16-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY --from=builder /app/dist ./dist
+CMD ["node", "dist/server.js"]
+# Result: ~80MB
+```
+
+2. USE .dockerignore
+
+Create `.dockerignore` file:
+```
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+README.md
+.vscode
+.idea
+dist
+build
+coverage
+*.test.js
+```
+
+Benefits:
+✅ Faster builds
+✅ Smaller images
+✅ No sensitive files leaked
+
+3. MINIMIZE LAYERS
+
+BAD (Many layers):
+```dockerfile
+RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get install -y git
+RUN apt-get install -y vim
+```
+
+GOOD (Combined):
+```dockerfile
+RUN apt-get update && \
+    apt-get install -y curl git vim && \
+    rm -rf /var/lib/apt/lists/*
+```
+
+4. LEVERAGE BUILD CACHE
+
+BAD (Cache busting):
+```dockerfile
+COPY . .
+RUN npm install
+# Any file change = reinstall all packages!
+```
+
+GOOD (Cache-friendly):
+```dockerfile
+COPY package*.json ./
+RUN npm install
+COPY . .
+# Package.json unchanged = use cached npm install!
+```
+
+5. USE SPECIFIC VERSIONS
+
+BAD:
+```dockerfile
+FROM node:latest  # Version changes unexpectedly!
+```
+
+GOOD:
+```dockerfile
+FROM node:16.14.2-alpine  # Predictable builds
+```
+
+6. RUN AS NON-ROOT USER
+
+BAD (Security risk):
+```dockerfile
+FROM node:16-alpine
+WORKDIR /app
+COPY . .
+CMD ["node", "server.js"]
+# Runs as root!
+```
+
+GOOD (Secure):
+```dockerfile
+FROM node:16-alpine
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+WORKDIR /app
+COPY --chown=nodejs:nodejs . .
+USER nodejs
+CMD ["node", "server.js"]
+# Runs as non-root user
+```
+
+7. USE HEALTH CHECKS
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
+```
+
+Benefits:
+✅ Docker knows if container is healthy
+✅ Orchestrators (Kubernetes) can restart unhealthy containers
+✅ Better monitoring
+
+8. CLEAN UP IN SAME LAYER
+
+BAD:
+```dockerfile
+RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get clean  # Doesn't reduce size!
+```
+
+GOOD:
+```dockerfile
+RUN apt-get update && \
+    apt-get install -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+# All in one layer = smaller size
+```
+
+9. USE MULTI-STAGE BUILDS FOR COMPILED LANGUAGES
+
+Example (Go):
+```dockerfile
+# Build stage
+FROM golang:1.19 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o server
+
+# Production stage
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/server .
+CMD ["./server"]
+# Final image: ~10MB (vs 300MB with full Go image)
+```
+
+10. LABEL YOUR IMAGES
+
+```dockerfile
+LABEL maintainer="dev@example.com"
+LABEL version="1.0.0"
+LABEL description="My API service"
+LABEL org.opencontainers.image.source="https://github.com/user/repo"
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 8: DOCKER NETWORKING IN DEPTH
+═══════════════════════════════════════════════════════════════════════════════════════
+
+NETWORK TYPES:
+
+1. BRIDGE (Default)
+
+Containers on same bridge network can communicate
+
+```bash
+# Create network
+docker network create mynetwork
+
+# Run containers
+docker run -d --name api --network mynetwork myapi
+docker run -d --name db --network mynetwork postgres
+
+# api can reach db by name!
+# Inside api container: curl http://db:5432
+```
+
+VISUAL:
+┌────────────────────────────────────────┐
+│         Bridge Network                 │
+│                                        │
+│  ┌─────────┐         ┌──────────┐     │
+│  │   API   │◄────────┤    DB    │     │
+│  └────┬────┘         └──────────┘     │
+│       │                                │
+└───────┼────────────────────────────────┘
+        │
+        ▼
+    Internet (via NAT)
+
+2. HOST
+
+Container uses host's network directly (no isolation)
+
+```bash
+docker run -d --network host nginx
+# Access directly on host's port 80
+```
+
+VISUAL:
+┌────────────────────────────┐
+│      Host Machine          │
+│                            │
+│  Container (no isolation)  │
+│  Uses host's ports         │
+└────────────────────────────┘
+
+Use case: Maximum performance (no NAT overhead)
+
+3. NONE
+
+No networking (isolated)
+
+```bash
+docker run -d --network none alpine
+# Completely isolated, no network access
+```
+
+Use case: Security testing, offline processing
+
+4. OVERLAY (Multi-host)
+
+Connect containers across multiple Docker hosts
+
+```bash
+docker network create -d overlay myoverlay
+# Used in Docker Swarm/Kubernetes
+```
+
+VISUAL:
+┌──────────────┐         ┌──────────────┐
+│   Host 1     │         │   Host 2     │
+│  ┌────────┐  │         │  ┌────────┐  │
+│  │Container│  │◄───────►│  │Container│ │
+│  └────────┘  │         │  └────────┘  │
+└──────────────┘         └──────────────┘
+   Same overlay network
+
+EXAMPLE: Multi-Container App with Networks
+
+```yaml
+version: '3.8'
+
+services:
+  frontend:
+    image: myfrontend
+    networks:
+      - frontend-net
+    ports:
+      - "80:80"
+
+  api:
+    image: myapi
+    networks:
+      - frontend-net  # Can talk to frontend
+      - backend-net   # Can talk to db
+    environment:
+      DB_HOST: db
+
+  db:
+    image: postgres
+    networks:
+      - backend-net  # Only api can reach db
+    environment:
+      POSTGRES_PASSWORD: secret
+
+networks:
+  frontend-net:
+  backend-net:
+```
+
+VISUAL:
+┌──────────────┐
+│   Frontend   │
+└──────┬───────┘
+       │ frontend-net
+       ▼
+┌──────────────┐
+│     API      │
+└──────┬───────┘
+       │ backend-net
+       ▼
+┌──────────────┐
+│   Database   │
+└──────────────┘
+
+Frontend CANNOT reach Database directly! (Security)
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 9: DOCKER VOLUMES (Data Persistence)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: Container data is lost when container stops!
+
+┌────────────────────┐
+│    Container       │
+│  - app code        │
+│  - user uploads    │
+│  - database data   │
+└────────────────────┘
+       ❌ Delete container = lose all data!
+
+SOLUTION: Volumes (Persistent Storage)
+
+THREE TYPES:
+
+1. NAMED VOLUMES (Managed by Docker) ⭐ RECOMMENDED
+
+```bash
+# Create volume
+docker volume create mydata
+
+# Use volume
+docker run -d -v mydata:/app/data myapp
+
+# Data persists even after container deletion!
+docker rm myapp
+docker run -d -v mydata:/app/data myapp  # Same data!
+```
+
+Location: `/var/lib/docker/volumes/mydata/`
+
+VISUAL:
+┌────────────────┐
+│   Container    │
+└────────┬───────┘
+         │ Mount
+         ▼
+┌────────────────┐
+│ Named Volume   │ ✅ Managed by Docker
+│   (mydata)     │ ✅ Survives container deletion
+└────────────────┘
+
+2. BIND MOUNTS (Host directory)
+
+```bash
+# Mount host directory into container
+docker run -d -v /home/user/data:/app/data myapp
+
+# Changes in host = changes in container (and vice versa)
+```
+
+VISUAL:
+┌────────────────┐
+│   Container    │
+└────────┬───────┘
+         │ Mount
+         ▼
+┌────────────────┐
+│ Host Directory │ ✅ Direct access to host filesystem
+│ /home/user/data│ ⚠️  Security risk if not careful
+└────────────────┘
+
+Use case: Development (live code reload)
+
+3. TMPFS MOUNTS (Memory)
+
+```bash
+# Store in RAM (temporary, fast)
+docker run -d --mount type=tmpfs,destination=/app/cache myapp
+```
+
+Use case: Temporary files, sensitive data (never written to disk)
+
+REAL-WORLD EXAMPLE:
+
+```yaml
+version: '3.8'
+
+services:
+  # API with code bind mount (development)
+  api:
+    build: ./api
+    volumes:
+      - ./api:/app        # Bind mount for live reload
+      - /app/node_modules # Anonymous volume (don't overwrite)
+    networks:
+      - backend
+
+  # Database with named volume (production)
+  db:
+    image: postgres:14
+    volumes:
+      - db-data:/var/lib/postgresql/data  # Named volume
+    networks:
+      - backend
+
+  # Nginx with config bind mount
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Read-only
+      - upload-data:/usr/share/nginx/uploads   # Named volume
+    ports:
+      - "80:80"
+
+volumes:
+  db-data:      # Named volume
+  upload-data:  # Named volume
+```
+
+VOLUME COMMANDS:
+
+```bash
+# Create
+docker volume create mydata
+
+# List
+docker volume ls
+
+# Inspect
+docker volume inspect mydata
+
+# Remove
+docker volume rm mydata
+
+# Remove unused
+docker volume prune
+
+# Backup volume
+docker run --rm -v mydata:/data -v $(pwd):/backup alpine tar czf /backup/backup.tar.gz /data
+
+# Restore volume
+docker run --rm -v mydata:/data -v $(pwd):/backup alpine tar xzf /backup/backup.tar.gz -C /
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 10: COMMON INTERVIEW QUESTIONS & ANSWERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q1: What is Docker and why use it?
+
+A: "Docker is a containerization platform that packages applications
+    with their dependencies into standardized units called containers.
+    It solves the 'works on my machine' problem by ensuring consistency
+    across development, testing, and production environments."
+
+Benefits:
+✅ Consistency across environments
+✅ Fast startup (seconds vs minutes for VMs)
+✅ Lightweight (shares host OS kernel)
+✅ Portable (run anywhere Docker runs)
+✅ Easy scaling (spin up multiple containers)
+✅ Isolation (apps don't interfere)
+
+Q2: What's the difference between Docker Image and Container?
+
+A: "Image is a blueprint/template (like a class), Container is a
+    running instance (like an object)"
+
+Image:
+- Read-only
+- Built from Dockerfile
+- Stored in registry
+- Can create many containers from one image
+
+Container:
+- Writable (has layer on top)
+- Running process
+- Can be started/stopped
+- Ephemeral (temporary)
+
+Analogy:
+```
+Recipe (Image) → Cake (Container)
+Class (Image) → Object (Container)
+```
+
+Q3: Explain Docker architecture
+
+A: "Docker uses client-server architecture"
+
+┌─────────────┐
+│ Docker CLI  │ (Client)
+└──────┬──────┘
+       │ REST API
+       ▼
+┌─────────────────────────┐
+│   Docker Daemon         │ (Server)
+│   - Build images        │
+│   - Run containers      │
+│   - Manage networks     │
+│   - Manage volumes      │
+└────┬──────────┬─────────┘
+     │          │
+     ▼          ▼
+┌─────────┐  ┌─────────┐
+│  Image  │  │Container│
+└─────────┘  └─────────┘
+
+Q4: What is the difference between CMD and ENTRYPOINT?
+
+A: "CMD provides default arguments, ENTRYPOINT defines the main command"
+
+CMD only:
+```dockerfile
+CMD ["node", "server.js"]
+```
+```bash
+docker run myapp            # Runs: node server.js
+docker run myapp bash       # Runs: bash (CMD overridden)
+```
+
+ENTRYPOINT only:
+```dockerfile
+ENTRYPOINT ["node"]
+```
+```bash
+docker run myapp server.js  # Runs: node server.js
+docker run myapp app.js     # Runs: node app.js
+```
+
+ENTRYPOINT + CMD (Best practice):
+```dockerfile
+ENTRYPOINT ["node"]
+CMD ["server.js"]
+```
+```bash
+docker run myapp           # Runs: node server.js (default)
+docker run myapp app.js    # Runs: node app.js (override CMD)
+```
+
+Q5: How to reduce Docker image size?
+
+A: "Use multi-stage builds, Alpine base images, and optimize layers"
+
+Techniques:
+1. Use Alpine: `node:16-alpine` (vs `node:16`)
+2. Multi-stage builds (copy only artifacts)
+3. Combine RUN commands (reduce layers)
+4. Remove cache: `npm ci --only=production && npm cache clean --force`
+5. Use .dockerignore (exclude unnecessary files)
+6. Don't install dev dependencies in production
+
+Example:
+```dockerfile
+# Before: 900MB
+FROM node:16
+COPY . .
+RUN npm install
+
+# After: 80MB
+FROM node:16-alpine AS builder
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:16-alpine
+COPY --from=builder /app/dist ./dist
+CMD ["node", "dist/server.js"]
+```
+
+Q6: What are Docker volumes and why use them?
+
+A: "Volumes are persistent storage that survive container deletion"
+
+Without volume:
+```bash
+docker run postgres
+# Stop container → Lose all database data! ❌
+```
+
+With volume:
+```bash
+docker run -v db-data:/var/lib/postgresql/data postgres
+# Stop container → Data persists in volume ✅
+# Start new container → Access same data ✅
+```
+
+Types:
+1. Named volumes (managed by Docker) - BEST for production
+2. Bind mounts (host directory) - BEST for development
+3. tmpfs mounts (memory) - BEST for temporary data
+
+Q7: How does Docker networking work?
+
+A: "Containers on the same network can communicate by name"
+
+```bash
+# Create network
+docker network create mynet
+
+# Run containers
+docker run --network mynet --name api myapi
+docker run --network mynet --name db postgres
+
+# Inside api container:
+curl http://db:5432  # Access by name!
+```
+
+Network types:
+- Bridge (default) - Single host
+- Host - No isolation, use host's network
+- None - No network
+- Overlay - Multi-host (Swarm/Kubernetes)
+
+Q8: What is Docker Compose?
+
+A: "Docker Compose is a tool for defining and running multi-container
+    applications using a YAML file"
+
+Instead of:
+```bash
+docker run db
+docker run redis
+docker run api
+docker run frontend
+```
+
+Use:
+```yaml
+# docker-compose.yml
+services:
+  db:
+    image: postgres
+  redis:
+    image: redis
+  api:
+    build: ./api
+  frontend:
+    build: ./frontend
+```
+
+```bash
+docker-compose up  # Start all services!
+```
+
+Q9: What are multi-stage builds?
+
+A: "Multi-stage builds use multiple FROM statements to create smaller
+    final images by copying only necessary artifacts"
+
+```dockerfile
+# Stage 1: Build (large - 2GB)
+FROM node:16 AS builder
+COPY . .
+RUN npm install
+RUN npm run build
+
+# Stage 2: Production (small - 100MB)
+FROM node:16-alpine
+COPY --from=builder /app/dist ./dist
+CMD ["node", "dist/server.js"]
+```
+
+Benefits:
+✅ Smaller images (no build tools in final image)
+✅ Faster deployment
+✅ More secure (fewer dependencies)
+
+Q10: How to debug a running container?
+
+A: "Use docker exec, logs, and inspect commands"
+
+```bash
+# View logs
+docker logs container_name
+docker logs -f container_name  # Follow logs
+
+# Execute command
+docker exec container_name ls /app
+
+# Enter container
+docker exec -it container_name bash
+
+# Inspect details
+docker inspect container_name
+
+# View processes
+docker top container_name
+
+# View stats
+docker stats container_name
+
+# View port mappings
+docker port container_name
+```
+
+Q11: What is the difference between COPY and ADD?
+
+A: "COPY just copies files, ADD can extract archives and download URLs"
+
+COPY (Recommended):
+```dockerfile
+COPY package.json /app/
+COPY . /app/
+```
+
+ADD (Special features):
+```dockerfile
+# Auto-extract tar
+ADD archive.tar.gz /app/
+
+# Download from URL
+ADD https://example.com/file.txt /app/
+```
+
+Best practice: Use COPY unless you need ADD's special features
+
+Q12: How to optimize Docker build cache?
+
+A: "Order Dockerfile instructions from least to most frequently changing"
+
+BAD (Cache busting):
+```dockerfile
+COPY . .              # Everything changes = rebuild all
+RUN npm install       # Always reinstalls packages
+```
+
+GOOD (Cache-friendly):
+```dockerfile
+COPY package*.json ./ # Only if package.json changes
+RUN npm install       # Uses cache if package.json unchanged
+COPY . .              # Copy code last
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 11: DOCKER SECURITY BEST PRACTICES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. RUN AS NON-ROOT USER ⭐ CRITICAL
+
+```dockerfile
+# Create user
+RUN addgroup -g 1001 appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Switch to user
+USER appuser
+
+# All subsequent commands run as appuser
+```
+
+2. SCAN IMAGES FOR VULNERABILITIES
+
+```bash
+# Using Docker Scout
+docker scout quickview nginx:latest
+
+# Using Trivy
+trivy image myapp:v1.0
+
+# Using Snyk
+snyk container test myapp:v1.0
+```
+
+3. USE TRUSTED BASE IMAGES
+
+```dockerfile
+# Official images only
+FROM node:16-alpine
+FROM postgres:14-alpine
+FROM nginx:alpine
+
+# Avoid random images
+# FROM randomuser/nodejs  ❌
+```
+
+4. KEEP IMAGES UPDATED
+
+```bash
+# Update base image regularly
+docker pull node:16-alpine
+docker build --no-cache -t myapp .
+```
+
+5. MINIMIZE ATTACK SURFACE
+
+```dockerfile
+# Remove unnecessary packages
+RUN apk del build-dependencies
+
+# Use minimal base images
+FROM alpine  # vs FROM ubuntu
+FROM scratch # Empty base (for compiled binaries)
+```
+
+6. USE SECRETS PROPERLY
+
+BAD:
+```dockerfile
+# Secrets in Dockerfile ❌
+ENV DB_PASSWORD=secret123
+```
+
+GOOD:
+```bash
+# Use Docker secrets
+echo "secret123" | docker secret create db_password -
+
+# Use in service
+docker service create \
+  --secret db_password \
+  myapp
+```
+
+Or use .env file:
+```bash
+# .env file (not in Git!)
+DB_PASSWORD=secret123
+
+# Docker Compose
+docker-compose --env-file .env up
+```
+
+7. LIMIT CONTAINER RESOURCES
+
+```bash
+# Limit CPU and memory
+docker run -d \
+  --cpus=".5" \
+  --memory="512m" \
+  myapp
+```
+
+8. USE READ-ONLY FILESYSTEM
+
+```bash
+docker run -d --read-only myapp
+```
+
+9. DROP CAPABILITIES
+
+```bash
+docker run -d \
+  --cap-drop ALL \
+  --cap-add NET_BIND_SERVICE \
+  myapp
+```
+
+10. USE DOCKER BENCH SECURITY
+
+```bash
+# Automated security audit
+docker run -it --net host --pid host --cap-add audit_control \
+  -v /var/lib:/var/lib \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  docker/docker-bench-security
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 12: QUICK REFERENCE - KEY POINTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+DOCKER IN ONE SENTENCE:
+"Docker packages applications with dependencies into standardized
+containers that run consistently anywhere"
+
+WHEN TO USE DOCKER:
+✅ Microservices architecture
+✅ CI/CD pipelines
+✅ Development environments (consistency)
+✅ Cloud deployments
+✅ Application isolation
+✅ Easy scaling
+
+WHEN NOT TO USE DOCKER:
+❌ GUI applications (possible but complex)
+❌ High-performance computing (small overhead)
+❌ Legacy applications with kernel dependencies
+❌ Desktop applications
+
+KEY CONCEPTS:
+- Image: Blueprint (recipe)
+- Container: Running instance (cake)
+- Dockerfile: Instructions file (written recipe)
+- Registry: Image store (Docker Hub)
+- Volume: Persistent storage
+- Network: Container communication
+
+COMMON COMMANDS:
+```bash
+docker build -t myapp .         # Build image
+docker run -d -p 8080:80 myapp  # Run container
+docker ps                        # List containers
+docker logs container_id        # View logs
+docker exec -it container bash  # Enter container
+docker-compose up               # Start all services
+```
+
+DOCKERFILE ESSENTIALS:
+```dockerfile
+FROM node:16-alpine              # Base image
+WORKDIR /app                     # Working directory
+COPY package*.json ./            # Copy files
+RUN npm ci --only=production     # Build step
+EXPOSE 3000                      # Document port
+USER nodejs                      # Security
+CMD ["node", "server.js"]        # Run command
+```
+
+BEST PRACTICES:
+✅ Use Alpine images (smaller)
+✅ Multi-stage builds (smaller final image)
+✅ Run as non-root user (security)
+✅ Use .dockerignore (faster builds)
+✅ Combine RUN commands (fewer layers)
+✅ Specific versions (predictable)
+✅ Health checks (monitoring)
+✅ Named volumes (data persistence)
+
+═══════════════════════════════════════════════════════════════════════════════════════
+MEMORIZATION TRICK
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Docker as SHIPPING CONTAINERS:
+
+🚢 Shipping Container = Docker Container
+📦 Contents = Your application
+📋 Packing List = Dockerfile
+🏪 Container Depot = Docker Registry
+🚚 Ship/Truck/Train = Any server (host OS doesn't matter)
+
+Key Points:
+- Standardized size (same everywhere)
+- Portable (ship, truck, train)
+- Isolated (contents don't mix)
+- Stackable (run many containers)
+- Track & manage (Docker commands)
+
+GOLDEN RULE FOR INTERVIEWS:
+"Docker solves environment consistency by packaging applications
+with dependencies into isolated, portable containers that run
+the same way everywhere"
+
+═══════════════════════════════════════════════════════════════════════════════════════
+INTERVIEW PRO TIPS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. Always mention "consistency across environments"
+2. Know difference between IMAGE and CONTAINER
+3. Explain MULTI-STAGE builds (smaller images)
+4. Understand VOLUMES (data persistence)
+5. Know NETWORKING basics (container communication)
+6. Mention SECURITY (non-root user, scan images)
+7. Be ready to write a simple Dockerfile
+8. Know Docker Compose basics
+9. Understand when NOT to use Docker
+10. Know difference between Docker and VM
+
+Common follow-up: "Design a microservices architecture with Docker"
+Answer structure:
+1. Each service = separate container
+2. Docker Compose to orchestrate
+3. Separate networks (frontend/backend)
+4. Named volumes for databases
+5. Load balancer (Nginx)
+6. Health checks for monitoring
+7. Environment variables for configuration
+
+PRACTICE SCENARIO:
+"Deploy a 3-tier application (frontend, API, database) using Docker"
+
+Solution:
+```yaml
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    environment:
+      DB_HOST: db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: secret
+
+volumes:
+  db-data:
+```
+
+This shows understanding of:
+✅ Multi-container setup
+✅ Service dependencies
+✅ Data persistence
+✅ Environment variables
+✅ Port mapping
+
