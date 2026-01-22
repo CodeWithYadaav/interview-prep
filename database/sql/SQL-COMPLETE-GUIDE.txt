@@ -1,0 +1,1185 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// SQL COMPLETE GUIDE - Master SQL for Senior Developer Interviews (30 LPA)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Become SQL expert - from basics to advanced query optimization
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 1: COMPLEX JOINS (Beyond Simple JOIN)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.1 SELF JOIN - Joining Table to Itself
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Finding Your Colleague
+- You're in a company (employees table)
+- You want to find who your manager is
+- Manager is ALSO an employee in the same table
+- Solution: Join employees table to ITSELF!
+
+Sample Data:
+
+employees table:
+┌────┬───────────┬─────────────┬────────────┐
+│ id │   name    │    title    │ manager_id │
+├────┼───────────┼─────────────┼────────────┤
+│ 1  │ Alice     │ CEO         │ NULL       │
+│ 2  │ Bob       │ VP Eng      │ 1          │
+│ 3  │ Charlie   │ Dev Manager │ 2          │
+│ 4  │ David     │ Developer   │ 3          │
+│ 5  │ Eve       │ Developer   │ 3          │
+└────┴───────────┴─────────────┴────────────┘
+
+
+Problem: List each employee with their manager's name
+
+-- Self Join
+SELECT
+    e.name AS employee_name,
+    e.title AS employee_title,
+    m.name AS manager_name,
+    m.title AS manager_title
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+
+Result:
+┌───────────────┬─────────────┬──────────────┬──────────────┐
+│ employee_name │ emp_title   │ manager_name │ manager_title│
+├───────────────┼─────────────┼──────────────┼──────────────┤
+│ Alice         │ CEO         │ NULL         │ NULL         │ ← CEO has no manager
+│ Bob           │ VP Eng      │ Alice        │ CEO          │
+│ Charlie       │ Dev Manager │ Bob          │ VP Eng       │
+│ David         │ Developer   │ Charlie      │ Dev Manager  │
+│ Eve           │ Developer   │ Charlie      │ Dev Manager  │
+└───────────────┴─────────────┴──────────────┴──────────────┘
+
+
+Real Interview Question: "Find all employees who earn more than their managers"
+
+SELECT
+    e.name AS employee,
+    e.salary AS emp_salary,
+    m.name AS manager,
+    m.salary AS mgr_salary
+FROM employees e
+INNER JOIN employees m ON e.manager_id = m.id
+WHERE e.salary > m.salary;
+
+
+Visual Explanation:
+
+employees table (e)          employees table (m)
+┌────────────┐              ┌────────────┐
+│ id: 4      │              │ id: 3      │
+│ name: David│─manager_id─▶ │name:Charlie│
+│ salary:100k│  = 3         │salary:90k  │
+└────────────┘              └────────────┘
+      │                           │
+      └─ Compare salaries ────────┘
+         100k > 90k? ✅ Include in result!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.2 CROSS JOIN - Cartesian Product
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: All Possible Combinations
+- Like trying all shirt + pant combinations
+- 3 shirts × 4 pants = 12 combinations
+
+colors:              sizes:
+┌────────┐          ┌──────┐
+│ Red    │          │ S    │
+│ Blue   │          │ M    │
+│ Green  │          │ L    │
+└────────┘          └──────┘
+
+-- Cross Join (All combinations)
+SELECT
+    c.color,
+    s.size
+FROM colors c
+CROSS JOIN sizes s;
+
+Result (3 × 3 = 9 rows):
+┌────────┬──────┐
+│ color  │ size │
+├────────┼──────┤
+│ Red    │ S    │
+│ Red    │ M    │
+│ Red    │ L    │
+│ Blue   │ S    │
+│ Blue   │ M    │
+│ Blue   │ L    │
+│ Green  │ S    │
+│ Green  │ M    │
+│ Green  │ L    │
+└────────┴──────┘
+
+
+Real Use Case: Generate date ranges
+
+-- All combinations of employees and dates (for attendance tracking)
+SELECT
+    e.employee_id,
+    e.name,
+    d.date
+FROM employees e
+CROSS JOIN (
+    SELECT generate_series(
+        '2024-01-01'::date,
+        '2024-01-31'::date,
+        '1 day'::interval
+    )::date AS date
+) d
+ORDER BY e.employee_id, d.date;
+
+
+⚠️ Warning: CROSS JOIN can create HUGE result sets!
+- 1000 employees × 365 days = 365,000 rows
+- Use with care!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.3 JOIN vs WHERE (Performance Difference)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- Method 1: Using JOIN (Recommended)
+SELECT o.order_id, c.customer_name
+FROM orders o
+INNER JOIN customers c ON o.customer_id = c.customer_id
+WHERE o.status = 'completed';
+
+-- Method 2: Using WHERE (Old style, avoid!)
+SELECT o.order_id, c.customer_name
+FROM orders o, customers c
+WHERE o.customer_id = c.customer_id
+  AND o.status = 'completed';
+
+✅ Use Method 1:
+- Clearer intent (separation of JOIN and filtering)
+- Better performance (optimizer understands better)
+- Industry standard
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 2: WINDOW FUNCTIONS (Advanced - Super Important for Interviews!)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2.1 WHAT ARE WINDOW FUNCTIONS?
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Looking Through a Sliding Window
+- You're on a train, looking out the window
+- Window shows you nearby scenery (neighboring rows)
+- You can see PREVIOUS, CURRENT, and NEXT rows at once
+- Regular functions see only ONE row at a time
+
+Window Function Syntax:
+
+FUNCTION() OVER (
+    PARTITION BY column1    -- Optional: Split into groups
+    ORDER BY column2        -- Optional: Order within groups
+    ROWS/RANGE BETWEEN ...  -- Optional: Define window frame
+)
+
+
+Sample Data for Examples:
+
+sales table:
+┌─────────┬───────────┬───────────┬────────┐
+│ dept    │ employee  │   month   │ amount │
+├─────────┼───────────┼───────────┼────────┤
+│ Sales   │ Alice     │ 2024-01   │ 5000   │
+│ Sales   │ Alice     │ 2024-02   │ 6000   │
+│ Sales   │ Alice     │ 2024-03   │ 5500   │
+│ Sales   │ Bob       │ 2024-01   │ 4000   │
+│ Sales   │ Bob       │ 2024-02   │ 4500   │
+│ Tech    │ Charlie   │ 2024-01   │ 7000   │
+│ Tech    │ Charlie   │ 2024-02   │ 7500   │
+│ Tech    │ David     │ 2024-01   │ 6500   │
+└─────────┴───────────┴───────────┴────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2.2 ROW_NUMBER() - Assign Unique Number
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- Assign unique number to each row
+SELECT
+    dept,
+    employee,
+    amount,
+    ROW_NUMBER() OVER (ORDER BY amount DESC) AS row_num
+FROM sales;
+
+Result:
+┌─────────┬───────────┬────────┬─────────┐
+│ dept    │ employee  │ amount │ row_num │
+├─────────┼───────────┼────────┼─────────┤
+│ Tech    │ Charlie   │ 7500   │ 1       │ ← Highest
+│ Tech    │ Charlie   │ 7000   │ 2       │
+│ Tech    │ David     │ 6500   │ 3       │
+│ Sales   │ Alice     │ 6000   │ 4       │
+│ Sales   │ Alice     │ 5500   │ 5       │
+│ Sales   │ Alice     │ 5000   │ 6       │
+│ Sales   │ Bob       │ 4500   │ 7       │
+│ Sales   │ Bob       │ 4000   │ 8       │ ← Lowest
+└─────────┴───────────┴────────┴─────────┘
+
+
+Use Case: Find top N per group
+
+-- Top 2 performers per department
+WITH ranked AS (
+    SELECT
+        dept,
+        employee,
+        amount,
+        ROW_NUMBER() OVER (
+            PARTITION BY dept    -- Separate ranking per dept
+            ORDER BY amount DESC
+        ) AS rank
+    FROM sales
+)
+SELECT * FROM ranked WHERE rank <= 2;
+
+Result:
+┌─────────┬───────────┬────────┬──────┐
+│ dept    │ employee  │ amount │ rank │
+├─────────┼───────────┼────────┼──────┤
+│ Sales   │ Alice     │ 6000   │ 1    │ ← Top in Sales
+│ Sales   │ Alice     │ 5500   │ 2    │
+│ Tech    │ Charlie   │ 7500   │ 1    │ ← Top in Tech
+│ Tech    │ Charlie   │ 7000   │ 2    │
+└─────────┴───────────┴────────┴──────┘
+
+
+Visual Explanation:
+
+PARTITION BY dept creates separate "windows":
+
+Sales Dept Window:          Tech Dept Window:
+┌──────────────────┐        ┌──────────────────┐
+│ Alice   6000  #1 │        │ Charlie 7500  #1 │
+│ Alice   5500  #2 │        │ Charlie 7000  #2 │
+│ Bob     4500  #3 │        │ David   6500  #3 │
+│ Bob     4000  #4 │        └──────────────────┘
+└──────────────────┘
+     Each window ranked independently!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2.3 RANK() and DENSE_RANK() - Handle Ties
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Sample Data with Ties:
+
+scores table:
+┌───────────┬────────┐
+│  student  │ score  │
+├───────────┼────────┤
+│ Alice     │ 95     │
+│ Bob       │ 90     │
+│ Charlie   │ 90     │ ← Same as Bob (tie!)
+│ David     │ 85     │
+│ Eve       │ 85     │ ← Same as David (tie!)
+└───────────┴────────┘
+
+
+-- Compare ROW_NUMBER, RANK, and DENSE_RANK
+SELECT
+    student,
+    score,
+    ROW_NUMBER() OVER (ORDER BY score DESC) AS row_num,
+    RANK() OVER (ORDER BY score DESC) AS rank,
+    DENSE_RANK() OVER (ORDER BY score DESC) AS dense_rank
+FROM scores;
+
+Result:
+┌───────────┬────────┬─────────┬──────┬────────────┐
+│  student  │ score  │ row_num │ rank │ dense_rank │
+├───────────┼────────┼─────────┼──────┼────────────┤
+│ Alice     │ 95     │ 1       │ 1    │ 1          │
+│ Bob       │ 90     │ 2       │ 2    │ 2          │
+│ Charlie   │ 90     │ 3       │ 2    │ 2          │ ← Same rank as Bob
+│ David     │ 85     │ 4       │ 4    │ 3          │ ← RANK skips 3!
+│ Eve       │ 85     │ 5       │ 4    │ 3          │
+└───────────┴────────┴─────────┼──────┼────────────┘
+                                │      │
+                  Gaps after ties ──────┘
+                  No gaps ───────────────┘
+
+
+When to Use What?
+
+╔═══════════════╦════════════════════════════════════════════════╗
+║   FUNCTION    ║              USE WHEN                          ║
+╠═══════════════╬════════════════════════════════════════════════╣
+║ ROW_NUMBER()  ║ Need unique number (pagination, deduplication) ║
+║ RANK()        ║ Olympic-style ranking (1, 2, 2, 4, 5)         ║
+║ DENSE_RANK()  ║ Compact ranking (1, 2, 2, 3, 4)               ║
+╚═══════════════╩════════════════════════════════════════════════╝
+
+
+Real Interview Question: "Find second highest salary per department"
+
+-- Using DENSE_RANK (handles ties correctly)
+WITH ranked AS (
+    SELECT
+        dept,
+        employee,
+        salary,
+        DENSE_RANK() OVER (
+            PARTITION BY dept
+            ORDER BY salary DESC
+        ) AS rank
+    FROM employees
+)
+SELECT * FROM ranked WHERE rank = 2;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2.4 LEAD() and LAG() - Access Next/Previous Rows
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Looking Ahead and Behind
+- LAG: Look at PREVIOUS row (rearview mirror)
+- LEAD: Look at NEXT row (looking ahead)
+
+sales_monthly:
+┌────────┬────────┐
+│ month  │ amount │
+├────────┼────────┤
+│ Jan    │ 1000   │
+│ Feb    │ 1200   │
+│ Mar    │ 1100   │
+│ Apr    │ 1300   │
+└────────┴────────┘
+
+
+-- Calculate month-over-month growth
+SELECT
+    month,
+    amount,
+    LAG(amount) OVER (ORDER BY month) AS prev_month_amount,
+    amount - LAG(amount) OVER (ORDER BY month) AS growth,
+    ROUND(
+        (amount - LAG(amount) OVER (ORDER BY month)) * 100.0 /
+        LAG(amount) OVER (ORDER BY month),
+        2
+    ) AS growth_pct
+FROM sales_monthly;
+
+Result:
+┌────────┬────────┬──────────────────┬────────┬────────────┐
+│ month  │ amount │ prev_month_amount│ growth │ growth_pct │
+├────────┼────────┼──────────────────┼────────┼────────────┤
+│ Jan    │ 1000   │ NULL             │ NULL   │ NULL       │ ← No prev
+│ Feb    │ 1200   │ 1000             │ 200    │ 20.00      │
+│ Mar    │ 1100   │ 1200             │ -100   │ -8.33      │
+│ Apr    │ 1300   │ 1100             │ 200    │ 18.18      │
+└────────┴────────┴──────────────────┴────────┴────────────┘
+
+
+Visual:
+         ┌─────┐
+    LAG  │ Jan │  LEAD
+    ◀────│ 1000│────▶
+         └─────┘
+         ┌─────┐
+    LAG  │ Feb │  LEAD
+    ◀────│ 1200│────▶
+         └─────┘
+         ┌─────┐
+    LAG  │ Mar │  LEAD
+    ◀────│ 1100│────▶
+         └─────┘
+
+
+LEAD Example: Compare with next month
+
+SELECT
+    month,
+    amount,
+    LEAD(amount) OVER (ORDER BY month) AS next_month_amount,
+    LEAD(month) OVER (ORDER BY month) AS next_month
+FROM sales_monthly;
+
+
+Real Use Case: Find consecutive days with increasing sales
+
+WITH daily_sales AS (
+    SELECT
+        date,
+        amount,
+        LAG(amount) OVER (ORDER BY date) AS prev_amount
+    FROM sales
+)
+SELECT *
+FROM daily_sales
+WHERE amount > prev_amount;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2.5 Running Totals and Moving Averages
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- Running total (cumulative sum)
+SELECT
+    month,
+    amount,
+    SUM(amount) OVER (
+        ORDER BY month
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS running_total
+FROM sales;
+
+-- Simpler syntax (same result)
+SELECT
+    month,
+    amount,
+    SUM(amount) OVER (ORDER BY month) AS running_total
+FROM sales;
+
+Result:
+┌────────┬────────┬───────────────┐
+│ month  │ amount │ running_total │
+├────────┼────────┼───────────────┤
+│ Jan    │ 1000   │ 1000          │ ← 1000
+│ Feb    │ 1200   │ 2200          │ ← 1000 + 1200
+│ Mar    │ 1100   │ 3300          │ ← 1000 + 1200 + 1100
+│ Apr    │ 1300   │ 4600          │ ← Sum of all
+└────────┴────────┴───────────────┘
+
+
+-- 3-month moving average
+SELECT
+    month,
+    amount,
+    ROUND(AVG(amount) OVER (
+        ORDER BY month
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ), 2) AS moving_avg_3_months
+FROM sales;
+
+Result:
+┌────────┬────────┬────────────────────┐
+│ month  │ amount │ moving_avg_3_months│
+├────────┼────────┼────────────────────┤
+│ Jan    │ 1000   │ 1000.00            │ ← Only Jan
+│ Feb    │ 1200   │ 1100.00            │ ← (Jan + Feb) / 2
+│ Mar    │ 1100   │ 1100.00            │ ← (Jan + Feb + Mar) / 3
+│ Apr    │ 1300   │ 1200.00            │ ← (Feb + Mar + Apr) / 3
+└────────┴────────┴────────────────────┘
+
+
+Window Frame Visualizations:
+
+ROWS BETWEEN 2 PRECEDING AND CURRENT ROW:
+
+   [Jan] [Feb] [Mar]  Apr   ← For Mar, window = Jan, Feb, Mar
+    Jan  [Feb] [Mar] [Apr]  ← For Apr, window = Feb, Mar, Apr
+
+
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW:
+
+   [Jan]  Feb   Mar   Apr   ← For Jan, window = Jan
+   [Jan] [Feb]  Mar   Apr   ← For Feb, window = Jan, Feb
+   [Jan] [Feb] [Mar]  Apr   ← For Mar, window = Jan, Feb, Mar
+   [Jan] [Feb] [Mar] [Apr]  ← For Apr, window = All
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 3: CTEs (COMMON TABLE EXPRESSIONS)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+3.1 WHAT ARE CTEs?
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Temporary Notepad
+- Like writing intermediate results on a notepad
+- Use those results in your final answer
+- Notepad disappears after you're done
+
+Syntax:
+
+WITH cte_name AS (
+    SELECT ...
+)
+SELECT * FROM cte_name;
+
+
+Without CTE (Messy):
+
+SELECT *
+FROM (
+    SELECT *
+    FROM (
+        SELECT dept, AVG(salary) AS avg_salary
+        FROM employees
+        GROUP BY dept
+    ) AS dept_avg
+    WHERE avg_salary > 50000
+) AS high_paying_depts;
+
+
+With CTE (Clean!):
+
+WITH dept_avg AS (
+    SELECT dept, AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY dept
+),
+high_paying_depts AS (
+    SELECT * FROM dept_avg WHERE avg_salary > 50000
+)
+SELECT * FROM high_paying_depts;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+3.2 Multiple CTEs
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Real Interview Question: "Find departments where average salary > company average"
+
+-- Multiple CTEs (step-by-step)
+WITH company_avg AS (
+    -- Step 1: Calculate company-wide average
+    SELECT AVG(salary) AS avg_salary
+    FROM employees
+),
+dept_avg AS (
+    -- Step 2: Calculate per-department average
+    SELECT
+        dept,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY dept
+)
+-- Step 3: Compare
+SELECT
+    d.dept,
+    d.avg_salary AS dept_avg,
+    c.avg_salary AS company_avg,
+    d.avg_salary - c.avg_salary AS difference
+FROM dept_avg d
+CROSS JOIN company_avg c
+WHERE d.avg_salary > c.avg_salary;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+3.3 RECURSIVE CTEs - Hierarchies and Trees
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Family Tree
+- Start with grandparent
+- Find their children
+- Find children's children
+- Repeat until no more descendants
+
+employees table (org chart):
+┌────┬─────────┬────────────┐
+│ id │  name   │ manager_id │
+├────┼─────────┼────────────┤
+│ 1  │ Alice   │ NULL       │ ← CEO
+│ 2  │ Bob     │ 1          │
+│ 3  │ Charlie │ 1          │
+│ 4  │ David   │ 2          │
+│ 5  │ Eve     │ 2          │
+│ 6  │ Frank   │ 3          │
+└────┴─────────┴────────────┘
+
+Org Chart:
+         Alice (CEO)
+         /       \
+       Bob     Charlie
+      /  \        |
+   David Eve    Frank
+
+
+-- Recursive CTE to find all subordinates of Alice
+WITH RECURSIVE subordinates AS (
+    -- Base case: Start with Alice
+    SELECT id, name, manager_id, 1 AS level
+    FROM employees
+    WHERE name = 'Alice'
+
+    UNION ALL
+
+    -- Recursive case: Find employees managed by subordinates
+    SELECT e.id, e.name, e.manager_id, s.level + 1
+    FROM employees e
+    INNER JOIN subordinates s ON e.manager_id = s.id
+)
+SELECT * FROM subordinates;
+
+Result:
+┌────┬─────────┬────────────┬───────┐
+│ id │  name   │ manager_id │ level │
+├────┼─────────┼────────────┼───────┤
+│ 1  │ Alice   │ NULL       │ 1     │ ← Level 1 (CEO)
+│ 2  │ Bob     │ 1          │ 2     │ ← Level 2 (Reports to Alice)
+│ 3  │ Charlie │ 1          │ 2     │
+│ 4  │ David   │ 2          │ 3     │ ← Level 3 (Reports to Bob)
+│ 5  │ Eve     │ 2          │ 3     │
+│ 6  │ Frank   │ 3          │ 3     │ ← Level 3 (Reports to Charlie)
+└────┴─────────┴────────────┴───────┘
+
+
+How Recursion Works:
+
+Iteration 1 (Base):        Iteration 2:          Iteration 3:
+┌────────┐                ┌────────┐            ┌────────┐
+│ Alice  │                │ Bob    │            │ David  │
+│ Level 1│                │ Charlie│            │ Eve    │
+└────────┘                │ Level 2│            │ Frank  │
+                          └────────┘            │ Level 3│
+                                                └────────┘
+                                                    │
+                                              No more rows
+                                              → STOP
+
+
+Real Use Case: Category hierarchy (e-commerce)
+
+categories:
+┌────┬─────────────┬───────────┐
+│ id │    name     │ parent_id │
+├────┼─────────────┼───────────┤
+│ 1  │ Electronics │ NULL      │
+│ 2  │ Computers   │ 1         │
+│ 3  │ Laptops     │ 2         │
+│ 4  │ Gaming      │ 2         │
+│ 5  │ Mobile      │ 1         │
+└────┴─────────────┴───────────┘
+
+-- Find all subcategories under "Electronics"
+WITH RECURSIVE category_tree AS (
+    SELECT id, name, parent_id, 0 AS depth
+    FROM categories
+    WHERE name = 'Electronics'
+
+    UNION ALL
+
+    SELECT c.id, c.name, c.parent_id, ct.depth + 1
+    FROM categories c
+    INNER JOIN category_tree ct ON c.parent_id = ct.id
+)
+SELECT
+    REPEAT('  ', depth) || name AS category_hierarchy
+FROM category_tree;
+
+Result:
+┌──────────────────────┐
+│ category_hierarchy   │
+├──────────────────────┤
+│ Electronics          │
+│   Computers          │
+│     Laptops          │
+│     Gaming           │
+│   Mobile             │
+└──────────────────────┘
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 4: INDEXES - Deep Dive (Performance Critical!)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4.1 HOW INDEXES WORK (B-Tree)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Phone Book vs Unsorted List
+
+WITHOUT Index (Full Table Scan):
+Find "Smith" in 1,000,000 names → Check ALL 1,000,000 rows 🐌
+Time: O(n) - Linear
+
+WITH Index (B-Tree):
+Find "Smith" in 1,000,000 names → Check ~20 rows ⚡
+Time: O(log n) - Logarithmic
+
+
+B-Tree Structure (Simplified):
+
+                    [M]
+                   /   \
+              [A-L]     [N-Z]
+             /    \      /    \
+         [A-F] [G-L] [N-S] [T-Z]
+          / \    / \   / \   / \
+        [A][C][G][J][N][R][T][Y]
+         ↓  ↓  ↓  ↓  ↓  ↓  ↓  ↓
+       Data Data...........Data
+
+To find "Smith":
+1. Start at root: [M] → Go right (S > M)
+2. [N-Z] → Go left (S < T)
+3. [N-S] → Found range!
+4. Read ~3 pages instead of 1,000,000!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4.2 INDEX TYPES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔════════════════╦══════════════════════════════╦═══════════════════════╗
+║  INDEX TYPE    ║         USE WHEN             ║      EXAMPLE          ║
+╠════════════════╬══════════════════════════════╬═══════════════════════╣
+║ B-Tree         ║ General purpose (default)    ║ Most columns          ║
+║ Hash           ║ Exact match (=)              ║ Lookup tables         ║
+║ GIN/GiST       ║ Full-text search, JSON       ║ Text search           ║
+║ Partial        ║ Filter subset of rows        ║ Active users only     ║
+║ Covering       ║ Index contains all needed    ║ Index-only scan       ║
+║ Composite      ║ Multiple columns together    ║ (last_name,first_name)║
+╚════════════════╩══════════════════════════════╩═══════════════════════╝
+
+
+-- Create different index types
+-- 1. Standard B-Tree (default)
+CREATE INDEX idx_email ON users(email);
+
+-- 2. Composite index (order matters!)
+CREATE INDEX idx_name ON users(last_name, first_name);
+
+-- 3. Partial index (smaller, faster)
+CREATE INDEX idx_active_users ON users(email) WHERE status = 'active';
+
+-- 4. Unique index (enforce uniqueness)
+CREATE UNIQUE INDEX idx_unique_email ON users(email);
+
+-- 5. Covering index (include extra columns)
+CREATE INDEX idx_user_orders ON orders(user_id) INCLUDE (order_date, total);
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4.3 COMPOSITE INDEX - Column Order Matters!
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Phone Book
+- Sorted by LAST NAME first, then FIRST NAME
+- Easy to find: "Smith, John"
+- Hard to find: All people named "John" (any last name)
+
+CREATE INDEX idx_name ON users(last_name, first_name);
+
+✅ Can use index:
+SELECT * FROM users WHERE last_name = 'Smith';
+SELECT * FROM users WHERE last_name = 'Smith' AND first_name = 'John';
+
+❌ Cannot use index:
+SELECT * FROM users WHERE first_name = 'John';  -- Missing last_name!
+
+Partial use:
+SELECT * FROM users WHERE last_name = 'Smith' OR first_name = 'John';
+-- Uses index for last_name part, full scan for first_name part
+
+
+Visual:
+
+Index: (last_name, first_name)
+
+┌──────────────────────────────────┐
+│ Anderson, Alice   → Row 123      │
+│ Anderson, Bob     → Row 456      │
+│ Brown, Charlie    → Row 789      │
+│ Smith, Alice      → Row 234      │
+│ Smith, Bob        → Row 567      │
+│ Smith, Charlie    → Row 890      │
+└──────────────────────────────────┘
+    └─ Level 1 sort      └─ Level 2 sort
+
+
+Rule: Left-to-right prefix
+- (A, B, C) index works for:
+  ✅ WHERE A = ?
+  ✅ WHERE A = ? AND B = ?
+  ✅ WHERE A = ? AND B = ? AND C = ?
+  ❌ WHERE B = ?
+  ❌ WHERE C = ?
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4.4 COVERING INDEX - Index-Only Scan
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Problem: Index points to rows, then DB must fetch actual data (2 steps)
+
+┌──────────┐      ┌──────────────┐
+│  Index   │──┐   │  Table Data  │
+│  email   │  └──▶│  Full Rows   │
+└──────────┘      └──────────────┘
+    Read index    Then read table (slow!)
+
+
+Solution: Covering index includes ALL needed columns
+
+CREATE INDEX idx_user_email_name ON users(email) INCLUDE (name, created_at);
+
+Now query can be answered from index ALONE:
+SELECT name, created_at FROM users WHERE email = 'john@example.com';
+
+┌─────────────────────────────┐
+│  Covering Index             │
+│  email | name | created_at  │
+└─────────────────────────────┘
+    Everything needed is here!
+    No need to touch table! ⚡
+
+
+Before (2 steps):                After (1 step):
+1. Read index (find row ID)      1. Read covering index (done!)
+2. Read table (get data)          ✅ 50% faster!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4.5 WHEN NOT TO INDEX
+═══════════════════════════════════════════════════════════════════════════════════════
+
+❌ Small tables (< 1000 rows)
+   - Full scan is faster than index
+
+❌ High cardinality columns (too many updates)
+   - status (only 3 values: active, inactive, pending)
+   - gender (only 2-3 values)
+   - boolean fields
+
+❌ Columns never used in WHERE/JOIN
+   - description, notes, comments
+
+❌ Too many indexes
+   - Each index slows INSERT/UPDATE/DELETE
+   - Consumes disk space
+   - Limit to 3-5 indexes per table
+
+
+Index Maintenance Cost:
+
+INSERT into table:
+┌────────────────────────────────────┐
+│ 1. Insert row into table           │
+│ 2. Update index 1                  │
+│ 3. Update index 2                  │
+│ 4. Update index 3                  │
+│ ...more indexes = slower INSERT    │
+└────────────────────────────────────┘
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 5: QUERY OPTIMIZATION
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+5.1 EXPLAIN ANALYZE - See Query Execution Plan
+═══════════════════════════════════════════════════════════════════════════════════════
+
+EXPLAIN ANALYZE shows HOW the database executes your query
+
+EXPLAIN ANALYZE
+SELECT * FROM users WHERE email = 'john@example.com';
+
+Result:
+┌──────────────────────────────────────────────────────────────┐
+│ Seq Scan on users  (cost=0.00..1234.00 rows=1 width=100)    │
+│   Filter: (email = 'john@example.com')                       │
+│   Planning Time: 0.123 ms                                    │
+│   Execution Time: 45.678 ms                                  │
+└──────────────────────────────────────────────────────────────┘
+                           ↑
+                     Sequential Scan (BAD! - reads entire table)
+
+
+After adding index:
+
+CREATE INDEX idx_email ON users(email);
+
+EXPLAIN ANALYZE
+SELECT * FROM users WHERE email = 'john@example.com';
+
+Result:
+┌──────────────────────────────────────────────────────────────┐
+│ Index Scan using idx_email on users  (cost=0.43..8.45)      │
+│   Index Cond: (email = 'john@example.com')                   │
+│   Planning Time: 0.123 ms                                    │
+│   Execution Time: 0.234 ms                                   │
+└──────────────────────────────────────────────────────────────┘
+                           ↑
+                     Index Scan (GOOD! - 200x faster!)
+
+
+Key Terms:
+- **Seq Scan**: Full table scan (reads all rows) ❌
+- **Index Scan**: Uses index (fast) ✅
+- **Bitmap Heap Scan**: Index + heap (medium speed)
+- **cost**: Estimated cost (lower = better)
+- **rows**: Estimated rows returned
+- **actual time**: Real execution time
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+5.2 COMMON QUERY ANTI-PATTERNS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+❌ ANTI-PATTERN 1: SELECT *
+
+-- Bad: Fetches all columns (wastes bandwidth)
+SELECT * FROM users WHERE id = 123;
+
+-- Good: Select only needed columns
+SELECT id, name, email FROM users WHERE id = 123;
+
+
+❌ ANTI-PATTERN 2: Functions in WHERE clause
+
+-- Bad: Cannot use index (function on indexed column)
+SELECT * FROM users WHERE UPPER(email) = 'JOHN@EXAMPLE.COM';
+
+-- Good: Store uppercase separately or use functional index
+SELECT * FROM users WHERE email = 'john@example.com';
+
+-- Or create functional index:
+CREATE INDEX idx_email_upper ON users(UPPER(email));
+
+
+❌ ANTI-PATTERN 3: Leading wildcard in LIKE
+
+-- Bad: Cannot use index
+SELECT * FROM users WHERE name LIKE '%Smith';
+
+-- Good: Can use index
+SELECT * FROM users WHERE name LIKE 'Smith%';
+
+
+❌ ANTI-PATTERN 4: OR in WHERE (sometimes)
+
+-- Bad: Might not use index
+SELECT * FROM users WHERE first_name = 'John' OR last_name = 'Smith';
+
+-- Better: Use UNION
+SELECT * FROM users WHERE first_name = 'John'
+UNION
+SELECT * FROM users WHERE last_name = 'Smith';
+
+
+❌ ANTI-PATTERN 5: N+1 Query Problem
+
+-- Bad: 1 query + N queries (N = number of users)
+users = SELECT * FROM users;
+for each user:
+    orders = SELECT * FROM orders WHERE user_id = user.id;  -- N queries!
+
+-- Good: 1 query with JOIN
+SELECT u.*, o.*
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id;
+
+
+❌ ANTI-PATTERN 6: NOT IN with subquery
+
+-- Bad: Slow for large datasets
+SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM orders);
+
+-- Good: Use NOT EXISTS or LEFT JOIN
+SELECT u.*
+FROM users u
+WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id);
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+5.3 OPTIMIZATION TECHNIQUES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+✅ TECHNIQUE 1: Limit result set early
+
+-- Bad: Filter after sorting entire table
+SELECT * FROM (
+    SELECT * FROM users ORDER BY created_at DESC
+) WHERE status = 'active'
+LIMIT 10;
+
+-- Good: Filter first, then sort
+SELECT * FROM users
+WHERE status = 'active'
+ORDER BY created_at DESC
+LIMIT 10;
+
+
+✅ TECHNIQUE 2: Use EXISTS instead of COUNT
+
+-- Bad: Counts all rows (slow)
+IF (SELECT COUNT(*) FROM orders WHERE user_id = 123) > 0 THEN...
+
+-- Good: Stops at first match (fast)
+IF EXISTS (SELECT 1 FROM orders WHERE user_id = 123) THEN...
+
+
+✅ TECHNIQUE 3: Batch operations
+
+-- Bad: 1000 individual INSERTs
+INSERT INTO users (name) VALUES ('Alice');
+INSERT INTO users (name) VALUES ('Bob');
+...
+
+-- Good: Single batch INSERT
+INSERT INTO users (name) VALUES
+    ('Alice'),
+    ('Bob'),
+    ('Charlie'),
+    ...
+    (1000 rows);
+
+
+✅ TECHNIQUE 4: Use appropriate data types
+
+-- Bad: Storing numbers as VARCHAR
+CREATE TABLE products (
+    price VARCHAR(20)  -- '19.99'
+);
+SELECT * FROM products WHERE price > '10.00';  -- String comparison!
+
+-- Good: Use NUMERIC
+CREATE TABLE products (
+    price NUMERIC(10,2)
+);
+SELECT * FROM products WHERE price > 10.00;  -- Numeric comparison, can use index
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 6: TRANSACTIONS & LOCKING
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+6.1 ACID PROPERTIES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**A**tomicity: All or nothing
+**C**onsistency: Valid state always
+**I**solation: Transactions don't interfere
+**D**urability: Committed = permanent
+
+Example: Bank Transfer
+
+BEGIN TRANSACTION;
+    UPDATE accounts SET balance = balance - 100 WHERE account_id = 'A';
+    UPDATE accounts SET balance = balance + 100 WHERE account_id = 'B';
+COMMIT;
+
+If ANY step fails → ROLLBACK (A keeps money)
+If ALL steps succeed → COMMIT (B gets money)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+6.2 ISOLATION LEVELS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔═══════════════════════╦════════════════╦═══════════════╦═════════════╗
+║  ISOLATION LEVEL      ║ DIRTY READ     ║ NON-REPEAT    ║ PHANTOM     ║
+╠═══════════════════════╬════════════════╬═══════════════╬═════════════╣
+║ READ UNCOMMITTED      ║ Possible       ║ Possible      ║ Possible    ║
+║ READ COMMITTED        ║ Not Possible   ║ Possible      ║ Possible    ║
+║ REPEATABLE READ       ║ Not Possible   ║ Not Possible  ║ Possible    ║
+║ SERIALIZABLE          ║ Not Possible   ║ Not Possible  ║ Not Possible║
+╚═══════════════════════╩════════════════╩═══════════════╩═════════════╝
+
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+6.3 DEADLOCK PREVENTION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Deadlock Example:
+
+Transaction 1:               Transaction 2:
+BEGIN;                       BEGIN;
+LOCK TABLE orders;           LOCK TABLE products;
+... processing ...           ... processing ...
+LOCK TABLE products;         LOCK TABLE orders;
+    ↓                            ↓
+  WAITING for                 WAITING for
+  Transaction 2               Transaction 1
+    ↓                            ↓
+        DEADLOCK! 💀
+
+
+Prevention:
+1. Always lock tables in same order
+2. Keep transactions short
+3. Use timeouts
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 7: DATABASE DESIGN BEST PRACTICES
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+7.1 NORMALIZATION (Reduce Redundancy)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**1NF**: Atomic values, no repeating groups
+**2NF**: No partial dependencies
+**3NF**: No transitive dependencies
+
+[Detailed explanation in separate section]
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+7.2 DENORMALIZATION (For Performance)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Sometimes, break normalization rules for speed!
+
+-- Bad: 3 JOINs for every product display
+SELECT p.name, c.name, b.name
+FROM products p
+JOIN categories c ON p.category_id = c.id
+JOIN brands b ON p.brand_id = b.id;
+
+-- Good: Store category_name, brand_name in products table
+SELECT name, category_name, brand_name FROM products;
+
+Trade-off: Faster reads, more storage, update complexity
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+QUICK INTERVIEW ANSWERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q: "How do you optimize a slow query?"
+
+A: "My process:
+1. Run EXPLAIN ANALYZE to see execution plan
+2. Check if indexes exist on WHERE/JOIN columns
+3. Look for Seq Scan (full table scan) → add index
+4. Verify index is being used
+5. Consider query rewrite (avoid functions in WHERE, etc.)
+6. Check for N+1 queries
+7. Monitor with pg_stat_statements
+
+In my last project, I optimized a query from 5 seconds to 50ms by adding
+a composite index and rewriting a subquery as a JOIN."
+
+
+Q: "Explain window functions"
+
+A: "Window functions perform calculations across rows related to current row,
+without collapsing result (unlike GROUP BY).
+
+Examples:
+- ROW_NUMBER: Unique number per row
+- RANK: Ranking with gaps for ties
+- LAG/LEAD: Access previous/next row
+- SUM() OVER: Running totals
+
+Real use: Top N per group, running totals, month-over-month growth."
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+NEXT: SQL-INTERVIEW-QUESTIONS.txt for 50+ practice problems!
+═══════════════════════════════════════════════════════════════════════════════════════
+

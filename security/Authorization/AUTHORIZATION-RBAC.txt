@@ -1,0 +1,852 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// AUTHORIZATION & RBAC - Role-Based Access Control Explained Simply
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Master authorization patterns for senior developer interviews
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 1: AUTHENTICATION vs AUTHORIZATION (Don't Confuse!)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Airport Security
+
+🎫 **AUTHENTICATION** - "Who are you?"
+- Show your ID/passport
+- Prove your identity
+- "Yes, you are John Doe"
+
+🚪 **AUTHORIZATION** - "What can you access?"
+- Check your boarding pass
+- First class vs Economy
+- "You can access Gate 5, Seat 12A"
+
+
+Real-World:
+
+╔═══════════════════════════╦═══════════════════════════════════════╗
+║      AUTHENTICATION       ║          AUTHORIZATION                ║
+╠═══════════════════════════╬═══════════════════════════════════════╣
+║ Login with username/pass  ║ Check if user has permission          ║
+║ JWT token verification    ║ Check user's role (admin, user)       ║
+║ "Are you logged in?"      ║ "Can you access this resource?"       ║
+║ Happens ONCE (login)      ║ Happens on EVERY request              ║
+╚═══════════════════════════╩═══════════════════════════════════════╝
+
+
+Example:
+
+// Authentication (Login)
+POST /api/login
+{ "email": "john@example.com", "password": "..." }
+→ Returns JWT token
+→ "You are John Doe" ✅
+
+// Authorization (Access)
+GET /api/admin/users
+Header: Authorization: Bearer <token>
+→ Check if John has 'admin' role
+→ "John is a regular user, access denied" ❌
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 2: RBAC (ROLE-BASED ACCESS CONTROL)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+WHAT IS RBAC?
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**RBAC** = Assign ROLES to users, assign PERMISSIONS to roles
+
+Hierarchy:
+
+USER → assigned to → ROLE → has → PERMISSIONS
+
+
+Example: Blog Platform
+
+┌─────────────┐
+│   USERS     │
+└─────────────┘
+      │
+      │ assigned to
+      ▼
+┌─────────────────────────────────────────────────────┐
+│                    ROLES                            │
+│  ┌─────────┐  ┌─────────┐  ┌──────────┐           │
+│  │  ADMIN  │  │ EDITOR  │  │  VIEWER  │           │
+│  └─────────┘  └─────────┘  └──────────┘           │
+└─────────────────────────────────────────────────────┘
+      │              │              │
+      │ has          │ has          │ has
+      ▼              ▼              ▼
+┌─────────────────────────────────────────────────────┐
+│                 PERMISSIONS                         │
+│  ┌──────────────┐  ┌──────────────┐               │
+│  │ users:create │  │ posts:read   │               │
+│  │ users:delete │  │ posts:write  │               │
+│  │ posts:*      │  │ posts:edit   │               │
+│  │ ...          │  │              │               │
+│  └──────────────┘  └──────────────┘               │
+└─────────────────────────────────────────────────────┘
+
+
+Concrete Example:
+
+**Admin** can:
+✅ Create/delete users
+✅ Create/edit/delete posts
+✅ Manage site settings
+✅ View analytics
+
+**Editor** can:
+✅ Create/edit/delete posts
+✅ Moderate comments
+❌ Cannot manage users
+❌ Cannot delete site
+
+**Viewer** can:
+✅ Read posts
+✅ Comment
+❌ Cannot edit posts
+❌ Cannot manage users
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+IMPLEMENTATION - DATABASE SCHEMA
+═══════════════════════════════════════════════════════════════════════════════════════
+
+// 1. Users Table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+// 2. Roles Table
+CREATE TABLE roles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,  -- 'admin', 'editor', 'viewer'
+  description TEXT
+);
+
+// 3. Permissions Table
+CREATE TABLE permissions (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,  -- 'users:create', 'posts:edit'
+  description TEXT
+);
+
+// 4. User-Role Relationship (Many-to-Many)
+CREATE TABLE user_roles (
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, role_id)
+);
+
+// 5. Role-Permission Relationship (Many-to-Many)
+CREATE TABLE role_permissions (
+  role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (role_id, permission_id)
+);
+
+
+Visual:
+
+┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+│    users     │         │   user_roles │         │    roles     │
+│──────────────│         │──────────────│         │──────────────│
+│ id           │────────▶│ user_id      │◀────────│ id           │
+│ email        │         │ role_id      │         │ name         │
+│ password     │         └──────────────┘         │ description  │
+└──────────────┘                                   └──────────────┘
+                                                         │
+                                                         │
+                                                         ▼
+                                                   ┌──────────────┐
+                                                   │role_perms    │
+                                                   │──────────────│
+                                                   │ role_id      │
+                                                   │ permission_id│
+                                                   └──────────────┘
+                                                         │
+                                                         │
+                                                         ▼
+                                                   ┌──────────────┐
+                                                   │ permissions  │
+                                                   │──────────────│
+                                                   │ id           │
+                                                   │ name         │
+                                                   └──────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+IMPLEMENTATION - NESTJS ENTITIES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+// user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Role } from './role.entity';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  password: string;
+
+  @ManyToMany(() => Role, role => role.users, { eager: true })
+  @JoinTable({ name: 'user_roles' })
+  roles: Role[];
+
+  // Helper method to check if user has role
+  hasRole(roleName: string): boolean {
+    return this.roles.some(role => role.name === roleName);
+  }
+
+  // Helper method to get all permissions
+  getAllPermissions(): string[] {
+    const permissions = new Set<string>();
+
+    for (const role of this.roles) {
+      for (const permission of role.permissions) {
+        permissions.add(permission.name);
+      }
+    }
+
+    return Array.from(permissions);
+  }
+
+  // Helper method to check if user has permission
+  hasPermission(permissionName: string): boolean {
+    return this.getAllPermissions().includes(permissionName);
+  }
+}
+
+
+// role.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { User } from './user.entity';
+import { Permission } from './permission.entity';
+
+@Entity('roles')
+export class Role {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  name: string; // 'admin', 'editor', 'viewer'
+
+  @Column({ nullable: true })
+  description: string;
+
+  @ManyToMany(() => User, user => user.roles)
+  users: User[];
+
+  @ManyToMany(() => Permission, permission => permission.roles, { eager: true })
+  @JoinTable({ name: 'role_permissions' })
+  permissions: Permission[];
+}
+
+
+// permission.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Role } from './role.entity';
+
+@Entity('permissions')
+export class Permission {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  name: string; // 'users:create', 'posts:edit', etc.
+
+  @Column({ nullable: true })
+  description: string;
+
+  @ManyToMany(() => Role, role => role.permissions)
+  roles: Role[];
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+IMPLEMENTATION - GUARDS (Authorization Check)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+// 1. Roles Guard - Check if user has required role
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    // Get required roles from decorator
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles) {
+      return true; // No roles required
+    }
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    if (!user) {
+      return false; // Not authenticated
+    }
+
+    // Check if user has ANY of the required roles
+    return requiredRoles.some(role => user.hasRole(role));
+  }
+}
+
+
+// 2. Permissions Guard - Check if user has required permission
+export const PERMISSIONS_KEY = 'permissions';
+export const RequirePermissions = (...permissions: string[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);
+
+@Injectable()
+export class PermissionsGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (!requiredPermissions) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    if (!user) {
+      return false;
+    }
+
+    // Check if user has ALL required permissions
+    return requiredPermissions.every(permission =>
+      user.hasPermission(permission)
+    );
+  }
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+IMPLEMENTATION - CONTROLLER USAGE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+import { Controller, Get, Post, Delete, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
+import { Roles } from './decorators/roles.decorator';
+import { RequirePermissions } from './decorators/permissions.decorator';
+
+@Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)  // Apply guards
+export class UsersController {
+
+  // 1. Using Roles - Admin or Moderator can access
+  @Get()
+  @Roles('admin', 'moderator')
+  async getAllUsers() {
+    return this.usersService.findAll();
+  }
+
+  // 2. Using Permissions - Anyone with 'users:create' permission
+  @Post()
+  @RequirePermissions('users:create')
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
+  // 3. Admin only
+  @Delete(':id')
+  @Roles('admin')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.delete(id);
+  }
+
+  // 4. Multiple permissions required (user needs ALL)
+  @Post(':id/promote')
+  @RequirePermissions('users:edit', 'users:promote')
+  async promoteUser(@Param('id') id: string) {
+    return this.usersService.promoteToAdmin(id);
+  }
+
+  // 5. Public endpoint (no guards applied)
+  @Get('public')
+  async getPublicInfo() {
+    return { message: 'This is public' };
+  }
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SEED DATABASE - Initial Setup
+═══════════════════════════════════════════════════════════════════════════════════════
+
+// seed.service.ts
+@Injectable()
+export class SeedService {
+  async seedRolesAndPermissions() {
+    // 1. Create Permissions
+    const permissions = await this.permissionRepository.save([
+      { name: 'users:create', description: 'Create new users' },
+      { name: 'users:read', description: 'View users' },
+      { name: 'users:edit', description: 'Edit user details' },
+      { name: 'users:delete', description: 'Delete users' },
+      { name: 'posts:create', description: 'Create posts' },
+      { name: 'posts:read', description: 'View posts' },
+      { name: 'posts:edit', description: 'Edit posts' },
+      { name: 'posts:delete', description: 'Delete posts' },
+      { name: 'comments:moderate', description: 'Moderate comments' },
+      { name: 'analytics:view', description: 'View analytics dashboard' },
+    ]);
+
+    // 2. Create Roles
+    const adminRole = await this.roleRepository.save({
+      name: 'admin',
+      description: 'Full system access',
+      permissions: permissions, // Admin has ALL permissions
+    });
+
+    const editorRole = await this.roleRepository.save({
+      name: 'editor',
+      description: 'Can manage content',
+      permissions: permissions.filter(p =>
+        p.name.startsWith('posts') || p.name === 'comments:moderate'
+      ),
+    });
+
+    const viewerRole = await this.roleRepository.save({
+      name: 'viewer',
+      description: 'Read-only access',
+      permissions: permissions.filter(p => p.name.endsWith(':read')),
+    });
+
+    // 3. Create Sample Users
+    const adminUser = await this.userRepository.save({
+      email: 'admin@example.com',
+      password: await bcrypt.hash('admin123', 10),
+      roles: [adminRole],
+    });
+
+    const editorUser = await this.userRepository.save({
+      email: 'editor@example.com',
+      password: await bcrypt.hash('editor123', 10),
+      roles: [editorRole],
+    });
+
+    const viewerUser = await this.userRepository.save({
+      email: 'viewer@example.com',
+      password: await bcrypt.hash('viewer123', 10),
+      roles: [viewerRole],
+    });
+
+    console.log('Database seeded successfully!');
+  }
+}
+
+
+// Run seed: npm run seed
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+ADVANCED: RESOURCE-BASED AUTHORIZATION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** User should only edit THEIR OWN posts, not other users' posts
+
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│  POST /api/posts/123 (Edit post)                           │
+│                                                             │
+│  ❌ Role-based: "Editor can edit posts"                    │
+│     → Allows editing ANY post (security issue!)            │
+│                                                             │
+│  ✅ Resource-based: "Editor can edit THEIR OWN posts"      │
+│     → Check: post.authorId === currentUser.id              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+
+Implementation:
+
+// posts.controller.ts
+@Put(':id')
+@UseGuards(JwtAuthGuard)
+async updatePost(
+  @Param('id') id: string,
+  @Body() updatePostDto: UpdatePostDto,
+  @Req() req,
+) {
+  const post = await this.postsService.findOne(id);
+
+  if (!post) {
+    throw new NotFoundException('Post not found');
+  }
+
+  // Check ownership
+  if (post.authorId !== req.user.id && !req.user.hasRole('admin')) {
+    throw new ForbiddenException('You can only edit your own posts');
+  }
+
+  return this.postsService.update(id, updatePostDto);
+}
+
+
+// Better: Create a Policy class
+class PostPolicy {
+  static canEdit(user: User, post: Post): boolean {
+    // Admin can edit any post
+    if (user.hasRole('admin')) {
+      return true;
+    }
+
+    // User can edit their own post
+    if (post.authorId === user.id) {
+      return true;
+    }
+
+    // Moderator can edit posts in their category
+    if (user.hasRole('moderator') && post.category === user.moderatorCategory) {
+      return true;
+    }
+
+    return false;
+  }
+
+  static canDelete(user: User, post: Post): boolean {
+    return user.hasRole('admin') || post.authorId === user.id;
+  }
+
+  static canPublish(user: User, post: Post): boolean {
+    return user.hasRole('admin') || user.hasRole('editor');
+  }
+}
+
+// Usage
+@Put(':id')
+async updatePost(@Param('id') id: string, @Req() req, @Body() dto: UpdatePostDto) {
+  const post = await this.postsService.findOne(id);
+
+  if (!PostPolicy.canEdit(req.user, post)) {
+    throw new ForbiddenException('Cannot edit this post');
+  }
+
+  return this.postsService.update(id, dto);
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+FRONTEND INTEGRATION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+// 1. Include roles/permissions in JWT payload
+const payload = {
+  sub: user.id,
+  email: user.email,
+  roles: user.roles.map(r => r.name),  // ['admin', 'editor']
+  permissions: user.getAllPermissions(), // ['users:create', 'posts:edit', ...]
+};
+
+const token = jwt.sign(payload, SECRET);
+
+
+// 2. Decode token on frontend
+import jwtDecode from 'jwt-decode';
+
+const token = localStorage.getItem('token');
+const decoded = jwtDecode(token);
+
+console.log(decoded.roles);        // ['admin']
+console.log(decoded.permissions);  // ['users:create', ...]
+
+
+// 3. Conditionally show UI elements
+function canCreatePost(user) {
+  return user.permissions.includes('posts:create');
+}
+
+function Dashboard() {
+  const user = useUser(); // Get from context/redux
+
+  return (
+    <div>
+      {user.roles.includes('admin') && (
+        <button>Admin Panel</button>
+      )}
+
+      {canCreatePost(user) && (
+        <button onClick={createPost}>New Post</button>
+      )}
+
+      {user.permissions.includes('analytics:view') && (
+        <Link to="/analytics">View Analytics</Link>
+      )}
+    </div>
+  );
+}
+
+
+// 4. Create permission hook
+function usePermission(permissionName: string): boolean {
+  const user = useUser();
+  return user?.permissions?.includes(permissionName) || false;
+}
+
+// Usage
+function EditPostButton({ post }) {
+  const canEdit = usePermission('posts:edit');
+  const isOwner = post.authorId === user.id;
+
+  if (!canEdit && !isOwner) {
+    return null; // Don't show button
+  }
+
+  return <button onClick={handleEdit}>Edit</button>;
+}
+
+
+⚠️ **IMPORTANT:** Frontend checks are for UX only, NOT security!
+Always validate permissions on backend!
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 3: ALTERNATIVE AUTHORIZATION MODELS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1. ACL (Access Control List)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Concept:** Each resource has a list of who can access it
+
+Example: Google Docs sharing
+- Document A: Alice (owner), Bob (editor), Charlie (viewer)
+- Document B: Alice (owner), David (editor)
+
+Implementation:
+CREATE TABLE document_access (
+  document_id INTEGER,
+  user_id INTEGER,
+  permission ENUM('owner', 'editor', 'viewer'),
+  PRIMARY KEY (document_id, user_id)
+);
+
+✅ Fine-grained control
+❌ Doesn't scale well (millions of records)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2. ABAC (Attribute-Based Access Control)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Concept:** Access based on attributes (user, resource, environment)
+
+Example:
+"Allow if user.department === resource.department AND user.level >= resource.securityLevel"
+
+if (
+  user.department === document.department &&
+  user.securityLevel >= document.securityLevel &&
+  currentTime >= '09:00' &&
+  currentTime <= '17:00'
+) {
+  allowAccess();
+}
+
+✅ Very flexible
+❌ Complex to implement
+❌ Hard to debug
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+COMPARISON
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔═══════════╦════════════════════╦══════════════╦═══════════════╗
+║  Model    ║  Use Case          ║  Complexity  ║  Scalability  ║
+╠═══════════╬════════════════════╬══════════════╬═══════════════╣
+║  RBAC     ║  Most apps         ║  ⭐⭐         ║  ⭐⭐⭐⭐     ║
+║  ACL      ║  Document sharing  ║  ⭐⭐⭐       ║  ⭐⭐         ║
+║  ABAC     ║  Enterprise apps   ║  ⭐⭐⭐⭐⭐   ║  ⭐⭐⭐       ║
+╚═══════════╩════════════════════╩══════════════╩═══════════════╝
+
+**Recommendation:** Start with RBAC (covers 90% of use cases)
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 4: COMMON INTERVIEW QUESTIONS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+Q1: Explain RBAC and how you've implemented it.
+
+A: "RBAC stands for Role-Based Access Control. Instead of assigning permissions
+directly to users, you:
+
+1. Create ROLES (admin, editor, viewer)
+2. Assign PERMISSIONS to roles (users:create, posts:edit)
+3. Assign ROLES to users
+
+**Benefits:**
+- Easy to manage (change role, all users updated)
+- Clear hierarchy
+- Scalable
+
+**My Implementation:**
+- Database: Users, Roles, Permissions (many-to-many)
+- NestJS Guards: RolesGuard, PermissionsGuard
+- Decorators: @Roles('admin'), @RequirePermissions('posts:edit')
+
+In my last project, I implemented RBAC for a content management system with
+4 roles (admin, editor, author, viewer) and 20+ permissions. This made it
+easy to onboard new users and maintain security policies."
+
+
+Q2: How do you handle role changes without requiring re-login?
+
+A: "Two approaches:
+
+**1. Short-lived tokens (Recommended):**
+- Access token expires in 15 minutes
+- Refresh token fetches new token with updated roles
+- User gets new permissions automatically on next token refresh
+
+**2. Cache invalidation:**
+- Backend maintains token blacklist in Redis
+- When role changes, add old tokens to blacklist
+- On next request, token is rejected, user must refresh
+
+**3. Real-time updates (WebSocket):**
+- Server sends 'role-updated' event via WebSocket
+- Frontend fetches new token immediately
+- User sees new permissions instantly
+
+I prefer option 1 for simplicity - 15 minute delay is acceptable for most apps."
+
+
+Q3: How do you prevent privilege escalation attacks?
+
+A: "Multiple safeguards:
+
+**1. Server-side validation (NEVER trust client):**
+@Post('users/:id/change-role')
+async changeRole(@Param('id') id: string, @Body() dto: ChangeRoleDto, @Req() req) {
+  // Check: Can current user change roles?
+  if (!req.user.hasPermission('users:change-role')) {
+    throw new ForbiddenException();
+  }
+
+  // Check: Is target role valid?
+  if (!['admin', 'editor', 'viewer'].includes(dto.newRole)) {
+    throw new BadRequestException('Invalid role');
+  }
+
+  // Check: User can't promote to higher role than themselves
+  if (dto.newRole === 'admin' && !req.user.hasRole('super-admin')) {
+    throw new ForbiddenException('Cannot promote to admin');
+  }
+
+  return this.usersService.changeRole(id, dto.newRole);
+}
+
+**2. Audit logging:**
+- Log all role changes
+- Monitor for suspicious patterns
+- Alert on mass promotions
+
+**3. Separate 'super-admin' role:**
+- Only super-admin can create admins
+- Regular admin cannot escalate to super-admin
+
+**4. API key for sensitive operations:**
+- Changing roles requires additional API key
+- Stored separately, rotated regularly"
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+BEST PRACTICES CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════════════
+
+✅ Use RBAC for most applications
+✅ Always validate on backend (never trust frontend)
+✅ Principle of least privilege (grant minimum permissions needed)
+✅ Combine role check + resource ownership check
+✅ Audit all permission changes
+✅ Use descriptive permission names (users:create, posts:edit)
+✅ Separate authentication and authorization guards
+✅ Include roles/permissions in JWT payload
+✅ Short-lived tokens (15 min access, 7 day refresh)
+✅ Test authorization thoroughly (can user A access user B's data?)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+WHAT TO SAY IN INTERVIEW
+═══════════════════════════════════════════════════════════════════════════════════════
+
+"For authorization, I implement RBAC (Role-Based Access Control):
+
+**Architecture:**
+- Database schema: Users → Roles → Permissions (many-to-many)
+- Guards: RolesGuard and PermissionsGuard in NestJS
+- Decorators: @Roles('admin') and @RequirePermissions('posts:edit')
+
+**Key Features:**
+1. **Role hierarchy:** Admin > Editor > Viewer
+2. **Fine-grained permissions:** users:create, posts:edit, etc.
+3. **Resource ownership:** Users can edit their own posts
+4. **Audit logging:** Track all permission changes
+
+**Security:**
+- Always validate on backend (frontend is for UX only)
+- Combine role check + ownership check
+- Principle of least privilege
+- Short-lived tokens with updated permissions
+
+In my [project name], I implemented RBAC for a multi-tenant platform with
+5 roles and 30+ permissions. This made onboarding new users simple - just
+assign a role and they get appropriate access. We never had a privilege
+escalation incident."
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SUMMARY - Quick Reference
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Authentication: "Who are you?" → Login, JWT
+Authorization: "What can you access?" → Roles, Permissions
+
+RBAC Flow:
+1. User logs in → Get JWT with roles
+2. User makes request → Guards check roles/permissions
+3. If authorized → Process request
+4. If not authorized → Return 403 Forbidden
+
+Implementation:
+- Database: 5 tables (users, roles, permissions, user_roles, role_permissions)
+- Guards: RolesGuard, PermissionsGuard
+- Decorators: @Roles(), @RequirePermissions()
+- Policy classes: For resource-based checks
+
+Best Practice: Role + Ownership check
+- "User must have 'editor' role AND own the post"
+

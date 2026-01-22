@@ -1,8 +1,0 @@
-How would you set up a Kafka cluster using Docker containers?
-Discuss setting up Kafka brokers, zookeepers, and networking between them using Docker.
-If you were deploying a Kafka-based application with Docker, how would you manage persistent storage?
-How would you scale a Kafka consumer application deployed with Docker?
-What would you do if a Kafka producer is significantly slower than the consumer? How would you troubleshoot it?
-How would you design a microservice architecture using Docker for processing Kafka messages?
-If a Kafka topic needs to handle billions of messages per day, how would you configure Docker and Kafka to achieve scalability?
-How would you manage Kafka performance tuning in a containerized environment (Docker)?

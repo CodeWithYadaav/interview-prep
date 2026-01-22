@@ -1,0 +1,718 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// AUTHENTICATION - Complete Interview Guide (Explained Simply)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Master all authentication methods for senior developer interviews (30 LPA level)
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 1: SESSION-BASED vs TOKEN-BASED AUTHENTICATION
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.1 SESSION-BASED AUTHENTICATION (Traditional - Like a Hotel Key Card)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Hotel Check-in
+- You check in → Front desk gives you a KEY CARD (session ID)
+- Your room details are stored at FRONT DESK (server)
+- Every time you enter room, they CHECK THEIR RECORDS
+- When you checkout → They DESTROY your key card
+
+How It Works:
+
+┌─────────────┐                                    ┌─────────────┐
+│   Browser   │                                    │   Server    │
+│             │                                    │             │
+│  1. Login   │──── Username + Password ────────▶ │ 2. Validate │
+│             │                                    │   Create    │
+│             │                                    │   Session   │
+│             │                                    │   (Server   │
+│             │                                    │   Memory)   │
+│             │                                    │             │
+│ 3. Store    │◀──── Session ID (Cookie) ────────│ 4. Return   │
+│   Cookie    │      Set-Cookie: sid=abc123       │   Session   │
+│             │                                    │   ID        │
+│             │                                    │             │
+│ 5. Send     │──── Cookie: sid=abc123 ──────────▶│ 6. Check    │
+│   Cookie    │      with every request            │   Session   │
+│   Auto      │                                    │   Store     │
+│             │◀──── Protected Data ──────────────│             │
+│             │                                    │             │
+│ 7. Logout   │──── Logout Request ──────────────▶│ 8. Destroy  │
+│             │                                    │   Session   │
+│             │◀──── Clear Cookie ────────────────│             │
+└─────────────┘                                    └─────────────┘
+
+                    ┌─────────────────┐
+                    │  Session Store  │
+                    │  (Redis/Memory) │
+                    │                 │
+                    │ abc123: {       │
+                    │   userId: 1     │
+                    │   email: "..."  │
+                    │   createdAt:... │
+                    │ }               │
+                    └─────────────────┘
+
+
+Implementation Example:
+
+// Using Express + Redis Session Store
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
+const redis = require('redis');
+
+const redisClient = redis.createClient();
+
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true,      // HTTPS only
+    httpOnly: true,    // Cannot access via JavaScript (XSS protection)
+    maxAge: 3600000,   // 1 hour
+    sameSite: 'strict' // CSRF protection
+  }
+}));
+
+// Login endpoint
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate user
+  const user = await User.findOne({ email });
+  const isValid = await bcrypt.compare(password, user.password);
+
+  if (!isValid) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // Create session
+  req.session.userId = user.id;
+  req.session.email = user.email;
+  req.session.role = user.role;
+
+  res.json({ message: 'Logged in successfully' });
+});
+
+// Protected route
+app.get('/profile', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  res.json({ userId: req.session.userId });
+});
+
+// Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out' });
+  });
+});
+
+
+PROS:
+✅ Session can be revoked immediately (logout = instant)
+✅ Server has full control
+✅ Smaller cookie size (just session ID)
+✅ Easier to track active users
+
+CONS:
+❌ Server must store sessions (memory/Redis)
+❌ Difficult to scale horizontally (need shared session store)
+❌ CSRF attacks possible (need CSRF tokens)
+❌ Not ideal for microservices
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.2 TOKEN-BASED AUTHENTICATION (Modern - Like a Movie Ticket)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Analogy: Movie Ticket
+- You buy ticket → Theater gives you PRINTED TICKET (JWT)
+- All information is ON THE TICKET (no need to check central database)
+- Theater staff just VERIFIES SIGNATURE (is this real ticket?)
+- Until expiry time, ticket is valid
+
+How It Works:
+
+┌─────────────┐                                    ┌─────────────┐
+│   Browser   │                                    │   Server    │
+│             │                                    │             │
+│  1. Login   │──── Username + Password ────────▶ │ 2. Validate │
+│             │                                    │   Create    │
+│             │                                    │   JWT Token │
+│             │                                    │   (Sign with│
+│             │                                    │   Secret)   │
+│             │                                    │             │
+│ 3. Store    │◀──── JWT Token ──────────────────│ 4. Return   │
+│   in        │      { "token": "eyJhbG..." }     │   Token     │
+│   localStorage                                   │             │
+│   or Memory │                                    │             │
+│             │                                    │             │
+│ 5. Send     │──── Authorization: Bearer eyJ...─▶│ 6. Verify   │
+│   Token in  │      with every request            │   Signature │
+│   Header    │                                    │   Decode    │
+│             │◀──── Protected Data ──────────────│             │
+│             │                                    │             │
+└─────────────┘                                    └─────────────┘
+
+                         NO SERVER STORAGE!
+                         Token contains all info
+
+
+JWT Token Structure:
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+│                  │                                  │                           │
+│     HEADER       │            PAYLOAD               │        SIGNATURE          │
+│  (Algorithm)     │        (User Data)               │    (Verification)         │
+│                  │                                  │                           │
+│  {               │  {                               │  HMACSHA256(              │
+│    "alg": "HS256"│    "sub": "1234567890",         │    base64(header) + "." + │
+│    "typ": "JWT"  │    "name": "John Doe",          │    base64(payload),       │
+│  }               │    "role": "admin",              │    SECRET_KEY             │
+│                  │    "iat": 1516239022,            │  )                        │
+│                  │    "exp": 1516242622             │                           │
+│                  │  }                               │                           │
+
+
+Implementation Example:
+
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+const SECRET_KEY = process.env.JWT_SECRET;
+
+// Login endpoint
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate user
+  const user = await User.findOne({ email });
+  const isValid = await bcrypt.compare(password, user.password);
+
+  if (!isValid) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // Create JWT token
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    },
+    SECRET_KEY,
+    {
+      expiresIn: '1h',      // Token expires in 1 hour
+      issuer: 'my-app',
+      audience: 'my-app-users'
+    }
+  );
+
+  res.json({ token });
+});
+
+// Middleware to verify token
+function authenticateToken(req, res, next) {
+  // Get token from header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  // Verify token
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token expired' });
+      }
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Token is valid, attach user to request
+    req.user = decoded;
+    next();
+  });
+}
+
+// Protected route
+app.get('/profile', authenticateToken, (req, res) => {
+  res.json({
+    userId: req.user.userId,
+    email: req.user.email,
+    role: req.user.role
+  });
+});
+
+
+PROS:
+✅ Stateless (no server storage needed)
+✅ Easy to scale horizontally
+✅ Works great for microservices (each service can verify)
+✅ Mobile-friendly (no cookies)
+✅ Cross-domain compatible
+
+CONS:
+❌ Token valid until expiry (can't revoke immediately)
+❌ Larger size (entire payload in token)
+❌ If secret key compromised, all tokens invalid
+❌ Need refresh token mechanism for long sessions
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1.3 SESSION vs JWT - WHEN TO USE WHAT?
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔══════════════════╦═══════════════════════╦═══════════════════════╗
+║   SCENARIO       ║   SESSION-BASED       ║   TOKEN-BASED (JWT)   ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ Traditional Web  ║   ✅ BEST CHOICE      ║   ✅ Also Good        ║
+║ App (SSR)        ║                       ║                       ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ SPA (React/      ║   ⚠️ Possible but    ║   ✅ BEST CHOICE      ║
+║ Angular/Vue)     ║   Need CORS config    ║                       ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ Mobile Apps      ║   ❌ Difficult        ║   ✅ BEST CHOICE      ║
+║                  ║   (No cookies)        ║                       ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ Microservices    ║   ❌ Hard to share    ║   ✅ BEST CHOICE      ║
+║                  ║   session across      ║   (Stateless)         ║
+║                  ║   services            ║                       ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ Need Instant     ║   ✅ BEST CHOICE      ║   ❌ Can't revoke     ║
+║ Logout/Revoke    ║   (Destroy session)   ║   until expiry        ║
+╠══════════════════╬═══════════════════════╬═══════════════════════╣
+║ High Scalability ║   ⚠️ Need Redis/DB   ║   ✅ BEST CHOICE      ║
+║                  ║   cluster             ║   (No storage)        ║
+╚══════════════════╩═══════════════════════╩═══════════════════════╝
+
+
+Real-World Decision:
+- Netflix, YouTube → JWT (millions of users, microservices)
+- Banking apps → Session (need instant revoke, security critical)
+- Your startup → Start with Session, move to JWT when scaling
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 2: REFRESH TOKEN PATTERN (Best of Both Worlds!)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+Problem: JWT expires in 15 minutes → User must login again (bad UX!)
+Solution: Use TWO tokens!
+
+1. ACCESS TOKEN (Short-lived: 15 minutes)
+   - Used for API requests
+   - Contains user info
+   - Expires quickly (security)
+
+2. REFRESH TOKEN (Long-lived: 7 days)
+   - Used ONLY to get new access token
+   - Stored securely (database + httpOnly cookie)
+   - Can be revoked
+
+
+Flow Diagram:
+
+┌─────────────┐                                         ┌─────────────┐
+│   Client    │                                         │   Server    │
+│             │                                         │             │
+│ 1. Login    │─── Username + Password ───────────────▶│ 2. Validate │
+│             │                                         │             │
+│             │◀── Access Token (15min) ───────────────│ 3. Generate │
+│             │    Refresh Token (7 days, httpOnly)    │    2 Tokens │
+│             │                                         │    Store    │
+│             │                                         │    Refresh  │
+│             │                                         │    in DB    │
+│             │                                         │             │
+│ 4. API Call │─── Authorization: Bearer <access> ────▶│ 5. Verify   │
+│             │                                         │    Access   │
+│             │◀── Data ───────────────────────────────│             │
+│             │                                         │             │
+│ ... 15 minutes later, access token expires ...       │             │
+│             │                                         │             │
+│ 6. API Call │─── Authorization: Bearer <expired> ───▶│ 7. Token    │
+│             │                                         │    Expired! │
+│             │◀── 401 Unauthorized ───────────────────│             │
+│             │                                         │             │
+│ 8. Auto     │─── Refresh Token (from cookie) ────────▶│ 9. Validate│
+│   Refresh   │    POST /auth/refresh                  │    Refresh  │
+│             │                                         │    Token    │
+│             │                                         │    in DB    │
+│             │◀── New Access Token (15min) ───────────│ 10. Generate│
+│             │                                         │     New     │
+│             │                                         │     Access  │
+│             │                                         │             │
+│ 11. Retry   │─── Authorization: Bearer <new> ────────▶│ 12. Success│
+│    API Call │                                         │             │
+│             │◀── Data ───────────────────────────────│             │
+└─────────────┘                                         └─────────────┘
+
+
+Implementation:
+
+// Database schema for refresh tokens
+const RefreshToken = {
+  token: String,
+  userId: ObjectId,
+  expiresAt: Date,
+  createdAt: Date,
+  lastUsedAt: Date,
+  deviceInfo: String  // Track which device
+};
+
+// Login - Generate both tokens
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  const isValid = await bcrypt.compare(password, user.password);
+
+  if (!isValid) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // Generate ACCESS token (short-lived)
+  const accessToken = jwt.sign(
+    { userId: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  // Generate REFRESH token (long-lived)
+  const refreshToken = jwt.sign(
+    { userId: user.id, type: 'refresh' },
+    process.env.REFRESH_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  // Store refresh token in database
+  await RefreshToken.create({
+    token: refreshToken,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    deviceInfo: req.headers['user-agent']
+  });
+
+  // Send access token in response body
+  // Send refresh token in httpOnly cookie (secure!)
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,   // Cannot access via JavaScript
+    secure: true,     // HTTPS only
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+  });
+
+  res.json({ accessToken });
+});
+
+// Refresh endpoint - Get new access token
+app.post('/auth/refresh', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'No refresh token' });
+  }
+
+  // Verify refresh token
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid refresh token' });
+  }
+
+  // Check if refresh token exists in database
+  const storedToken = await RefreshToken.findOne({
+    token: refreshToken,
+    userId: decoded.userId
+  });
+
+  if (!storedToken) {
+    return res.status(403).json({ error: 'Refresh token revoked' });
+  }
+
+  // Check if expired
+  if (storedToken.expiresAt < new Date()) {
+    await RefreshToken.deleteOne({ _id: storedToken._id });
+    return res.status(403).json({ error: 'Refresh token expired' });
+  }
+
+  // Generate new access token
+  const user = await User.findById(decoded.userId);
+  const newAccessToken = jwt.sign(
+    { userId: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  // Update last used time
+  storedToken.lastUsedAt = new Date();
+  await storedToken.save();
+
+  res.json({ accessToken: newAccessToken });
+});
+
+// Logout - Revoke refresh token
+app.post('/logout', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (refreshToken) {
+    // Delete from database
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out' });
+});
+
+// Logout from ALL devices
+app.post('/logout-all', authenticateToken, async (req, res) => {
+  // Delete all refresh tokens for this user
+  await RefreshToken.deleteMany({ userId: req.user.userId });
+
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out from all devices' });
+});
+
+
+Frontend Implementation (React):
+
+// axios interceptor for automatic token refresh
+import axios from 'axios';
+
+let accessToken = localStorage.getItem('accessToken');
+
+// Add token to every request
+axios.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+
+// Handle token expiry
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If 401 and haven't retried yet
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Call refresh endpoint
+        const { data } = await axios.post('/auth/refresh');
+
+        // Store new access token
+        accessToken = data.accessToken;
+        localStorage.setItem('accessToken', accessToken);
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return axios(originalRequest);
+
+      } catch (refreshError) {
+        // Refresh failed, redirect to login
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
+Security Best Practices:
+1. ✅ Access token: 15 minutes max
+2. ✅ Refresh token: Store in httpOnly cookie + database
+3. ✅ Rotate refresh tokens (generate new on each use)
+4. ✅ Track device/IP for suspicious activity
+5. ✅ Allow "logout from all devices"
+6. ✅ Use different secrets for access and refresh tokens
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 3: COMMON INTERVIEW QUESTIONS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+Q1: How do you revoke a JWT token before it expires?
+
+A: "JWT tokens can't be revoked directly since they're stateless. Solutions:
+
+**1. Token Blacklist:**
+- When user logs out, add token to Redis blacklist
+- Check blacklist before accepting token
+- Set TTL = remaining token lifetime
+
+**2. Short Expiry + Refresh Token:**
+- Access token: 15 minutes (can't do much damage)
+- Refresh token: stored in DB (can revoke instantly)
+- Best balance of security and UX
+
+**3. Token Versioning:**
+- Add 'tokenVersion' to user in database
+- Include in JWT payload
+- On logout, increment user's tokenVersion
+- Reject tokens with old version
+
+I prefer option 2 (refresh tokens) for most applications."
+
+
+Q2: Where do you store JWT tokens on the frontend?
+
+A: "Three options with tradeoffs:
+
+**1. localStorage:**
+✅ Persists across browser restart
+✅ Easy to implement
+❌ Vulnerable to XSS attacks
+❌ Accessible from any script
+
+**2. sessionStorage:**
+✅ Cleared when tab closes (more secure)
+❌ Still vulnerable to XSS
+❌ Lost on tab close (bad UX)
+
+**3. Memory (React state):**
+✅ Most secure (no XSS risk)
+✅ Lost on refresh (need silent auth)
+❌ Complex to implement
+❌ Need refresh token in httpOnly cookie
+
+**My recommendation:**
+- Access token: Memory (React state)
+- Refresh token: httpOnly cookie
+- On refresh: Auto-get new access token
+
+This combines security with good UX."
+
+
+Q3: How do you handle authentication in microservices?
+
+A: "Use JWT with API Gateway pattern:
+
+┌─────────┐    ┌──────────────┐    ┌─────────────┐
+│ Client  │───▶│ API Gateway  │───▶│   Auth      │
+│         │    │              │    │   Service   │
+└─────────┘    │ 1. Check JWT │    │             │
+               │ 2. Validate  │    │  Issue JWT  │
+               │ 3. Route     │    │             │
+               └──────────────┘    └─────────────┘
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+   ┌────▼───┐   ┌────▼───┐   ┌─────▼────┐
+   │ User   │   │ Order  │   │ Payment  │
+   │Service │   │Service │   │ Service  │
+   └────────┘   └────────┘   └──────────┘
+        │             │             │
+        └─────────────┴─────────────┘
+               (All verify JWT with same secret)
+
+**Each service can:**
+- Verify JWT signature independently
+- Extract user info from token
+- No need to call Auth service for every request
+
+**Benefits:**
+- Stateless (scales well)
+- Fast (no network calls)
+- Secure (each service validates)"
+
+
+Q4: Explain OAuth 2.0 in simple terms.
+
+A: "OAuth 2.0 is 'Login with Google/Facebook/GitHub'.
+
+**Analogy: Valet Key**
+- You give valet a SPECIAL KEY (limited access)
+- Can only park/retrieve car
+- Can't open trunk or glove box
+- You keep the MASTER KEY
+
+**OAuth Flow:**
+
+User → Your App → 'Login with Google' button
+                          ↓
+              Redirect to Google login
+                          ↓
+          Google asks: 'Allow this app to access
+          your email and profile?' → User clicks Yes
+                          ↓
+        Google sends AUTHORIZATION CODE to your app
+                          ↓
+    Your app exchanges code for ACCESS TOKEN (Google's API)
+                          ↓
+        Use token to get user info from Google
+
+**Real Implementation:** (covered in OAUTH-2.0.txt file)
+
+**Why use OAuth?**
+- Users don't create new password (better UX)
+- You don't store passwords (less liability)
+- Users trust Google/Facebook more
+- Social features easier (friends, profile pic)"
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+QUICK COMPARISON TABLE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔═══════════════════╦═══════════════╦═══════════════╦═══════════════════╗
+║   FEATURE         ║   SESSION     ║     JWT       ║ JWT + REFRESH     ║
+╠═══════════════════╬═══════════════╬═══════════════╬═══════════════════╣
+║ Scalability       ║   ⭐⭐       ║   ⭐⭐⭐⭐⭐  ║   ⭐⭐⭐⭐    ║
+║ Security          ║   ⭐⭐⭐⭐  ║   ⭐⭐⭐       ║   ⭐⭐⭐⭐⭐ ║
+║ Revoke Instantly  ║   ⭐⭐⭐⭐⭐║   ⭐           ║   ⭐⭐⭐⭐⭐  ║
+║ Mobile Friendly   ║   ⭐⭐       ║   ⭐⭐⭐⭐⭐  ║   ⭐⭐⭐⭐⭐ ║
+║ Microservices     ║   ⭐⭐       ║   ⭐⭐⭐⭐⭐  ║   ⭐⭐⭐⭐⭐ ║
+║ Simplicity        ║   ⭐⭐⭐⭐  ║   ⭐⭐⭐⭐    ║   ⭐⭐⭐       ║
+║ Server Storage    ║   Redis/DB    ║   None          ║   Refresh Only  ║
+╚═══════════════════╩═══════════════╩═══════════════ ╩═══════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+RECOMMENDED APPROACH FOR INTERVIEWS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+"For a modern full-stack application targeting 30 LPA companies, I recommend:
+
+1. **JWT with Refresh Token pattern** (best of both worlds)
+   - Access token: 15 minutes (stateless, fast)
+   - Refresh token: 7 days (stored, revocable)
+   - httpOnly cookies for refresh (XSS protection)
+
+2. **Why?**
+   - Scalable (stateless access tokens)
+   - Secure (short-lived, revocable)
+   - Good UX (no frequent logins)
+   - Works with microservices
+
+3. **Implementation:**
+   - NestJS backend with Guards
+   - React frontend with axios interceptors
+   - Redis for token blacklist (if needed)
+   - Database for refresh tokens
+
+This is what companies like Netflix, Spotify, and modern startups use."
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+NEXT: Read OAUTH-2.0.txt for "Login with Google/GitHub" implementation!
+═══════════════════════════════════════════════════════════════════════════════════════
+
