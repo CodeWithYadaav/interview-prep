@@ -1,6 +1,460 @@
-Q1.You accidentally committed a sensitive file, but haven't pushed it to the remote repository. How do you undo this commit and remove the file?
+Q1. You accidentally committed a sensitive file, but haven't pushed it to the remote repository. How do you undo this commit and remove the file?
 
-        Discuss git reset and git rm --cached.
+SOLUTION:
+    Method 1: Complete Undo (removes commit entirely)
+        git reset --soft HEAD~1
+        # This undoes the commit but keeps all changes staged
+        # HEAD~1 means "go back one commit"
+
+        git rm --cached sensitive-file.txt
+        # Removes file from staging area but keeps it in your working directory
+        # --cached means "only remove from Git tracking, not from disk"
+
+        git commit -m "commit without sensitive file"
+        # Now commit again without the sensitive file
+
+    Method 2: Keep Commit, Just Remove the File
+        git rm --cached sensitive-file.txt
+        # Remove from Git tracking
+
+        git commit --amend
+        # Modifies the previous commit to exclude the file
+        # --amend rewrites the last commit
+
+    IMPORTANT: Add to .gitignore
+        echo "sensitive-file.txt" >> .gitignore
+        # Prevents accidentally committing it again in the future
+
+    WHY THIS WORKS:
+    - git reset moves your branch pointer back, undoing commits
+    - --soft keeps your changes staged (vs --hard which deletes everything)
+    - --cached removes from Git's index but not your local filesystem
+    - This only works if you HAVEN'T pushed - once pushed, you need git filter-branch or BFG Repo-Cleaner
 
 Q2. If you want to synchronize your local repository with the latest changes from a remote branch without losing your local changes, what steps do you follow?
-        Discuss using git pull --rebase, stashing, or manually resolving conflicts.
+
+SOLUTION:
+    Method 1: Using Stash (safest for beginners)
+        git stash
+        # Temporarily saves your uncommitted changes
+        # Your working directory becomes clean
+
+        git pull origin main
+        # Downloads and merges remote changes
+
+        git stash pop
+        # Reapplies your saved changes on top of the new code
+        # If conflicts occur, Git will mark them for you to resolve
+
+    Method 2: Using Rebase (cleaner history)
+        git pull --rebase origin main
+        # Downloads remote changes and replays your local commits on top
+        # Creates a linear history instead of merge commits
+
+        # If conflicts occur:
+        # 1. Fix the conflicts in your editor
+        # 2. git add <fixed-files>
+        # 3. git rebase --continue
+        # If you want to abort: git rebase --abort
+
+    Method 3: Manual Approach (most control)
+        git fetch origin
+        # Downloads remote changes but doesn't merge them yet
+        # Your local branch stays unchanged
+
+        git rebase origin/main
+        # OR: git merge origin/main
+        # Rebase gives linear history, merge shows the branching
+
+    WHEN TO USE EACH:
+    - Stash: When you have work-in-progress that's not ready to commit
+    - Pull --rebase: When you have local commits you want to keep on top
+    - Fetch + manual: When you want to inspect changes before integrating
+
+    KEY DIFFERENCES:
+    - git pull = git fetch + git merge (creates merge commit)
+    - git pull --rebase = git fetch + git rebase (linear history)
+    - Stash temporarily hides changes, rebase moves commits
+
+    CONFLICT RESOLUTION:
+    When conflicts happen:
+    1. Open conflicted files (marked with <<<<<<, ======, >>>>>>)
+    2. Choose which changes to keep or combine both
+    3. Remove conflict markers
+    4. git add <resolved-files>
+    5. Continue with git rebase --continue or git merge --continue
+
+================================================================================
+
+Q3. You pushed a commit to the remote repository but realized it contains a bug. How do you fix it?
+
+SOLUTION:
+    Method 1: If Others Haven't Pulled Yet (Safe to Rewrite History)
+        git commit --amend
+        # Fix the bug and amend the last commit
+
+        git push --force-with-lease origin main
+        # --force-with-lease is safer than --force
+        # It only pushes if no one else has pushed changes
+
+    Method 2: If Others Already Pulled (Create New Commit)
+        # Fix the bug in your code
+        git add .
+        git commit -m "fix: resolve bug from previous commit"
+        git push origin main
+        # This is the safest approach - never rewrites history
+
+    Method 3: Revert the Commit (Undo Publicly)
+        git revert <commit-hash>
+        # Creates a new commit that undoes the buggy commit
+        # Preserves history - shows what was done and undone
+        git push origin main
+
+    BEST PRACTICE:
+    - Never use --force on shared branches unless absolutely necessary
+    - Always prefer adding new commits over rewriting history
+    - Use --force-with-lease instead of --force for safety
+
+================================================================================
+
+Q4. Explain the difference between git merge and git rebase. When would you use each?
+
+ANSWER:
+    GIT MERGE:
+        git checkout main
+        git merge feature-branch
+        # Creates a new "merge commit" that combines both branches
+        # Preserves complete history showing when branches merged
+
+    Advantages:
+    - Non-destructive - doesn't change existing commits
+    - Shows the full context of how branches evolved
+    - Safer for shared branches
+
+    Disadvantages:
+    - Creates cluttered history with many merge commits
+    - Harder to follow the project timeline
+
+    GIT REBASE:
+        git checkout feature-branch
+        git rebase main
+        # Moves your feature branch commits to the tip of main
+        # Rewrites commit history to be linear
+
+    Advantages:
+    - Clean, linear history that's easy to follow
+    - No unnecessary merge commits
+    - Makes git log easier to read
+
+    Disadvantages:
+    - Rewrites history (dangerous on shared branches)
+    - Loses context of when work actually happened
+    - Can cause problems if others are working on the same branch
+
+    WHEN TO USE:
+    - Use MERGE: For merging feature branches into main, public branches
+    - Use REBASE: For updating your local feature branch with main, cleaning up before PR
+
+    GOLDEN RULE:
+    Never rebase commits that have been pushed to a shared/public branch!
+
+================================================================================
+
+Q5. How do you find which commit introduced a bug? Describe git bisect.
+
+SOLUTION:
+    git bisect start
+    # Start the binary search process
+
+    git bisect bad
+    # Mark current commit as bad (has the bug)
+
+    git bisect good <commit-hash>
+    # Mark a known good commit (before the bug existed)
+    # Git will check out a commit halfway between good and bad
+
+    # Test the code at this commit
+    # Then mark it as good or bad:
+    git bisect good  # if bug doesn't exist here
+    # OR
+    git bisect bad   # if bug exists here
+
+    # Git will keep narrowing down until it finds the exact commit
+
+    git bisect reset
+    # Exit bisect mode and return to original branch
+
+    AUTOMATED BISECT:
+        git bisect start
+        git bisect bad HEAD
+        git bisect good <known-good-commit>
+        git bisect run npm test
+        # Automatically runs tests at each commit
+        # Exits with 0 for good, non-zero for bad
+
+    HOW IT WORKS:
+    - Uses binary search algorithm (O(log n) efficiency)
+    - If you have 1000 commits, finds the bug in ~10 steps
+    - Much faster than checking each commit manually
+
+================================================================================
+
+Q6. What's the difference between git reset, git revert, and git checkout?
+
+ANSWER:
+    GIT RESET (Changes where branch points):
+        git reset --soft HEAD~1
+        # Moves branch pointer back, keeps changes staged
+        # Use when: You want to uncommit but keep changes
+
+        git reset --mixed HEAD~1  (default)
+        # Moves branch pointer back, unstages changes
+        # Use when: You want to uncommit and unstage
+
+        git reset --hard HEAD~1
+        # Moves branch pointer back, deletes all changes
+        # Use when: You want to completely discard commits
+        # WARNING: This is destructive!
+
+    GIT REVERT (Creates new commit that undoes):
+        git revert <commit-hash>
+        # Creates a new commit that reverses the changes
+        # Use when: You want to undo a commit that's already public
+        # Safe for shared branches - doesn't rewrite history
+
+    GIT CHECKOUT (Switches branches or restores files):
+        git checkout feature-branch
+        # Switches to a different branch
+
+        git checkout -- file.txt
+        # Discards changes in file.txt (restores from last commit)
+
+        git checkout <commit-hash>
+        # Detaches HEAD to view old commit (read-only mode)
+
+    SUMMARY:
+    - RESET: Rewrites history (use locally)
+    - REVERT: Adds new history (safe for shared branches)
+    - CHECKOUT: Navigates or restores (doesn't affect commits)
+
+================================================================================
+
+Q7. How do you cherry-pick a specific commit from another branch?
+
+SOLUTION:
+    # First, find the commit hash you want
+    git log feature-branch
+    # Or: git log --oneline --graph
+
+    git checkout main
+    # Switch to the branch where you want to apply the commit
+
+    git cherry-pick <commit-hash>
+    # Applies that specific commit to current branch
+    # Creates a new commit with the same changes
+
+    HANDLING CONFLICTS:
+        # If conflicts occur during cherry-pick:
+        # 1. Fix conflicts in your editor
+        # 2. git add <fixed-files>
+        # 3. git cherry-pick --continue
+
+        # To abort:
+        git cherry-pick --abort
+
+    CHERRY-PICK MULTIPLE COMMITS:
+        git cherry-pick <hash1> <hash2> <hash3>
+        # Or a range:
+        git cherry-pick <start-hash>..<end-hash>
+
+    USE CASES:
+    - Apply a bug fix from one branch to another
+    - Move a specific feature commit without merging everything
+    - Selectively backport fixes to older releases
+
+    NOTE: Cherry-picking creates a NEW commit with a different hash
+    The original commit stays on the source branch
+
+================================================================================
+
+Q8. Explain git stash in detail and its common use cases.
+
+SOLUTION:
+    BASIC STASH OPERATIONS:
+        git stash
+        # Saves uncommitted changes (staged + unstaged)
+        # Cleans working directory
+
+        git stash push -m "work in progress on login feature"
+        # Stash with a descriptive message
+
+        git stash list
+        # Shows all stashes:
+        # stash@{0}: WIP on main: 123abc commit message
+        # stash@{1}: WIP on feature: 456def older stash
+
+        git stash pop
+        # Applies most recent stash and removes it from stash list
+
+        git stash apply
+        # Applies most recent stash but keeps it in stash list
+
+        git stash apply stash@{1}
+        # Applies a specific stash by index
+
+        git stash drop stash@{0}
+        # Deletes a specific stash
+
+        git stash clear
+        # Deletes all stashes (careful!)
+
+    ADVANCED STASH:
+        git stash -u
+        # Includes untracked files (new files not added to Git)
+
+        git stash -a
+        # Includes untracked AND ignored files
+
+        git stash --keep-index
+        # Stashes only unstaged changes, keeps staged changes
+
+        git stash branch new-branch-name
+        # Creates a new branch from the stashed commit
+        # Applies stash to that branch and drops it
+
+    VIEWING STASH CONTENTS:
+        git stash show
+        # Shows summary of changes in most recent stash
+
+        git stash show -p
+        # Shows full diff of changes
+
+        git stash show stash@{1} -p
+        # Shows diff of specific stash
+
+    COMMON USE CASES:
+    1. Need to switch branches but work isn't ready to commit
+    2. Pull latest changes without committing current work
+    3. Quickly test something on a clean working directory
+    4. Save experimental changes before trying a different approach
+    5. Emergency context switch (production bug while working on feature)
+
+================================================================================
+
+Q9. What is a detached HEAD state and how do you recover from it?
+
+ANSWER:
+    WHAT IS IT:
+    - HEAD normally points to a branch (like main or feature)
+    - Detached HEAD means HEAD points directly to a commit instead
+    - Happens when you checkout a specific commit or tag
+
+    HOW IT HAPPENS:
+        git checkout <commit-hash>
+        # Now you're in detached HEAD state
+        git checkout v1.0.0  (tag)
+        # Also causes detached HEAD
+
+    WHY IT MATTERS:
+    - Any commits made in detached HEAD are "orphaned"
+    - If you switch branches, those commits become unreachable
+    - Git will eventually garbage collect them (delete permanently)
+
+    RECOVERING:
+        Option 1: Create a Branch from Detached HEAD
+            git checkout -b recovery-branch
+            # Saves your work in a new branch
+            # Now HEAD points to recovery-branch
+
+        Option 2: You Made No Changes (Just Return)
+            git checkout main
+            # Simply return to your previous branch
+
+        Option 3: You Made Commits but Switched Away
+            git reflog
+            # Shows history of where HEAD has been
+            # Find the commit hash of your work
+
+            git checkout -b recovery-branch <commit-hash>
+            # Creates branch at that commit
+
+        Option 4: Merge Changes into Existing Branch
+            git checkout main
+            git merge <commit-hash-from-detached-HEAD>
+
+    PREVENTION:
+    - Always create a branch if you plan to make changes
+    - Use detached HEAD only for quick inspections
+    - Git will warn you when entering detached HEAD state
+
+================================================================================
+
+Q10. How do you resolve a merge conflict step by step?
+
+SOLUTION:
+    WHEN CONFLICT OCCURS:
+        git merge feature-branch
+        # Git shows: "CONFLICT (content): Merge conflict in file.txt"
+        # Git pauses the merge and marks conflicted files
+
+    STEP 1: Identify Conflicted Files
+        git status
+        # Shows "both modified" for conflicted files
+
+    STEP 2: Open the Conflicted File
+        # You'll see conflict markers:
+        <<<<<<< HEAD
+        // Your current branch code
+        const result = methodA();
+        =======
+        // Incoming branch code
+        const result = methodB();
+        >>>>>>> feature-branch
+
+    STEP 3: Resolve the Conflict
+        # Choose one of three options:
+        # A) Keep your version (remove markers and incoming code)
+        # B) Keep their version (remove markers and your code)
+        # C) Combine both (write new code using both changes)
+
+        # Example resolution:
+        const result = methodA() || methodB();
+
+    STEP 4: Mark as Resolved
+        git add file.txt
+        # Staging tells Git the conflict is resolved
+
+    STEP 5: Complete the Merge
+        git commit
+        # Git opens editor with default merge commit message
+        # You can edit or just save and close
+
+        # Or provide message directly:
+        git commit -m "merge: resolve conflicts in feature-branch"
+
+    ABORTING A MERGE:
+        git merge --abort
+        # Cancels the merge and returns to pre-merge state
+        # Use this if you want to start over
+
+    USEFUL TOOLS:
+        git diff
+        # Shows conflicts in terminal
+
+        git mergetool
+        # Opens graphical merge tool (if configured)
+
+        git log --merge
+        # Shows commits that caused conflicts
+
+        git checkout --ours file.txt
+        # Takes your version for entire file
+
+        git checkout --theirs file.txt
+        # Takes their version for entire file
+
+    PREVENTING CONFLICTS:
+    - Pull frequently to stay up to date
+    - Keep feature branches short-lived
+    - Communicate with team about overlapping work
+    - Use smaller, focused commits
