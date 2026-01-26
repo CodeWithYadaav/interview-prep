@@ -1,0 +1,136 @@
+% Praveen Yadav - Senior Software Engineer Resume
+
+\documentclass[10.9 pt,a4paper]{article}
+
+% Packages
+\usepackage[left=0.65in,right=0.65in,top=0.5in,bottom=0.5in]{geometry}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fontawesome5}
+\usepackage{xcolor}
+
+% Colors
+\definecolor{linkcolor}{HTML}{0066cc}
+\definecolor{sectioncolor}{HTML}{1a1a1a}
+\definecolor{textcolor}{HTML}{333333}
+\hypersetup{colorlinks=true, linkcolor=linkcolor, urlcolor=linkcolor}
+
+% Typography - Modern and Clean
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{helvet}
+
+% Better text rendering
+\color{textcolor}
+\linespread{1.05}
+
+% Section formatting - cleaner
+\titleformat{\section}
+  {\Large\bfseries\color{sectioncolor}}
+  {}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{8pt}{5pt}
+
+% Custom commands
+\newcommand{\entry}[4]{
+  \noindent
+  \begin{tabular*}{\textwidth}{@{}l@{\extracolsep{\fill}}r@{}}
+    \textbf{\large #1} & \textit{#2} \\
+    \textit{\color{gray}#3} & \textit{\color{gray}#4} \\
+  \end{tabular*}
+  \vspace{3pt}
+}
+
+% Document start
+\begin{document}
+
+% Remove extra spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\pagestyle{empty}
+
+% Header - More prominent
+\begin{center}
+  {\Huge\bfseries Praveen Yadav}\\
+  \vspace{4pt}
+  {\large\color{gray} Senior Software Engineer}\\
+  \vspace{6pt}
+\end{center}
+
+% Contact info - better spacing
+\begin{center}
+\small
+\begin{tabular}{c@{\hspace{12pt}}c@{\hspace{12pt}}c@{\hspace{12pt}}c@{\hspace{12pt}}c}
+\faPhone\ +91-7888859348 & 
+\faEnvelope\ \href{mailto:praveen098.py@gmail.com}{praveen098.py@gmail.com} & 
+\faLinkedin\ \href{https://linkedin.com/in/praveen-yadav}{linkedin.com/in/praveen-yadav} & 
+\faGlobe\ \href{https://deluxe-naiad-8a1ff6.netlify.app/}{Portfolio} & 
+\faGithub\ \href{https://github.com/CodeWithYadaav}{GitHub} \\
+\end{tabular}
+\end{center}
+
+\vspace{-2pt}
+
+% Summary
+\section{Professional Summary}
+\vspace{-1pt}
+Senior Software Engineer with 5+ years of experience building scalable, high-concurrency backend systems. Expert in \textbf{Node.js, NestJS, and TypeScript} with proven experience designing \textbf{Event-Driven Architectures} using Kafka and Redis. Specialized in real-time communication with \textbf{WebSockets} and cloud-native development on \textbf{AWS Serverless}. Delivered high-availability products in EdTech, FinTech, and Blockchain domains.
+
+\vspace{3pt}
+
+% Skills
+\section{Technical Skills}
+\vspace{-1pt}
+\begin{itemize}[leftmargin=*,label={\small\textbullet},itemsep=1pt,parsep=0pt,topsep=0pt]
+    \item \textbf{Languages:} JavaScript (ES6+), TypeScript, SQL
+    \item \textbf{Backend:} Node.js, NestJS, Express.js, Serverless (AWS Lambda)
+    \item \textbf{Frontend:} React.js, SvelteKit
+    \item \textbf{Databases:} PostgreSQL, MySQL, MongoDB, Redis
+    \item \textbf{Messaging \& Real-time:} Kafka, WebSockets (Socket.io), RabbitMQ
+    \item \textbf{Cloud \& DevOps:} AWS (Lambda, S3, RDS, Cognito, CloudWatch), Docker, Git
+    \item \textbf{Architecture:} Microservices, Distributed Systems, Event-Driven Design
+    \item \textbf{Testing:} Jest, Vitest
+\end{itemize}
+
+\vspace{3pt}
+
+% Experience
+\section{Professional Experience}
+\vspace{-1pt}
+
+\entry{Senior Software Engineer}{Aug 2024 – Present}{InfoBeans (Client: UPRIO School Exam App)}{Pune}
+\begin{itemize}[leftmargin=*,label={\small\textbullet},itemsep=1.5pt,parsep=0pt,topsep=2pt]
+    \item Built a \textbf{real-time quiz battle system} using \textbf{WebSockets} supporting peer-to-peer and bot-based competitive gameplay with sub-100ms latency for concurrent users.
+    \item Integrated \textbf{LLM-based AI assistant} ("Study Buddy") providing automated doubt resolution and personalized learning recommendations for students.
+    \item Designed and implemented a \textbf{gamification engine} with automated ranking logic, streak tracking, and \textbf{cron-based} point redemption/expiration workflows.
+    \item Improved application performance through database query optimization, strategic caching, and code refactoring.
+\end{itemize}
+
+\vspace{3pt}
+
+\entry{Software Engineer}{Dec 2023 – July 2024}{VT Netzwelt (Client: YouGov/GfK)}{Mohali, India}
+\begin{itemize}[leftmargin=*,label={\small\textbullet},itemsep=1.5pt,parsep=0pt,topsep=2pt]
+    \item Rebuilt consumer-facing portals using \textbf{SvelteKit} and \textbf{AWS Lambda} in a microservices architecture, reducing page load times significantly.
+    \item Optimized Lambda cold starts and memory allocation, cutting AWS compute costs while maintaining sub-200ms response times.
+    \item Established testing standards using \textbf{Vitest} and \textbf{Jest}, maintaining 90\%+ code coverage for critical services.
+\end{itemize}
+
+\vspace{3pt}
+
+\entry{Software Engineer}{Feb 2021 – Nov 2023}{Antier Solutions}{Mohali, India}
+\begin{itemize}[leftmargin=*,label={\small\textbullet},itemsep=1.5pt,parsep=0pt,topsep=2pt]
+    \item Architected event-driven microservices using \textbf{Node.js, NestJS, and Kafka} for fintech platforms, processing 10K+ transactions/minute with high uptime.
+    \item Optimized \textbf{PostgreSQL} queries and implemented \textbf{Redis} caching layers, reducing API response times from 800ms to under 200ms.
+    \item Led development of blockchain-based trading platform, mentoring junior developers and conducting root cause analysis for production incidents.
+\end{itemize}
+
+\vspace{3pt}
+
+% Education
+\section{Education}
+\vspace{-1pt}
+\entry{R.I.E.I.T}{Aug 2012 – Jul 2016}{B.E. in Electronics \& Communication}{Punjab, India}
+
+\end{document}
