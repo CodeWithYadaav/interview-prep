@@ -1,0 +1,165 @@
+Kid-Level Explanation
+- Vector databases are smart libraries that store books as number lists so similar books sit close together.
+- An embedding is the secret recipe that turns words, images, or sound into those number lists.
+- Similarity search is asking “which book is nearest to this one?” by comparing how close their number lists are.
+- Cosine similarity checks the angle between vectors; dot product checks both angle and length.
+- Pinecone and Weaviate are cloud librarians who manage the shelves for you; FAISS is a do-it-yourself toolkit.
+- Managed services mean someone else fixes servers; self-hosted means you set up and look after the shelves yourself.
+
+Interview Prep Notes
+- Embeddings: high-dimensional dense vectors capturing semantic meaning; generated via models like `text-embedding-3-large`, `bge-large`, `e5`.
+- Index structures: IVF, HNSW, PQ, SQ for approximate nearest neighbor (ANN); trade memory for recall/latency.
+- Similarity metrics: cosine (normalize vectors), dot product (requires magnitude awareness), Euclidean (L2 norm); pick based on embedding training objective.
+- FAISS vs Pinecone: FAISS offers fine-grained control, on-prem deployment, GPU acceleration; Pinecone provides managed infra, auto-scaling, multi-tenant security.
+- Managed vs self-hosted: managed for fast go-live, 24/7 SLOs, compliance; self-host when you need VPC isolation, custom hardware tuning, or cost predictability at scale.
+- Weaviate: schema-aware, supports hybrid (BM25 + dense), plug-in modules for multi-modal; fits when you need metadata filtering with GraphQL-like queries.
+
+Detailed Walkthrough
+- Ingest: normalize text, chunk, generate embeddings, attach metadata, batch upserts into the vector DB.
+- Query: embed user request, run ANN search, apply metadata filters/rerankers, return top-k ids + metadata.
+- Update: handle delta syncs (new, updated, deleted docs), schedule re-indexing when embedding models change.
+- Scaling: shard large corpora, replicate for availability, monitor QPS vs latency headroom.
+- Cost: batch embeddings, cache hot vectors, prune stale entries, choose index types that balance accuracy vs compute.
+
+Advanced Engineering Notes
+- Hybrid search: combine sparse (BM25) and dense scores; libraries like Pinecone’s hybrid, Weaviate’s BM25 module.
+- Multi-tenancy: isolate namespaces per customer, enforce metadata filters, restrict context leakage.
+- Observability: log query vectors hashes, latency per stage (embed/search/rank), evaluate recall with labeled datasets.
+- Security: encrypt data in rest/transit, align with SOC2/ISO needs, consider IP whitelisting or private link.
+- Disaster recovery: replicate indexes across regions, snapshot vector stores, rehearse restore procedures.
+- Model drift: track embedding distribution shifts; re-embed when upstream model version changes.
+
+Sample Code: Pinecone Retrieval with LangChain (Node.js)
+```javascript
+import "dotenv/config";
+import { Pinecone } from "@pinecone-database/pinecone";
+import OpenAI from "openai";
+import { PineconeStore } from "@langchain/pinecone";
+import { OpenAIEmbeddings } from "@langchain/openai";
+
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY,
+});
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function ensureIndex(indexName) {
+  const existing = await pinecone.listIndexes();
+  if (!existing.indexes.find((idx) => idx.name === indexName)) {
+    await pinecone.createIndex({
+      name: indexName,
+      dimension: 3072, // Match embedding dimension (e.g., text-embedding-3-large).
+      metric: "cosine",
+      spec: { serverless: { region: "us-west-2", cloud: "aws" } },
+    });
+    // Index creation is async; wait until ready in production code.
+  }
+}
+
+async function ingestDocuments(indexName, docs) {
+  const embeddings = new OpenAIEmbeddings({
+    model: "text-embedding-3-large",
+    openAIApiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const pineconeIndex = pinecone.Index(indexName);
+  const store = await PineconeStore.fromTexts(
+    docs.map((doc) => doc.text),
+    docs.map((doc) => doc.metadata),
+    embeddings,
+    {
+      pineconeIndex,
+      namespace: "support-articles",
+    },
+  );
+  return store;
+}
+
+async function retrieveSimilar(indexName, query, topK = 3) {
+  const embeddings = new OpenAIEmbeddings({
+    model: "text-embedding-3-large",
+    openAIApiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const pineconeIndex = pinecone.Index(indexName);
+  const store = await PineconeStore.fromExistingIndex(embeddings, {
+    pineconeIndex,
+    namespace: "support-articles",
+  });
+
+  const results = await store.similaritySearch(query, topK, {
+    locale: "en",
+    productTier: "enterprise",
+  });
+
+  return results;
+}
+
+async function answerWithContext(indexName, query) {
+  const matches = await retrieveSimilar(indexName, query);
+  if (!matches.length) {
+    return "I could not find relevant documents; escalating.";
+  }
+
+  const context = matches
+    .map(
+      ({ pageContent, metadata }, idx) =>
+        `[doc${idx + 1} id=${metadata.docId}] ${pageContent}`,
+    )
+    .join("\n");
+
+  const prompt = `
+You are a support assistant. Use ONLY the context to answer.
+If unsure, say you do not know. Include the citation id.
+
+Context:
+${context}
+
+Question: ${query}
+Answer:`;
+
+  const response = await client.responses.create({
+    model: "gpt-4.1-mini",
+    input: [{ role: "user", content: prompt }],
+    temperature: 0.2,
+  });
+
+  return response.output_text;
+}
+
+async function main() {
+  const indexName = "support-index";
+  await ensureIndex(indexName);
+
+  const docs = [
+    {
+      text: "Enterprise customers receive a dedicated onboarding manager within 3 business days.",
+      metadata: { docId: "onboarding#enterprise", locale: "en", productTier: "enterprise" },
+    },
+    {
+      text: "Starter tier customers can upgrade anytime via the billing dashboard.",
+      metadata: { docId: "billing#tiers", locale: "en", productTier: "starter" },
+    },
+    {
+      text: "Enterprise SLA guarantees 99.9% uptime with 24/7 support.",
+      metadata: { docId: "sla#enterprise", locale: "en", productTier: "enterprise" },
+    },
+  ];
+
+  await ingestDocuments(indexName, docs);
+  const answer = await answerWithContext(indexName, "What uptime SLA do enterprise users get?");
+  console.log(answer);
+}
+
+main().catch((error) => {
+  console.error("Pipeline error:", error);
+});
+```
+
+Interview Drill Prompts
+- Compare FAISS IVF+PQ vs HNSW at 100 million vectors: latency, recall, hardware footprint.
+- Design a migration from self-hosted FAISS to Pinecone with zero downtime.
+- Explain how to secure cross-tenant data isolation in Weaviate.
+- Propose a playbook for re-embedding when the upstream embedding model changes.
