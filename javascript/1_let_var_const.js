@@ -176,13 +176,39 @@ function illegal() {
 
 console.log("\n=== 7. HOISTING ===");
 
-// var is hoisted (available as undefined)
-console.log("num1 (var):", num1); // undefined (no error)
-var num1 = 100;
+// Think of the Execution Context like a 2‑column diagram:
+//
+// CREATION PHASE (happens first, before your code runs line by line)
+// 1️⃣ Create Global Object  ->  window (browser) / global (Node)
+// 2️⃣ Create Memory Space   ->  reserve space for all variables & functions
+// 3️⃣ Initialize:
+//      - var        ->  undefined
+//      - function   ->  full function is stored
+//      - let/const  ->  created BUT in TDZ (cannot use yet)
+//
+// EXECUTION PHASE (second pass, runs your code top‑to‑bottom)
+// - Values are read/updated inside that memory created above.
+// - You finally get real values instead of undefined.
+//
+// Small mental picture:
+//  Creation Phase:  a: undefined,  b: undefined,  multiply: function() { ... }
+//  Execution Phase: a: 10,         b: 100,        multiply: function() { ... }
+function hoistExample() {
+  // Using var before declaration returns undefined (it is hoisted)
+  console.log("var before declaration:", sampleVar); // undefined
 
-// let/const are NOT accessible before declaration
-// console.log("num2 (let):", num2); // Error! Cannot access before initialization
-let num2 = 200;
+  // Uncommenting next line would throw ReferenceError because let is in TDZ
+  // console.log("let before declaration:", sampleLet); // ❌ TDZ crash
+
+  var sampleVar = 10;
+  let sampleLet = 20;
+
+  // Execution Phase: after declarations run, values are available
+  console.log("var after declaration:", sampleVar); // 10
+  console.log("let after declaration:", sampleLet); // 20
+}
+
+hoistExample();
 
 // SIMPLE RULE:
 // var   -> Hoisted (value is undefined)

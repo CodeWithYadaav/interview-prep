@@ -2,25 +2,48 @@
 ═══════════════════════════════════════════════════════════════════════════════════════
 1. INTRODUCE YOURSELF
 ═══════════════════════════════════════════════════════════════════════════════════════
+Hi, I’m Praveen Yadav. I have over five years of experience as a software engineer.
+I’m currently working as a Senior Software Engineer, and my main experience is with Node.js, NestJS, and TypeScript, along with relational databases like PostgreSQL and MySQL.
 
-"Hello, I'm Praveen Yadav, a Senior Backend Developer with over 5 years of experience
-specializing in Node.js, NestJS, and TypeScript. I've worked extensively on building
-scalable microservices architectures, implementing real-time features, and optimizing
-database performance.
+I also have hands-on experience with AWS services such as Lambda, EC2, API Gateway, Cognito, and Docker.
+I’ve worked as an individual contributor across EdTech and FinTech products, where I’ve built core features, improved performance, and ensured systems are stable and easy to maintain.
+═══════════════════════════════════════════════════════════════════════════════════════
 
-In my current role, I've successfully:
-- Designed and developed RESTful APIs handling millions of requests
-- Implemented microservices architecture using NestJS, Redis, and Kafka
-- Optimized database queries reducing response time by 60%
-- Led a team of developers in delivering critical features on tight deadlines
+Que: Why did you leave VT with just 8 months of exp?
 
-My technical expertise includes Node.js ecosystem (NestJS, Express), databases
-(PostgreSQL, MongoDB, Redis), message queues (Kafka, RabbitMQ), containerization
-(Docker, Kubernetes), and cloud platforms (AWS).
+At VT Netzwelt, I joined to work on rebuilding consumer-facing portals and improving backend services for GFK
+cleint(german client).The project went well and was delivered successfully.
+After that, the client slowed down new feature development and the work became mostly maintenance-focused.
 
-I'm passionate about clean code, design patterns, and building systems that scale.
-I'm currently looking for challenging opportunities where I can contribute to
-building high-performance applications while growing my technical leadership skills."
+I wanted to continue working on new features and keep growing technically, so I decided to look for another opportunity.
+
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Que: Why did you leave current org?
+
+At InfoBeans, I’ve had a good experience working on the UPRIO project.
+I worked on features like real-time quizzes, gamification, and AI-related integrations.
+
+Now I’m looking for an opportunity where I can work on more complex backend problems, take bigger ownership, and contribute to products with wider impact.
+That’s the main reason I’m exploring a change
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Que: In your previous org your salary is X LPA and in current org you have Y LPA so what are you expecting?
+
+My current CTC is Y LPA. For my next role, I’m looking for a fair market-aligned increase based on the responsibilities and overall scope of the role.
+Ideally, I’m expecting something in the range of X to Y LPA, but I’m flexible and open to discussion for the right opportunity, role fit, and growth potential.
+
+
+
+My current CTC is Y LPA. Based on my experience, current compensation, and the kind of responsibilities I’m looking to take on, I’m expecting around X LPA. That said, I’m open to discussion depending on the overall role, growth opportunities, and total compensation structure
+
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Que: “That’s a big jump”, reply calmly
+
+I understand. My expectation is based on my current compensation, experience level, and the scope of work I’m looking to take on. I’m definitely open to discussing and aligning based on the role and budget
 
 ═══════════════════════════════════════════════════════════════════════════════════════
 2. JAVASCRIPT AND NODE.JS

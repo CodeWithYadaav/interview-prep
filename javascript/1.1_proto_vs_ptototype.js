@@ -9,7 +9,6 @@
 // ════════════════════════════════════════════════════════════════════════════════════
 // 1. WHAT IS prototype?
 // ════════════════════════════════════════════════════════════════════════════════════
-
 // prototype is a property that exists ONLY on functions
 // It's used as a BLUEPRINT when creating new objects
 
