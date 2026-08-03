@@ -2,7 +2,6 @@
 // JAVASCRIPT EVENT LOOP, CALLSTACK, MICROTASK & MACROTASK QUEUES (INTERVIEW POV)
 // ════════════════════════════════════════════════════════════════════════════════════
 //
-// Use this file to VISUALIZE what actually happens when JS runs.
 //
 // Single‑threaded rule:
 // - One call stack, one thing executes at a time.

@@ -654,3 +654,34 @@ useCallbacks
 state manage in large application
 Hooks
 Use of key attribute
+
+
+
+
+tredence
+
+Que 1: const arr = [
+  { name: "praveen", role: "developer" },
+  { name: "kumar", role: "tester" },
+  { name: "sai", role: "developer" },
+  { name: "raju", role: "tester" },
+  { name: "praveen", role: "developer" }
+];
+
+
+
+output= {
+  developer: [
+      {name:"praveen", role:"developer"},
+      {name:"sai", role:"developer"},
+      {name:"praveen", role:"developer"}
+  ],
+  tester:[
+      {name:"kumar", role:"tester"},
+      {name:"raju", role:"tester"}
+  ]
+}
+
+
+Que 2: CacheStempede
+

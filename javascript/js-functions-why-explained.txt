@@ -139,3 +139,9 @@ const add = (firstNum, secondNum) => firstNum + secondNum;
 WHY:
 - Arrow functions are concise and do not bind their own `this`, making them useful in many functional programming scenarios.
 
+
+
+
+
+var / let / const
+The Interview Answer: var is function-scoped and gets hoisted as undefined, making it leak out of block scopes. let and const are block-scoped and enter the Temporal Dead Zone (TDZ) on hoist — they exist but cannot be read before declaration. const adds the constraint of no reassignment, though object mutations are still allowed since const guards the binding, not the value.

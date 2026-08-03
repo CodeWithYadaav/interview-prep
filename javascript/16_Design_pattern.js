@@ -4,7 +4,7 @@
  1: Singleton Pattern
  ===============================
  The Singleton Pattern ensures that a class has only one instance and provides a global point of access to that instance.
- 
+
  When to use: This pattern is ideal when exactly one instance of a class is needed throughout the lifecycle of the application,
  such as in cases like logging, database connections, configuration settings, or thread pools.
 
@@ -98,7 +98,7 @@ class Vehicle {
     constructor(name) {
         this.name = name; // Name of the vehicle
     }
-    
+
     drive() {
         console.log(`${this.name} is driving.`);
     }
@@ -140,15 +140,15 @@ myCar.drive(); // Output: Toyota is driving.
 myTruck.drive(); // Output: Ford is driving.
 
 
- 
+
 /*
  ===============================
  3: Observer Pattern
  ===============================
- The Observer Pattern defines a one-to-many relationship between objects, where a change in one object (the subject) 
+ The Observer Pattern defines a one-to-many relationship between objects, where a change in one object (the subject)
  triggers updates to all its observers.
 
- When to use: Use this pattern when you want changes in one object to automatically notify and update dependent objects, 
+ When to use: Use this pattern when you want changes in one object to automatically notify and update dependent objects,
  such as in event handling systems.
 
  Key Points:
@@ -209,10 +209,10 @@ subject.notify("Hello Observers!");  // Both observers will receive the data
  ===============================
  4: Strategy Pattern
  ===============================
- The Strategy Pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable, allowing 
+ The Strategy Pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable, allowing
  the client to choose the appropriate algorithm at runtime.
 
- When to use: Use this pattern when you have multiple algorithms for a specific task and want to switch between them dynamically 
+ When to use: Use this pattern when you have multiple algorithms for a specific task and want to switch between them dynamically
  based on client needs or conditions.
 
  Key Points:
@@ -264,10 +264,10 @@ console.log(context.executeStrategy(5, 3));  // Output: 15
  ===============================
  5: Decorator Pattern
  ===============================
- The Decorator Pattern allows behavior to be added to individual objects dynamically, without affecting other objects 
+ The Decorator Pattern allows behavior to be added to individual objects dynamically, without affecting other objects
  from the same class. This pattern provides a flexible alternative to subclassing for extending functionality.
 
- When to use: Use this pattern when you want to add responsibilities to objects dynamically and transparently, 
+ When to use: Use this pattern when you want to add responsibilities to objects dynamically and transparently,
  without modifying their structure.
 
  Key Points:
@@ -450,3 +450,38 @@ lightOffCommand.execute();  // Output: Light is OFF
 // Decorator – Adds functionality to objects dynamically.
 // Adapter – Makes incompatible interfaces work together.
 // Command – Encapsulates requests as objects.
+
+
+
+
+
+
+
+//provide me solution In-flight Promise (Request Coalescing)
+let loadingPromise = null;
+
+async function getData() {
+
+    const cache = await redis.get("users");
+
+    if (cache) {
+        return cache;
+    }
+
+    // Someone is already fetching data
+    if (loadingPromise) {
+        return loadingPromise;
+    }
+
+    loadingPromise = (async () => {
+        const dbData = await fetchDb();
+
+        await redis.set("users", dbData);
+
+        loadingPromise = null;
+
+        return dbData;
+    })();
+
+    return loadingPromise;
+}

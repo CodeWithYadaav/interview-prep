@@ -1,142 +1,182 @@
-// Map, Filter, Reduce
+/**
+ * ============================================================================
+ * CHEAT SHEET: Map, Filter, Reduce (Polyfills & Interview Questions)
+ * ============================================================================
+ *
+ * CORE CONCEPTS:
+ *  1. map(): Creates a NEW array by transforming every element of the existing array via a callback.
+ *  2. filter(): Creates a NEW array containing only elements that satisfy a condition (return true).
+ *  3. reduce(): Reduces an array down to a single value (number, object, array) by executing a reducer callback on each element.
+ *
+ * NOTE ON REDUCE ACCUMULATOR:
+ *  - If an `initialValue` is provided, the accumulator starts as `initialValue`.
+ *  - If no `initialValue` is provided, the accumulator defaults to array index 0, and iteration starts from index 1.
+ */
 
-// Map=> it is creating to new array from the existing array by applying function to each of first elem of the arrray
-
-// Filter=> takes each elem in an array and aplly condition statement against if it return true it will push in an array else will not push in array
-
-// Reduce=> reduces the value of array down to just one value
-//acc is result of previous computation
-//if there is no acc is provided means no value is given then it set to 0 which is provided if no value provided in acc then it will pick 0 index of arr bydefault
-
-
-//POlYFILL of MAP
+/* ============================================================================
+ * 1. MAP POLYFILL & EXAMPLE
+ * ============================================================================
+ */
 
 Array.prototype.myMap = function (cb) {
   let temp = [];
   for (let i = 0; i < this.length; i++) {
-    temp.push(cb(this[i], i, this))
+    temp.push(cb(this[i], i, this));
   }
   return temp;
-}
+};
 
-
-const number = [1, 2, 3, 4]
+// Example Usage:
+const number = [1, 2, 3, 4];
 
 const resp = number.myMap((num, i, arr) => {
-  return num * 3
-})
-console.log(resp);
+  return num * 3;
+});
+
+console.log(resp); // Output: [3, 6, 9, 12]
 
 
-
-
-//POlYFILL of Filter
+/* ============================================================================
+ * 2. FILTER POLYFILL & EXAMPLE
+ * ============================================================================
+ */
 
 Array.prototype.myFilter = function (cb) {
   let temp = [];
   for (let i = 0; i < this.length; i++) {
-    if (cb(this[i], i, this)) temp.push(this[i])
+    if (cb(this[i], i, this)) {
+      temp.push(this[i]);
+    }
   }
-  return temp
-}
+  return temp;
+};
 
-const nums = [1, 2, 3, 4]
+// Example Usage:
+const nums = [1, 2, 3, 4];
 
 const moreThanTwo = nums.myFilter((num) => {
-  return num > 2
-})
+  return num > 2;
+});
 
-console.log(moreThanTwo);
+console.log(moreThanTwo); // Output: [3, 4]
 
 
-
-//POlYFILL of Reduce function
+/* ============================================================================
+ * 3. REDUCE POLYFILL & EXAMPLE
+ * ============================================================================
+ */
 
 Array.prototype.myReduce = function (cb, initial) {
-  let accumulater = initial
+  let accumulator = initial;
   for (let i = 0; i < this.length; i++) {
-    accumulater = accumulater ? cb(accumulater, this[i]) : this[i]
+    accumulator = accumulator !== undefined ? cb(accumulator, this[i], i, this) : this[i];
   }
-  return accumulater;
-}
+  return accumulator;
+};
 
-const arr = [1, 2, 3, 4]
+// Example Usage:
+const arr = [1, 2, 3, 4];
 
 const res = arr.myReduce((acc, curr) => {
-  return acc + curr
-})
+  return acc + curr;
+});
 
-console.log(res);
-
-
+console.log(res); // Output: 10
 
 
-//Map Vs ForEach
+/* ============================================================================
+ * 4. MAP VS FOREACH (INTERVIEW COMPARISON)
+ * ============================================================================
+ *
+ * Key Differences:
+ *  1. Return Value: `map()` returns a brand new array. `forEach()` returns `undefined`.
+ *  2. Chaining: `map()` result can be directly chained (`.filter()`, `.sort()`). `forEach()` cannot be chained.
+ *  3. Original Array Mutation: `map()` does not mutate original array; `forEach()` is typically used to mutate or perform side-effects.
+ */
+
+const compArr = [2, 3, 4, 5];
+
+// `map()` creates and returns a new array (can be chained)
+const mapRes = compArr.map((ar) => {
+  return ar + 2;
+});
+
+// `forEach()` does NOT return a value; modifies original array in-place
+const forEachRes = compArr.forEach((ar, i) => {
+  compArr[i] = ar + 4; // Modifies original array
+});
+
+console.log(mapRes);     // Output: [4, 5, 6, 7]
+console.log(forEachRes); // Output: undefined
+console.log(compArr);   // Output: [6, 7, 8, 9] (Mutated original array)
 
 
-// const arr=[2,3,4,5]
+/* ============================================================================
+ * 5. OUTPUT-BASED INTERVIEW QUESTIONS
+ * ============================================================================
+ */
+
+const students = [
+  { name: "John Doe", rollNumber: 101, marks: 80 },
+  { name: "Jane Smith", rollNumber: 102, marks: 69 },
+  { name: "Michael Brown", rollNumber: 103, marks: 35 },
+  { name: "Emily Davis", rollNumber: 104, marks: 55 }
+];
+
+// ----------------------------------------------------------------------------
+// Q1: Return only names of students in uppercase
+// ----------------------------------------------------------------------------
+
+// Traditional `for` loop approach:
+const namesLoop = [];
+for (let i = 0; i < students.length; i++) {
+  namesLoop.push(students[i].name.toUpperCase());
+}
+console.log(namesLoop);
+
+// Functional `map()` approach:
+const namesMap = students.map((stu) => {
+  return stu.name.toUpperCase();
+});
+console.log(namesMap);
+
+// 🎯 Output: ["JOHN DOE", "JANE SMITH", "MICHAEL BROWN", "EMILY DAVIS"]
 
 
-//we can chain on map like filter join.split but on forEach cannot do anything
-// const mapRes = arr.map((ar) => {
-//   return ar + 2
-// })
+// ----------------------------------------------------------------------------
+// Q2: Return details of students who scored more than 60
+// ----------------------------------------------------------------------------
+const highScorers = students.filter((mark) => {
+  return mark.marks > 60;
+});
 
-// //map will returns the new array but forEach will not return anything it will simply modified the existing array
-// const forEachRes = arr.forEach((ar, i) => {
-//    return arr + 2    will not give anything
-//   arr[i] = ar + 4  // this will modify the org array
-// })
-// console.log(mapRes,forEachRes,arr);
-
-
-
-
-//Q1====>return only names of students in capital
-// const students = [
-//   { name: "John Doe", rollNumber: 101, marks: 80 },
-//   { name: "Jane Smith", rollNumber: 102, marks: 69 },
-//   { name: "Michael Brown", rollNumber: 103, marks: 35 },
-//   { name: "Emily Davis", rollNumber: 104, marks: 55 }
-// ];
-
-//   const names= []
-//   for (let i = 0; i < students.length; i++) {
-//      names.push(students[i].name.toUpperCase())
-//   }
-//   console.log(names);
-
-// const names=students.map((stu)=>{
-//     return stu.name.toUpperCase()
-// })
-// console.log(names);
+console.log(highScorers);
+/*
+ * 🎯 Output:
+ * [
+ *   { name: 'John Doe', rollNumber: 101, marks: 80 },
+ *   { name: 'Jane Smith', rollNumber: 102, marks: 69 }
+ * ]
+ */
 
 
+// ----------------------------------------------------------------------------
+// Q3: Sum of marks of all students
+// ----------------------------------------------------------------------------
+const totalMarks = students.reduce((acc, curr) => {
+  return acc + curr.marks;
+}, 0);
 
-//Q2==> return only details of those who score more than 60
-
-// const marks= students.filter((mark)=>{
-//     return mark.marks>60
-// })
-// console.log(marks);
-
-
-// Q3==> sum of marks of all students
-
-// const sum = students.reduce((acc,curr,i,arr)=>{
-//     return acc+curr.marks
-// },0)
-// console.log(sum);
+console.log(totalMarks);
+// 🎯 Output: 239 (80 + 69 + 35 + 55)
 
 
-// Q4===>  return only names who scored more than 60
+// ----------------------------------------------------------------------------
+// Q4: Return only names of students who scored more than 60 (Method Chaining)
+// ----------------------------------------------------------------------------
+const combineName = students
+  .filter((stu) => stu.marks > 60)
+  .map((names) => names.name);
 
-// const combineName = students.filter((stu)=>{
-//     return stu.marks>60
-// }).map((names)=>{return names.name})
-
-// console.log(combineName);
-
-
-
-
+console.log(combineName);
+// 🎯 Output: ["John Doe", "Jane Smith"]
