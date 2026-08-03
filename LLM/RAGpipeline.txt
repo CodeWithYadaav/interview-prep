@@ -1,0 +1,176 @@
+Kid-Level Explanation
+- A user asks a question.
+- We turn the question into number codes (embeddings) so computers understand it.
+- We look in a big library of number codes to find the closest matching pages.
+- We glue the helpful pages to the question.
+- The model reads the glued bundle and writes the answer.
+- Because the model reads real pages, it makes fewer guesses.
+
+Interview Prep Notes
+- End-to-end flow: user query → embed → vector similarity search → fetch top-k docs → optional rerank → metadata filter → construct augmented prompt → LLM generates grounded reply.
+- Hallucination reduction: retrieved passages provide factual anchors; still add citation checks and have fallbacks when recall fails (decline to answer, escalate, or trigger human review).
+- Chunking: pick window sizes (200–500 tokens) with overlap that respects sentence boundaries; tune per domain (legal docs need larger overlap, FAQs can be small).
+- Metadata filtering: store attributes (source, product, locale, security level) to enforce compliance before similarity scoring.
+- Relevance scoring: cosine similarity for fast recall, then optional Maximal Marginal Relevance (MMR) or cross-encoder rerank for precision-sensitive answers.
+- Prompt assembly: include instructions, user question, ordered snippets with citations, and mention token budget trade-offs.
+- Evaluation: track precision@k, answer groundedness, factuality, latency, and escalation rate; build dashboards to observe drift.
+
+Detailed Walkthrough
+- Ingest: chunk raw content, capture metadata, generate embeddings, persist in vector store (FAISS, pgvector, Pinecone, Weaviate).
+- Retrieve: embed the live query, run approximate nearest neighbor (ANN) search, apply metadata filters, optionally run multi-query expansion to improve recall.
+- Rerank: use MMR or a lightweight cross-encoder (e.g., `bge-reranker`) to reorder passages by answerability.
+- Assemble Prompt: stitch instructions, question, citations; cap tokens; include guardrail instructions (`answer only if confident`).
+- Generate & Validate: call LLM, check for explicit citations, optional fact-check fallback, log telemetry.
+- Feedback Loop: collect thumbs-up/down, recrawl stale docs, retrain or adjust embeddings, review escalations.
+
+Advanced Engineering Notes
+- Index freshness: schedule re-embedding when source content changes; keep tombstones for deleted docs.
+- Hybrid search: blend sparse (BM25) and dense similarity to cover long-tail keywords and numeric values.
+- Multi-hop questions: allow secondary retrieval based on intermediate entities extracted from the answer draft.
+- Guardrails: detect when top scores fall below threshold; trigger `I do not have enough info` response.
+- Cost controls: cache embeddings, batch queries, and prune history to control LLM token spend.
+- Observability: trace each answer with IDs for query, retrieved chunks, model version, and latency stages.
+
+Sample Code: Production-Ready Skeleton (Python)
+```python
+import os
+from dataclasses import dataclass
+from typing import Any, Dict, List, Sequence, Tuple
+
+import faiss  # pip install faiss-cpu
+import numpy as np
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+@dataclass
+class Chunk:
+    doc_id: str
+    text: str
+    metadata: Dict[str, Any]
+
+
+def embed_texts(texts: Sequence[str]) -> np.ndarray:
+    response = client.embeddings.create(
+        input=list(texts),
+        model="text-embedding-3-large",
+    )
+    vectors = [entry.embedding for entry in response.data]
+    return np.array(vectors, dtype=np.float32)
+
+
+def build_faiss_index(chunks: List[Chunk]) -> Tuple[faiss.IndexFlatIP, np.ndarray]:
+    vectors = embed_texts([chunk.text for chunk in chunks])
+    norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+    normalized = vectors / np.clip(norms, 1e-12, None)
+    index = faiss.IndexFlatIP(normalized.shape[1])
+    index.add(normalized)
+    return index, normalized
+
+
+def metadata_filter(chunks: List[Chunk], required: Dict[str, Any]) -> List[int]:
+    allowed = []
+    for idx, chunk in enumerate(chunks):
+        if all(chunk.metadata.get(key) == value for key, value in required.items()):
+            allowed.append(idx)
+    return allowed
+
+
+def mmr(scores: np.ndarray, embeddings: np.ndarray, top_k: int, diversity: float = 0.3) -> List[int]:
+    selected, candidate_indices = [], list(range(len(scores)))
+    while candidate_indices and len(selected) < top_k:
+        if not selected:
+            best = int(np.argmax(scores[candidate_indices]))
+            selected.append(candidate_indices.pop(best))
+            continue
+        remaining = np.array(candidate_indices)
+        sim_to_selected = embeddings[remaining] @ embeddings[selected].T
+        max_sim = sim_to_selected.max(axis=1)
+        relevance = scores[remaining]
+        mmr_score = (1 - diversity) * relevance - diversity * max_sim
+        best = int(np.argmax(mmr_score))
+        selected.append(remaining[best])
+        candidate_indices.remove(remaining[best])
+    return selected
+
+
+def retrieve(query: str, chunks: List[Chunk], index: faiss.IndexFlatIP, embeddings: np.ndarray,
+             top_k: int = 4, filter_by: Dict[str, Any] | None = None) -> List[Tuple[float, Chunk]]:
+    query_vec = embed_texts([query])
+    query_vec /= np.linalg.norm(query_vec, axis=1, keepdims=True)
+    scores, indices = index.search(query_vec, len(chunks))
+
+    valid_indices = list(indices[0])
+    valid_scores = list(scores[0])
+
+    if filter_by:
+        allowed = set(metadata_filter(chunks, filter_by))
+        filtered = [(s, i) for s, i in zip(valid_scores, valid_indices) if i in allowed]
+        if not filtered:
+            return []
+        valid_scores, valid_indices = zip(*filtered)
+
+    ranking = mmr(np.array(valid_scores), embeddings[np.array(valid_indices)], top_k=top_k)
+    top_results = []
+    for rank in ranking:
+        chunk_index = valid_indices[rank]
+        top_results.append((valid_scores[rank], chunks[chunk_index]))
+    return top_results
+
+
+def build_prompt(query: str, retrieved: List[Tuple[float, Chunk]]) -> str:
+    if not retrieved:
+        return (
+            "No supporting documents were found.\n"
+            f"Question: {query}\n"
+            "Answer: I do not have enough information to answer that confidently."
+        )
+
+    citations = "\n".join(
+        f"[score={score:.2f} id={chunk.doc_id}] {chunk.text}"
+        for score, chunk in retrieved
+    )
+    return (
+        "You are an assistant that answers using ONLY the provided context. "
+        "Cite the document id in square brackets. If the context is insufficient, say so.\n\n"
+        f"Context:\n{citations}\n\n"
+        f"Question: {query}\nAnswer:"
+    )
+
+
+def answer(query: str, chunks: List[Chunk], index: faiss.IndexFlatIP, embeddings: np.ndarray) -> str:
+    retrieved = retrieve(query, chunks, index, embeddings, top_k=4, filter_by={"locale": "en"})
+    prompt = build_prompt(query, retrieved)
+    if "No supporting documents" in prompt:
+        return prompt
+
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=[{"role": "user", "content": prompt}],
+        temperature=0.1,
+    )
+
+    top_score = retrieved[0][0] if retrieved else 0.0
+    if top_score < 0.45:
+        return "I do not have enough confidence to answer. Escalating to a human agent."
+    return response.output_text
+
+
+if __name__ == "__main__":
+    KNOWLEDGE_BASE = [
+        Chunk(doc_id="shipping_policy#2024", text="Express shipping delivers within 1 business day in metro cities.", metadata={"locale": "en"}),
+        Chunk(doc_id="returns_faq#base", text="Returns are accepted within 30 days when items are unused.", metadata={"locale": "en"}),
+        Chunk(doc_id="returns_faq#es", text="Las devoluciones se aceptan dentro de los 30 días si el producto no se usa.", metadata={"locale": "es"}),
+        Chunk(doc_id="inventory#backorder", text="Backordered items ship when stock returns; expect 5 extra days.", metadata={"locale": "en"}),
+    ]
+
+    vector_index, matrix = build_faiss_index(KNOWLEDGE_BASE)
+    result = answer("How long does express shipping take to arrive?", KNOWLEDGE_BASE, vector_index, matrix)
+    print(result)
+```
+
+Interview Drill Prompts
+- Map each pipeline stage to concrete AWS/Azure/GCP services for a production rollout.
+- Describe how you would test grounding quality when the corpus updates hourly.
+- Propose a hybrid search strategy for product catalogs with numerical attributes.
+- Outline a monitoring dashboard that flags answer drift and low-confidence spikes.

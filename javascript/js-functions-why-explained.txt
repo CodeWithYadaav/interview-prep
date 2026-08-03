@@ -1,0 +1,147 @@
+
+JavaScript Functions: Detailed "Why" Explanations
+=================================================
+
+Q1. What is Function Declaration?
+---------------------------------
+function square(num) {
+    return num * num;
+}
+
+WHY:
+- Function declarations are hoisted completely to the top of their scope, meaning they can be called before they are defined.
+
+Q2. What is Function Expression?
+--------------------------------
+const square = function(num) {
+    return num * num;
+};
+
+WHY:
+- Function expressions are not hoisted like declarations. Only the variable (`square`) is hoisted with `undefined` value, not the function itself.
+
+Q3. First-Class Functions
+-------------------------
+function square(num) {
+    return num * num;
+}
+function displaySquare(fn) {
+    console.log("Square is ::", fn(5));
+}
+displaySquare(square);
+
+WHY:
+- JavaScript treats functions as first-class citizens. Functions can be passed as arguments, returned from other functions, and stored in variables.
+
+Q4. IIFE (Immediately Invoked Function Expression)
+---------------------------------------------------
+(function square(num) {
+    console.log(num * num);
+})(5);
+
+WHY:
+- IIFE allows us to execute a function immediately after its definition. Commonly used to avoid polluting the global namespace.
+
+Closure Example:
+----------------
+(function(x) {
+    return (function(y) {
+        console.log(x);
+    })(2);
+})(1); // Prints: 1
+
+WHY:
+- Inner function forms a closure and retains access to the outer function’s variables (`x`), even after the outer function has executed.
+
+Q7. Function Scope and Block Scope
+----------------------------------
+for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+        console.log(i);
+    }, i * 1000);
+}
+// Prints 0 1 2 3 4
+
+WHY:
+- `let` is block-scoped, creating a new `i` for each loop iteration.
+- With `var`, all timeouts share the same `i`, which becomes 5 by the time they execute.
+
+Q8. Function Hoisting
+---------------------
+funcitonName();
+function funcitonName() {
+    console.log("praveen");
+}
+
+console.log(a);
+var a = 10;
+
+WHY:
+- Function declarations are hoisted completely.
+- Variables declared with `var` are hoisted but initialized as `undefined`.
+
+Q9. Variable Shadowing Inside Function
+--------------------------------------
+var x = 9;
+var fun = function() {
+    console.log(x);
+    var x = 20;
+}
+fun(); // undefined
+
+WHY:
+- Due to hoisting, `var x` inside the function is hoisted to the top of the function, making `x` undefined at the time of the console.log.
+
+Q10. Parameters vs Arguments
+----------------------------
+function square(num) { // num is a parameter
+    console.log(num * num);
+}
+square(5); // 5 is an argument
+
+WHY:
+- Parameters are placeholders in function definitions.
+- Arguments are the actual values passed during invocation.
+
+Q11. Spread vs Rest
+-------------------
+function square(...num) {  // rest operator
+    console.log(num[0] * num[1]);
+}
+var arr = [5, 6];
+square(...arr);  // spread operator
+
+WHY:
+- Rest gathers values into an array.
+- Spread expands array elements into individual values.
+
+Rest Params Must Be Last:
+-------------------------
+const fn = (a, x, y, ...numbers) => {
+    console.log(x, y, numbers);
+}
+fn(5, 6, 3, 7, 8, 9, 2);
+
+WHY:
+- Rest parameter must be the last parameter to correctly collect all remaining arguments.
+
+Q12. Callback Function
+----------------------
+A callback is a function passed into another function as an argument to be executed later.
+
+WHY:
+- Enables asynchronous programming and better modularization of code.
+
+Q13. Arrow Function
+-------------------
+const add = (firstNum, secondNum) => firstNum + secondNum;
+
+WHY:
+- Arrow functions are concise and do not bind their own `this`, making them useful in many functional programming scenarios.
+
+
+
+
+
+var / let / const
+The Interview Answer: var is function-scoped and gets hoisted as undefined, making it leak out of block scopes. let and const are block-scoped and enter the Temporal Dead Zone (TDZ) on hoist — they exist but cannot be read before declaration. const adds the constraint of no reassignment, though object mutations are still allowed since const guards the binding, not the value.

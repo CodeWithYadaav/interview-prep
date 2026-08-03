@@ -1,0 +1,1075 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// SQL INTERVIEW QUESTIONS - 50+ Real Problems with Solutions
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Practice SQL questions asked in actual interviews (Amazon, Google, Microsoft, etc.)
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// DIFFICULTY LEVELS:
+// 🟢 EASY - Basic SELECT, WHERE, GROUP BY
+// 🟡 MEDIUM - JOINs, Subqueries, Window Functions
+// 🔴 HARD - Complex CTEs, Recursive Queries, Optimization
+// ════════════════════════════════════════════════════════════════════════════════════
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 1: SALARY PROBLEMS (Classic Interview Questions!)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 1: 🟡 SECOND HIGHEST SALARY
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Write a query to find the second highest salary. If there's no second
+highest, return NULL.
+
+employees:
+┌────┬────────┬────────┐
+│ id │  name  │ salary │
+├────┼────────┼────────┤
+│ 1  │ Alice  │ 100    │
+│ 2  │ Bob    │ 200    │
+│ 3  │ Charlie│ 300    │
+└────┴────────┴────────┘
+
+
+-- SOLUTION 1: Using LIMIT OFFSET
+SELECT salary
+FROM (
+    SELECT DISTINCT salary
+    FROM employees
+    ORDER BY salary DESC
+    LIMIT 1 OFFSET 1
+) AS second_highest;
+
+-- SOLUTION 2: Using DENSE_RANK (handles ties)
+SELECT salary
+FROM (
+    SELECT
+        salary,
+        DENSE_RANK() OVER (ORDER BY salary DESC) AS rank
+    FROM employees
+) ranked
+WHERE rank = 2;
+
+-- SOLUTION 3: Using MAX with subquery
+SELECT MAX(salary) AS second_highest_salary
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+-- Handle NULL case (if no second highest exists)
+SELECT COALESCE(
+    (SELECT DISTINCT salary
+     FROM employees
+     ORDER BY salary DESC
+     LIMIT 1 OFFSET 1),
+    NULL
+) AS SecondHighestSalary;
+
+
+Expected Output:
+┌────────┐
+│ salary │
+├────────┤
+│ 200    │
+└────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 2: 🟡 NTH HIGHEST SALARY
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Write a function to find the Nth highest salary.
+
+-- Create function
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+    RETURN (
+        SELECT DISTINCT salary
+        FROM employees
+        ORDER BY salary DESC
+        LIMIT 1 OFFSET N-1
+    );
+END;
+
+-- Using DENSE_RANK (better for ties)
+WITH ranked AS (
+    SELECT
+        salary,
+        DENSE_RANK() OVER (ORDER BY salary DESC) AS rank
+    FROM employees
+)
+SELECT salary
+FROM ranked
+WHERE rank = N;  -- Replace N with desired rank
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 3: 🟡 DEPARTMENT-WISE TOP EARNERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find the highest paid employee in each department.
+
+employees:
+┌────┬────────┬────────┬────────┐
+│ id │  name  │  dept  │ salary │
+├────┼────────┼────────┼────────┤
+│ 1  │ Alice  │ Sales  │ 5000   │
+│ 2  │ Bob    │ Sales  │ 6000   │
+│ 3  │ Charlie│ Tech   │ 7000   │
+│ 4  │ David  │ Tech   │ 8000   │
+│ 5  │ Eve    │ Sales  │ 5500   │
+└────┴────────┴────────┴────────┘
+
+
+-- SOLUTION: Using ROW_NUMBER
+WITH ranked AS (
+    SELECT
+        dept,
+        name,
+        salary,
+        ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rank
+    FROM employees
+)
+SELECT dept, name, salary
+FROM ranked
+WHERE rank = 1;
+
+Expected Output:
+┌────────┬────────┬────────┐
+│  dept  │  name  │ salary │
+├────────┼────────┼────────┤
+│ Sales  │ Bob    │ 6000   │
+│ Tech   │ David  │ 8000   │
+└────────┴────────┴────────┘
+
+
+-- Alternative: Using correlated subquery
+SELECT e1.dept, e1.name, e1.salary
+FROM employees e1
+WHERE e1.salary = (
+    SELECT MAX(e2.salary)
+    FROM employees e2
+    WHERE e2.dept = e1.dept
+);
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 4: 🔴 EMPLOYEES EARNING MORE THAN THEIR MANAGERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find employees who earn more than their managers.
+
+employees:
+┌────┬────────┬────────┬────────────┐
+│ id │  name  │ salary │ manager_id │
+├────┼────────┼────────┼────────────┤
+│ 1  │ Alice  │ 90000  │ NULL       │ ← CEO
+│ 2  │ Bob    │ 80000  │ 1          │
+│ 3  │ Charlie│ 85000  │ 2          │ ← Earns more than Bob!
+│ 4  │ David  │ 70000  │ 2          │
+└────┴────────┴────────┴────────────┘
+
+
+-- SOLUTION: Self JOIN
+SELECT
+    e.name AS employee,
+    e.salary AS emp_salary,
+    m.name AS manager,
+    m.salary AS mgr_salary
+FROM employees e
+INNER JOIN employees m ON e.manager_id = m.id
+WHERE e.salary > m.salary;
+
+Expected Output:
+┌──────────┬────────────┬─────────┬────────────┐
+│ employee │ emp_salary │ manager │ mgr_salary │
+├──────────┼────────────┼─────────┼────────────┤
+│ Charlie  │ 85000      │ Bob     │ 80000      │
+└──────────┴────────────┴─────────┴────────────┘
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 2: RUNNING TOTALS & WINDOW FUNCTIONS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 5: 🟡 RUNNING TOTAL
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate running total of sales by date.
+
+sales:
+┌────────────┬────────┐
+│    date    │ amount │
+├────────────┼────────┤
+│ 2024-01-01 │ 100    │
+│ 2024-01-02 │ 200    │
+│ 2024-01-03 │ 150    │
+│ 2024-01-04 │ 300    │
+└────────────┴────────┘
+
+
+-- SOLUTION: Using SUM() OVER
+SELECT
+    date,
+    amount,
+    SUM(amount) OVER (ORDER BY date) AS running_total
+FROM sales;
+
+Expected Output:
+┌────────────┬────────┬───────────────┐
+│    date    │ amount │ running_total │
+├────────────┼────────┼───────────────┤
+│ 2024-01-01 │ 100    │ 100           │
+│ 2024-01-02 │ 200    │ 300           │
+│ 2024-01-03 │ 150    │ 450           │
+│ 2024-01-04 │ 300    │ 750           │
+└────────────┴────────┴───────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 6: 🟡 MONTH-OVER-MONTH GROWTH
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate month-over-month revenue growth percentage.
+
+monthly_revenue:
+┌────────┬─────────┐
+│  month │ revenue │
+├────────┼─────────┤
+│ Jan    │ 10000   │
+│ Feb    │ 12000   │
+│ Mar    │ 11000   │
+└────────┴─────────┘
+
+
+-- SOLUTION: Using LAG
+SELECT
+    month,
+    revenue,
+    LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
+    revenue - LAG(revenue) OVER (ORDER BY month) AS growth,
+    ROUND(
+        (revenue - LAG(revenue) OVER (ORDER BY month)) * 100.0 /
+        LAG(revenue) OVER (ORDER BY month),
+        2
+    ) AS growth_pct
+FROM monthly_revenue;
+
+Expected Output:
+┌────────┬─────────┬─────────────────────┬────────┬────────────┐
+│  month │ revenue │ prev_month_revenue  │ growth │ growth_pct │
+├────────┼─────────┼─────────────────────┼────────┼────────────┤
+│ Jan    │ 10000   │ NULL                │ NULL   │ NULL       │
+│ Feb    │ 12000   │ 10000               │ 2000   │ 20.00      │
+│ Mar    │ 11000   │ 12000               │ -1000  │ -8.33      │
+└────────┴─────────┴─────────────────────┴────────┴────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 7: 🟡 3-MONTH MOVING AVERAGE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate 3-month moving average of sales.
+
+-- SOLUTION
+SELECT
+    month,
+    sales,
+    ROUND(AVG(sales) OVER (
+        ORDER BY month
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ), 2) AS moving_avg_3_months
+FROM monthly_sales;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 8: 🔴 YEAR-OVER-YEAR COMPARISON
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Compare sales for same month across different years.
+
+sales:
+┌────────┬─────────┬────────┐
+│  year  │  month  │ amount │
+├────────┼─────────┼────────┤
+│ 2023   │ Jan     │ 1000   │
+│ 2023   │ Feb     │ 1200   │
+│ 2024   │ Jan     │ 1500   │
+│ 2024   │ Feb     │ 1400   │
+└────────┴─────────┴────────┘
+
+
+-- SOLUTION: Using LAG with PARTITION
+SELECT
+    year,
+    month,
+    amount,
+    LAG(amount) OVER (PARTITION BY month ORDER BY year) AS prev_year_amount,
+    amount - LAG(amount) OVER (PARTITION BY month ORDER BY year) AS yoy_growth
+FROM sales;
+
+Expected Output:
+┌────────┬─────────┬────────┬──────────────────┬────────────┐
+│  year  │  month  │ amount │ prev_year_amount │ yoy_growth │
+├────────┼─────────┼────────┼──────────────────┼────────────┤
+│ 2023   │ Jan     │ 1000   │ NULL             │ NULL       │
+│ 2024   │ Jan     │ 1500   │ 1000             │ 500        │
+│ 2023   │ Feb     │ 1200   │ NULL             │ NULL       │
+│ 2024   │ Feb     │ 1400   │ 1200             │ 200        │
+└────────┴─────────┴────────┴──────────────────┴────────────┘
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 3: DUPLICATE DETECTION
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 9: 🟢 FIND DUPLICATE EMAILS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find all duplicate emails in the users table.
+
+users:
+┌────┬──────────────────┬──────┐
+│ id │      email       │ name │
+├────┼──────────────────┼──────┤
+│ 1  │ john@example.com │ John │
+│ 2  │ jane@example.com │ Jane │
+│ 3  │ john@example.com │ Jon  │ ← Duplicate!
+└────┴──────────────────┴──────┘
+
+
+-- SOLUTION 1: Using GROUP BY
+SELECT email, COUNT(*) as count
+FROM users
+GROUP BY email
+HAVING COUNT(*) > 1;
+
+-- SOLUTION 2: With details
+SELECT *
+FROM users
+WHERE email IN (
+    SELECT email
+    FROM users
+    GROUP BY email
+    HAVING COUNT(*) > 1
+);
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 10: 🟡 DELETE DUPLICATES (Keep Oldest)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Delete duplicate rows, keeping only the row with smallest id.
+
+-- SOLUTION: Using ROW_NUMBER
+DELETE FROM users
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM users
+    GROUP BY email
+);
+
+-- Or using window function
+WITH ranked AS (
+    SELECT
+        id,
+        ROW_NUMBER() OVER (PARTITION BY email ORDER BY id) AS rn
+    FROM users
+)
+DELETE FROM users
+WHERE id IN (
+    SELECT id FROM ranked WHERE rn > 1
+);
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 4: GAP AND ISLAND PROBLEMS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 11: 🔴 CONSECUTIVE DAYS WITH SALES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find the longest streak of consecutive days with sales.
+
+sales:
+┌────────────┬────────┐
+│    date    │ amount │
+├────────────┼────────┤
+│ 2024-01-01 │ 100    │
+│ 2024-01-02 │ 200    │
+│ 2024-01-03 │ 150    │ ← 3 consecutive days
+│ 2024-01-05 │ 300    │ ← Gap (no sale on 01-04)
+│ 2024-01-06 │ 250    │
+└────────────┴────────┘
+
+
+-- SOLUTION: Island and Gap technique
+WITH numbered AS (
+    SELECT
+        date,
+        date - ROW_NUMBER() OVER (ORDER BY date) * INTERVAL '1 day' AS grp
+    FROM sales
+),
+streaks AS (
+    SELECT
+        grp,
+        COUNT(*) AS streak_length,
+        MIN(date) AS streak_start,
+        MAX(date) AS streak_end
+    FROM numbered
+    GROUP BY grp
+)
+SELECT *
+FROM streaks
+ORDER BY streak_length DESC
+LIMIT 1;
+
+Expected Output:
+┌────────────┬──────────────┬──────────────┬───────────────┐
+│    grp     │streak_length │ streak_start │  streak_end   │
+├────────────┼──────────────┼──────────────┼───────────────┤
+│ 2023-12-30 │ 3            │ 2024-01-01   │ 2024-01-03    │
+└────────────┴──────────────┴──────────────┴───────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 12: 🔴 FIND MISSING NUMBERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find missing numbers in a sequence from 1 to 100.
+
+numbers:
+┌────┐
+│ id │
+├────┤
+│ 1  │
+│ 2  │
+│ 4  │ ← 3 is missing!
+│ 5  │
+└────┘
+
+
+-- SOLUTION: Generate series and LEFT JOIN
+WITH all_numbers AS (
+    SELECT generate_series(1, 100) AS num
+)
+SELECT num AS missing_number
+FROM all_numbers
+WHERE num NOT IN (SELECT id FROM numbers);
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 5: EMPLOYEE-MANAGER HIERARCHIES
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 13: 🟡 LIST ALL EMPLOYEES WITH THEIR MANAGER
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- SOLUTION: Self JOIN
+SELECT
+    e.name AS employee,
+    e.title AS emp_title,
+    m.name AS manager,
+    m.title AS mgr_title
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 14: 🔴 FIND ALL SUBORDINATES (ENTIRE CHAIN)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find all employees reporting to a given manager (directly or indirectly).
+
+employees:
+┌────┬─────────┬────────────┐
+│ id │  name   │ manager_id │
+├────┼─────────┼────────────┤
+│ 1  │ Alice   │ NULL       │ ← CEO
+│ 2  │ Bob     │ 1          │
+│ 3  │ Charlie │ 1          │
+│ 4  │ David   │ 2          │ ← Reports to Bob (indirectly to Alice)
+│ 5  │ Eve     │ 2          │
+└────┴─────────┴────────────┘
+
+
+-- SOLUTION: Recursive CTE
+WITH RECURSIVE subordinates AS (
+    -- Base case: Start with the manager
+    SELECT id, name, manager_id, 0 AS level
+    FROM employees
+    WHERE name = 'Alice'
+
+    UNION ALL
+
+    -- Recursive case: Find employees managed by subordinates
+    SELECT e.id, e.name, e.manager_id, s.level + 1
+    FROM employees e
+    INNER JOIN subordinates s ON e.manager_id = s.id
+)
+SELECT id, name, level
+FROM subordinates
+WHERE id != (SELECT id FROM employees WHERE name = 'Alice');
+
+Expected Output:
+┌────┬─────────┬───────┐
+│ id │  name   │ level │
+├────┼─────────┼───────┤
+│ 2  │ Bob     │ 1     │ ← Direct report
+│ 3  │ Charlie │ 1     │
+│ 4  │ David   │ 2     │ ← Indirect report
+│ 5  │ Eve     │ 2     │
+└────┴─────────┴───────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 15: 🔴 ORGANIZATION CHART DEPTH
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find the maximum depth of the organization hierarchy.
+
+-- SOLUTION
+WITH RECURSIVE hierarchy AS (
+    SELECT id, name, manager_id, 1 AS depth
+    FROM employees
+    WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT e.id, e.name, e.manager_id, h.depth + 1
+    FROM employees e
+    INNER JOIN hierarchy h ON e.manager_id = h.id
+)
+SELECT MAX(depth) AS max_depth
+FROM hierarchy;
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 6: COMPLEX JOINS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 16: 🟡 CUSTOMERS WHO NEVER ORDERED
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find customers who have never placed an order.
+
+customers:                     orders:
+┌────┬───────┐                ┌────┬─────────────┐
+│ id │ name  │                │ id │ customer_id │
+├────┼───────┤                ├────┼─────────────┤
+│ 1  │ Alice │                │ 1  │ 1           │
+│ 2  │ Bob   │                │ 2  │ 3           │
+│ 3  │ Charlie│               └────┴─────────────┘
+└────┴───────┘
+     ↑ Bob never ordered!
+
+
+-- SOLUTION 1: LEFT JOIN
+SELECT c.id, c.name
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+WHERE o.id IS NULL;
+
+-- SOLUTION 2: NOT IN (careful with NULLs!)
+SELECT id, name
+FROM customers
+WHERE id NOT IN (SELECT customer_id FROM orders WHERE customer_id IS NOT NULL);
+
+-- SOLUTION 3: NOT EXISTS (fastest!)
+SELECT c.id, c.name
+FROM customers c
+WHERE NOT EXISTS (
+    SELECT 1 FROM orders o WHERE o.customer_id = c.id
+);
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 17: 🟡 PRODUCTS NEVER ORDERED
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- Same pattern as above
+SELECT p.product_id, p.product_name
+FROM products p
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+WHERE oi.order_id IS NULL;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 18: 🔴 SELF-REFERENCING MANY-TO-MANY (Friends)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find mutual friends (users who are friends with each other).
+
+friendships:
+┌─────────┬───────────┐
+│ user_id │ friend_id │
+├─────────┼───────────┤
+│ 1       │ 2         │
+│ 2       │ 1         │ ← Mutual (1 and 2 are friends)
+│ 1       │ 3         │
+│ 4       │ 1         │ ← Not mutual (1 is not friends with 4)
+└─────────┴───────────┘
+
+
+-- SOLUTION
+SELECT LEAST(f1.user_id, f1.friend_id) AS user1,
+       GREATEST(f1.user_id, f1.friend_id) AS user2
+FROM friendships f1
+INNER JOIN friendships f2
+    ON f1.user_id = f2.friend_id
+    AND f1.friend_id = f2.user_id
+WHERE f1.user_id < f1.friend_id;  -- Avoid duplicates
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 7: DATE & TIME PROBLEMS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 19: 🟡 ACTIVE USERS IN LAST 30 DAYS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- SOLUTION
+SELECT COUNT(DISTINCT user_id) AS active_users
+FROM user_activity
+WHERE activity_date >= CURRENT_DATE - INTERVAL '30 days';
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 20: 🟡 FIRST AND LAST PURCHASE DATE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** For each customer, find their first and last purchase date.
+
+-- SOLUTION
+SELECT
+    customer_id,
+    MIN(order_date) AS first_purchase,
+    MAX(order_date) AS last_purchase,
+    DATEDIFF(MAX(order_date), MIN(order_date)) AS days_between
+FROM orders
+GROUP BY customer_id;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 21: 🔴 RETENTION RATE (Day 1, Day 7, Day 30)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate user retention - users who came back after 7 days.
+
+-- SOLUTION
+WITH first_visit AS (
+    SELECT user_id, MIN(visit_date) AS first_date
+    FROM user_visits
+    GROUP BY user_id
+),
+day7_visit AS (
+    SELECT DISTINCT uv.user_id
+    FROM user_visits uv
+    INNER JOIN first_visit fv ON uv.user_id = fv.user_id
+    WHERE uv.visit_date = fv.first_date + INTERVAL '7 days'
+)
+SELECT
+    COUNT(DISTINCT fv.user_id) AS total_users,
+    COUNT(DISTINCT d7.user_id) AS day7_retained,
+    ROUND(COUNT(DISTINCT d7.user_id) * 100.0 / COUNT(DISTINCT fv.user_id), 2) AS retention_rate
+FROM first_visit fv
+LEFT JOIN day7_visit d7 ON fv.user_id = d7.user_id;
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 8: AGGREGATION CHALLENGES
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 22: 🟡 TOP 3 PRODUCTS BY REVENUE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- SOLUTION
+WITH product_revenue AS (
+    SELECT
+        product_id,
+        SUM(quantity * price) AS total_revenue
+    FROM order_items
+    GROUP BY product_id
+)
+SELECT *
+FROM product_revenue
+ORDER BY total_revenue DESC
+LIMIT 3;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 23: 🟡 PERCENTAGE OF TOTAL
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate each department's percentage of total company sales.
+
+-- SOLUTION
+SELECT
+    dept,
+    SUM(sales) AS dept_sales,
+    ROUND(SUM(sales) * 100.0 / SUM(SUM(sales)) OVER (), 2) AS pct_of_total
+FROM sales
+GROUP BY dept;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 24: 🔴 COHORT ANALYSIS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Group users by signup month and track their activity over time.
+
+-- SOLUTION
+WITH user_cohorts AS (
+    SELECT
+        user_id,
+        DATE_TRUNC('month', signup_date) AS cohort_month
+    FROM users
+),
+cohort_activity AS (
+    SELECT
+        uc.cohort_month,
+        DATE_TRUNC('month', a.activity_date) AS activity_month,
+        COUNT(DISTINCT a.user_id) AS active_users
+    FROM user_cohorts uc
+    INNER JOIN user_activity a ON uc.user_id = a.user_id
+    GROUP BY uc.cohort_month, DATE_TRUNC('month', a.activity_date)
+)
+SELECT
+    cohort_month,
+    activity_month,
+    active_users,
+    EXTRACT(MONTH FROM AGE(activity_month, cohort_month)) AS months_since_signup
+FROM cohort_activity
+ORDER BY cohort_month, activity_month;
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 9: STRING MANIPULATION
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 25: 🟢 FIND EMAILS FROM SPECIFIC DOMAIN
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- SOLUTION
+SELECT *
+FROM users
+WHERE email LIKE '%@gmail.com';
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 26: 🟡 SPLIT FULL NAME INTO FIRST AND LAST
+═══════════════════════════════════════════════════════════════════════════════════════
+
+-- SOLUTION (PostgreSQL)
+SELECT
+    full_name,
+    SPLIT_PART(full_name, ' ', 1) AS first_name,
+    SPLIT_PART(full_name, ' ', 2) AS last_name
+FROM users;
+
+-- MySQL
+SELECT
+    full_name,
+    SUBSTRING_INDEX(full_name, ' ', 1) AS first_name,
+    SUBSTRING_INDEX(full_name, ' ', -1) AS last_name
+FROM users;
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 10: PERFORMANCE OPTIMIZATION PROBLEMS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 27: 🔴 OPTIMIZE SLOW QUERY
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Given Query (Slow):**
+
+SELECT *
+FROM orders o
+JOIN customers c ON o.customer_id = c.id
+WHERE YEAR(o.order_date) = 2024
+  AND c.country = 'USA'
+ORDER BY o.order_date DESC;
+
+
+**Problems:**
+1. YEAR(o.order_date) prevents index usage
+2. SELECT * fetches unnecessary columns
+3. Missing indexes
+
+
+**Optimized:**
+
+-- Add indexes
+CREATE INDEX idx_orders_date ON orders(order_date);
+CREATE INDEX idx_customers_country ON customers(country);
+
+-- Rewrite query
+SELECT
+    o.id,
+    o.order_date,
+    o.total,
+    c.name
+FROM orders o
+INNER JOIN customers c ON o.customer_id = c.id
+WHERE o.order_date >= '2024-01-01'
+  AND o.order_date < '2025-01-01'
+  AND c.country = 'USA'
+ORDER BY o.order_date DESC;
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 11: REAL INTERVIEW QUESTIONS FROM COMPANIES
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 28: 🔴 TRIPS AND USERS (Uber/Lyft Interview)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Calculate daily cancellation rate for non-banned users.
+
+trips:
+┌────┬───────────┬────────────┬────────┬────────────┐
+│ id │ client_id │ driver_id  │ status │    date    │
+├────┼───────────┼────────────┼────────┼────────────┤
+│ 1  │ 1         │ 10         │ completed  │ 2024-01-01 │
+│ 2  │ 2         │ 11         │ cancelled_by_driver │ 2024-01-01 │
+│ 3  │ 3         │ 10         │ completed  │ 2024-01-01 │
+│ 4  │ 4         │ 11         │ cancelled_by_client │ 2024-01-02 │
+└────┴───────────┴────────────┴────────┴────────────┘
+
+users:
+┌────┬────────┬────────┐
+│ id │  role  │ banned │
+├────┼────────┼────────┤
+│ 1  │ client │ No     │
+│ 2  │ client │ Yes    │
+│ 3  │ client │ No     │
+│ 4  │ client │ No     │
+│ 10 │ driver │ No     │
+│ 11 │ driver │ No     │
+└────┴────────┴────────┘
+
+
+-- SOLUTION
+SELECT
+    t.date AS Day,
+    ROUND(
+        SUM(CASE WHEN t.status LIKE 'cancelled%' THEN 1 ELSE 0 END) * 1.0 /
+        COUNT(*),
+        2
+    ) AS cancellation_rate
+FROM trips t
+INNER JOIN users c ON t.client_id = c.id AND c.banned = 'No'
+INNER JOIN users d ON t.driver_id = d.id AND d.banned = 'No'
+WHERE t.date BETWEEN '2024-01-01' AND '2024-01-31'
+GROUP BY t.date
+ORDER BY t.date;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 29: 🔴 CONSECUTIVE AVAILABLE SEATS (Airlines Interview)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Find all pairs of consecutive available seats.
+
+cinema:
+┌────┬──────┐
+│seat│ free │
+├────┼──────┤
+│ 1  │ 1    │
+│ 2  │ 0    │
+│ 3  │ 1    │
+│ 4  │ 1    │ ← Consecutive pair (3, 4)
+│ 5  │ 1    │ ← Consecutive pair (4, 5)
+└────┴──────┘
+
+
+-- SOLUTION
+SELECT DISTINCT
+    c1.seat AS seat1,
+    c2.seat AS seat2
+FROM cinema c1
+INNER JOIN cinema c2 ON ABS(c1.seat - c2.seat) = 1
+WHERE c1.free = 1 AND c2.free = 1
+  AND c1.seat < c2.seat
+ORDER BY c1.seat;
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PROBLEM 30: 🔴 EXCHANGE SEATS (School Database)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Question:** Swap seat IDs for adjacent students. If odd number of students,
+last student stays in same seat.
+
+seat:
+┌────┬─────────┐
+│ id │  name   │
+├────┼─────────┤
+│ 1  │ Alice   │  → Swap with 2
+│ 2  │ Bob     │  → Swap with 1
+│ 3  │ Charlie │  → Swap with 4
+│ 4  │ David   │  → Swap with 3
+│ 5  │ Eve     │  → Stay (odd number)
+└────┴─────────┘
+
+
+-- SOLUTION
+SELECT
+    CASE
+        WHEN id % 2 = 1 AND id = (SELECT MAX(id) FROM seat) THEN id
+        WHEN id % 2 = 1 THEN id + 1
+        ELSE id - 1
+    END AS id,
+    name
+FROM seat
+ORDER BY id;
+
+Expected Output:
+┌────┬─────────┐
+│ id │  name   │
+├────┼─────────┤
+│ 1  │ Bob     │
+│ 2  │ Alice   │
+│ 3  │ David   │
+│ 4  │ Charlie │
+│ 5  │ Eve     │
+└────┴─────────┘
+
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// SECTION 12: QUICK TIPS FOR INTERVIEWS
+// ════════════════════════════════════════════════════════════════════════════════════
+
+╔═══════════════════════════╦════════════════════════════════════════╗
+║  PROBLEM TYPE             ║          APPROACH                      ║
+╠═══════════════════════════╬════════════════════════════════════════╣
+║ Top N per group           ║ ROW_NUMBER() with PARTITION BY         ║
+║ Running totals            ║ SUM() OVER (ORDER BY ...)              ║
+║ Previous/Next row         ║ LAG() / LEAD()                         ║
+║ Duplicates                ║ GROUP BY ... HAVING COUNT(*) > 1       ║
+║ Hierarchies               ║ Recursive CTE                          ║
+║ Gaps and Islands          ║ Row number - date trick                ║
+║ Never/Always              ║ NOT EXISTS or LEFT JOIN ... IS NULL    ║
+║ Self-referencing          ║ Self JOIN                              ║
+║ Date ranges               ║ BETWEEN, DATEDIFF, DATE_TRUNC          ║
+╚═══════════════════════════╩════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+INTERVIEW CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Before Interview:
+□ Know window functions (ROW_NUMBER, RANK, LAG, LEAD)
+□ Practice recursive CTEs (hierarchies)
+□ Understand JOIN types (INNER, LEFT, SELF)
+□ Know how to optimize queries (indexes, EXPLAIN)
+□ Practice 2-3 problems from each section
+
+During Interview:
+□ Ask clarifying questions (NULL handling, duplicates, etc.)
+□ Start with simple solution, then optimize
+□ Explain your thought process
+□ Test with edge cases (empty table, single row, all duplicates)
+□ Know complexity (time/space) of your solution
+
+Common Mistakes to Avoid:
+❌ Using SELECT * (specify columns)
+❌ Forgetting DISTINCT when needed
+❌ Not handling NULLs properly
+❌ Incorrect date comparisons (timezone issues)
+❌ Forgetting to ORDER BY in window functions
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+MORE PROBLEMS TO PRACTICE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+31. Find customers who ordered all products
+32. Calculate median salary per department
+33. Find overlapping date ranges
+34. Implement PIVOT (row to column transformation)
+35. Find the first occurrence of each value
+36. Calculate compound annual growth rate (CAGR)
+37. Find products bought together (market basket analysis)
+38. Implement pagination (LIMIT, OFFSET)
+39. Find users who logged in on consecutive days
+40. Calculate quartiles and percentiles
+41. Find the longest palindrome in a string column
+42. Implement full-text search ranking
+43. Find circular references in hierarchical data
+44. Calculate distance between GPS coordinates
+45. Implement custom sorting (alphabetical, then numeric)
+46. Find time periods without any activity
+47. Calculate session duration from event logs
+48. Implement A/B test analysis
+49. Find anomalies in time-series data
+50. Calculate customer lifetime value (LTV)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PRACTICE PLATFORMS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. LeetCode Database Problems (175+ questions)
+   - Easy: 50 questions
+   - Medium: 100 questions
+   - Hard: 25 questions
+
+2. HackerRank SQL Challenges
+
+3. SQLZoo Interactive Tutorials
+
+4. Mode Analytics SQL Tutorial
+
+5. StrataScratch (Real Interview Questions)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+FINAL ADVICE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+"For SQL interviews at 30 LPA level, you MUST know:
+
+1. Window Functions (80% of medium/hard problems use these)
+   - ROW_NUMBER, RANK, DENSE_RANK
+   - LAG, LEAD
+   - SUM/AVG with window frames
+
+2. CTEs and Recursive CTEs
+   - Hierarchical data (org charts)
+   - Graph traversal
+
+3. Complex Joins
+   - Self joins (manager-employee)
+   - Many-to-many relationships
+
+4. Performance
+   - When to use indexes
+   - How to read EXPLAIN plans
+   - Query optimization patterns
+
+5. Real-world patterns
+   - Cohort analysis
+   - Retention metrics
+   - Running totals
+   - Year-over-year growth
+
+Practice 3-5 problems daily for 2 weeks. Focus on explaining your approach,
+not just writing SQL. Interviewers care more about your thinking process
+than memorizing syntax.
+
+Good luck! 🚀"
+

@@ -1,0 +1,1548 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// REDIS EXPLAINED - The Simplest Way Possible
+// ════════════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 1: WHAT IS REDIS? (Real-World Analogy)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Redis as a SUPER FAST STICKY NOTE BOARD in your brain:
+
+Traditional Database (Disk - Slow):
+┌─────────────┐
+│ Application │
+└──────┬──────┘
+       │ "Get user data"
+       ▼
+┌─────────────┐
+│  Database   │ 💾 Stored on DISK
+│  (Disk)     │ ⏱️  Takes 10-50ms
+└─────────────┘
+
+With Redis (Memory - Fast):
+┌─────────────┐
+│ Application │
+└──────┬──────┘
+       │ "Get user data"
+       ▼
+┌─────────────┐
+│    REDIS    │ 🧠 Stored in MEMORY (RAM)
+│  (Memory)   │ ⚡ Takes 0.1-1ms (50x faster!)
+└─────────────┘
+
+Redis = Remote Dictionary Server
+"Dictionary" = Key-Value pairs (like a real dictionary: word → meaning)
+
+SIMPLE EXAMPLE:
+
+Without Redis:
+User requests profile → Check DB (50ms) → Send response
+TOTAL: 50ms per request
+
+With Redis:
+First time: Check Redis (miss) → Check DB (50ms) → Store in Redis → Send response
+Next times: Check Redis (hit) → Send response (1ms)
+TOTAL: 1ms per request (50x faster!)
+
+REAL-WORLD EXAMPLE:
+
+Imagine a LIBRARY:
+
+WITHOUT REDIS:
+Every time you want a book, librarian goes to storage room (slow)
+Storage room = Database
+Time: 10 minutes per book
+
+WITH REDIS:
+Librarian keeps popular books on the desk (fast access)
+Desk = Redis (quick access)
+Storage room = Database (backup)
+Time: 10 seconds for popular books
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 2: HOW REDIS WORKS (Step by Step)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+REDIS ARCHITECTURE:
+
+┌────────────────────────────────────────────────────┐
+│              APPLICATION SERVER                    │
+└───────────────────┬────────────────────────────────┘
+                    │
+        ┌───────────┴──────────┐
+        ▼                      ▼
+┌───────────────┐      ┌──────────────┐
+│     REDIS     │      │   DATABASE   │
+│   (Memory)    │      │    (Disk)    │
+│               │      │              │
+│ ⚡ Fast        │      │ 💾 Durable   │
+│ 🔄 Temporary   │      │ 📦 Permanent │
+└───────────────┘      └──────────────┘
+
+Flow:
+1. App checks Redis first (fast)
+2. If found (cache hit) → Return immediately ✅
+3. If not found (cache miss) → Check database → Store in Redis → Return
+
+KEY CONCEPTS:
+
+1. KEY-VALUE STORE
+   Think: Like a JavaScript object
+
+   ```javascript
+   {
+     "user:1001": "{ name: 'John', age: 30 }",
+     "session:abc123": "{ userId: 1001, loggedIn: true }",
+     "product:5": "{ name: 'Laptop', price: 1000 }"
+   }
+   ```
+
+2. IN-MEMORY
+   Data stored in RAM (not disk)
+   - Pros: Super fast
+   - Cons: Lost if server restarts (unless persistence enabled)
+
+3. DATA STRUCTURES
+   Not just strings! Redis supports:
+   - Strings
+   - Lists (arrays)
+   - Sets (unique items)
+   - Sorted Sets (ranked items)
+   - Hashes (objects)
+   - Streams
+   - Bitmaps
+   - HyperLogLogs
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 3: REDIS DATA STRUCTURES (With Examples)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. STRING (Most Common)
+   Simple key-value pairs
+
+   ```javascript
+   // Set
+   await redis.set('user:1001:name', 'John Doe');
+
+   // Get
+   const name = await redis.get('user:1001:name');
+   // Output: "John Doe"
+
+   // Set with expiry (TTL - Time To Live)
+   await redis.set('otp:123456', '9876', 'EX', 300); // Expires in 300 seconds
+   ```
+
+   USE CASE: Cache user data, session tokens, configuration
+
+2. HASH (Object-like)
+   Store objects with multiple fields
+
+   ```javascript
+   // Set multiple fields
+   await redis.hset('user:1001', {
+     name: 'John Doe',
+     email: 'john@example.com',
+     age: 30
+   });
+
+   // Get single field
+   const email = await redis.hget('user:1001', 'email');
+   // Output: "john@example.com"
+
+   // Get all fields
+   const user = await redis.hgetall('user:1001');
+   // Output: { name: 'John Doe', email: 'john@example.com', age: 30 }
+   ```
+
+   USE CASE: User profiles, product details, shopping cart
+
+3. LIST (Array-like)
+   Ordered collection, allows duplicates
+
+   ```javascript
+   // Add to beginning (left)
+   await redis.lpush('notifications:user:1001', 'New message');
+   await redis.lpush('notifications:user:1001', 'Friend request');
+
+   // Add to end (right)
+   await redis.rpush('logs', 'Error: Connection timeout');
+
+   // Get range
+   const notifications = await redis.lrange('notifications:user:1001', 0, 9);
+   // Output: ['Friend request', 'New message'] (first 10)
+
+   // Get length
+   const count = await redis.llen('notifications:user:1001');
+   ```
+
+   USE CASE: Activity feeds, recent searches, job queues
+
+4. SET (Unique items)
+   Unordered collection, NO duplicates
+
+   ```javascript
+   // Add items
+   await redis.sadd('tags:article:123', 'javascript', 'nodejs', 'redis');
+   await redis.sadd('tags:article:123', 'javascript'); // Won't add duplicate
+
+   // Get all members
+   const tags = await redis.smembers('tags:article:123');
+   // Output: ['javascript', 'nodejs', 'redis']
+
+   // Check if exists
+   const exists = await redis.sismember('tags:article:123', 'nodejs');
+   // Output: 1 (true)
+
+   // Set operations
+   await redis.sadd('users:online:server1', 'user1', 'user2', 'user3');
+   await redis.sadd('users:online:server2', 'user2', 'user3', 'user4');
+
+   // Union (all unique users)
+   const allUsers = await redis.sunion('users:online:server1', 'users:online:server2');
+   // Output: ['user1', 'user2', 'user3', 'user4']
+
+   // Intersection (common users)
+   const commonUsers = await redis.sinter('users:online:server1', 'users:online:server2');
+   // Output: ['user2', 'user3']
+   ```
+
+   USE CASE: Tags, unique visitors, online users, followers
+
+5. SORTED SET (Ranked items)
+   Like SET but with scores (for ordering)
+
+   ```javascript
+   // Add with scores (score, member)
+   await redis.zadd('leaderboard', 1000, 'player1');
+   await redis.zadd('leaderboard', 1500, 'player2');
+   await redis.zadd('leaderboard', 800, 'player3');
+
+   // Get top 10 (highest scores)
+   const topPlayers = await redis.zrevrange('leaderboard', 0, 9, 'WITHSCORES');
+   // Output: ['player2', 1500, 'player1', 1000, 'player3', 800]
+
+   // Get rank
+   const rank = await redis.zrevrank('leaderboard', 'player1');
+   // Output: 1 (second place, 0-indexed)
+
+   // Get score
+   const score = await redis.zscore('leaderboard', 'player1');
+   // Output: 1000
+
+   // Increment score
+   await redis.zincrby('leaderboard', 100, 'player1');
+   ```
+
+   USE CASE: Leaderboards, trending posts, rate limiting, priority queues
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 4: CACHING STRATEGIES (Most Important for Interviews!)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. CACHE-ASIDE (Lazy Loading) ⭐ MOST COMMON
+
+Flow:
+┌──────────┐
+│   App    │
+└────┬─────┘
+     │ 1. Read user:1001
+     ▼
+┌──────────┐
+│  Redis   │ Check cache
+└────┬─────┘
+     │ 2. Cache MISS (not found)
+     ▼
+┌──────────┐
+│    DB    │ Query database
+└────┬─────┘
+     │ 3. Return data
+     ▼
+┌──────────┐
+│  Redis   │ 4. Store in cache
+└──────────┘
+     │ 5. Return to app
+     ▼
+┌──────────┐
+│   App    │
+└──────────┘
+
+Next request:
+┌──────────┐
+│   App    │
+└────┬─────┘
+     │ 1. Read user:1001
+     ▼
+┌──────────┐
+│  Redis   │ 2. Cache HIT! ✅ Return immediately
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│   App    │
+└──────────┘
+
+CODE EXAMPLE:
+async function getUser(userId) {
+  const cacheKey = `user:${userId}`;
+
+  // 1. Check Redis first
+  let user = await redis.get(cacheKey);
+
+  if (user) {
+    console.log('Cache HIT');
+    return JSON.parse(user); // Found in cache
+  }
+
+  console.log('Cache MISS');
+
+  // 2. Not in cache, query database
+  user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+
+  // 3. Store in Redis for next time (expire in 1 hour)
+  await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600);
+
+  return user;
+}
+
+
+PROS:
+✅ Only requested data is cached (saves memory)
+✅ Simple to implement
+✅ Cache failure doesn't break app
+
+CONS:
+❌ First request always slow (cache miss)
+❌ Cache and DB can be out of sync
+
+2. WRITE-THROUGH (Synchronous Write)
+
+Flow:
+┌──────────┐
+│   App    │ Update user
+└────┬─────┘
+     │ 1. Write data
+     ▼
+┌──────────┐
+│  Redis   │ 2. Update cache
+└────┬─────┘
+     │ 3. Write to DB
+     ▼
+┌──────────┐
+│    DB    │ 4. Confirm write
+└────┬─────┘
+     │ 5. Return success
+     ▼
+┌──────────┐
+│   App    │
+└──────────┘
+
+CODE EXAMPLE:
+async function updateUser(userId, data) {
+  const cacheKey = `user:${userId}`;
+
+  // 1. Update cache
+  await redis.hset(cacheKey, data);
+
+  // 2. Update database
+  await db.query('UPDATE users SET name = ?, email = ? WHERE id = ?',
+    [data.name, data.email, userId]);
+
+  return { success: true };
+}
+
+PROS:
+✅ Cache always in sync with DB
+✅ Read performance is great
+
+CONS:
+❌ Write latency (must update both)
+❌ Unused data also cached
+
+3. WRITE-BEHIND (Asynchronous Write)
+
+Flow:
+┌──────────┐
+│   App    │ Update user
+└────┬─────┘
+     │ 1. Write data
+     ▼
+┌──────────┐
+│  Redis   │ 2. Update cache immediately
+└────┬─────┘
+     │ 3. Return success (fast!)
+     ▼
+┌──────────┐
+│   App    │
+└──────────┘
+     │
+     │ (Background process)
+     ▼
+┌──────────┐
+│    DB    │ 4. Update later (async)
+└──────────┘
+
+CODE EXAMPLE:
+async function updateUser(userId, data) {
+  const cacheKey = `user:${userId}`;
+
+  // 1. Update cache immediately
+  await redis.hset(cacheKey, data);
+
+  // 2. Add to write queue (process later)
+  await redis.lpush('write_queue', JSON.stringify({ userId, data }));
+
+  // 3. Return immediately (don't wait for DB)
+  return { success: true };
+}
+
+// Background worker
+async function processWriteQueue() {
+  while (true) {
+    // Get item from queue
+    const item = await redis.rpop('write_queue');
+
+    if (item) {
+      const { userId, data } = JSON.parse(item);
+
+      // Update database
+      await db.query('UPDATE users SET name = ?, email = ? WHERE id = ?',
+        [data.name, data.email, userId]);
+    }
+
+    await sleep(100); // Wait 100ms
+  }
+}
+
+PROS:
+✅ Very fast writes
+✅ Reduces DB load (batch writes)
+
+CONS:
+❌ Data loss risk if Redis crashes
+❌ Complex to implement
+
+4. REFRESH-AHEAD (Proactive Refresh)
+
+Flow:
+┌──────────┐
+│  Redis   │ TTL about to expire
+└────┬─────┘
+     │ Refresh data before expiry
+     ▼
+┌──────────┐
+│    DB    │ Get fresh data
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│  Redis   │ Update cache
+└──────────┘
+
+CODE EXAMPLE:
+async function getUser(userId) {
+  const cacheKey = `user:${userId}`;
+
+  let user = await redis.get(cacheKey);
+  const ttl = await redis.ttl(cacheKey);
+
+  // If TTL < 5 minutes, refresh in background
+  if (ttl < 300 && ttl > 0) {
+    refreshUserInBackground(userId);
+  }
+
+  if (user) {
+    return JSON.parse(user);
+  }
+
+  // Cache miss, load from DB
+  user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+  await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600);
+
+  return user;
+}
+
+async function refreshUserInBackground(userId) {
+  const cacheKey = `user:${userId}`;
+  const user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+  await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600);
+}
+
+PROS:
+✅ No cache misses for frequently accessed data
+✅ Always fresh data
+
+CONS:
+❌ Wasted refreshes if data not accessed
+❌ Complex to implement
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 5: CACHE INVALIDATION (The Hard Problem!)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Famous Quote: "There are only two hard things in Computer Science:
+cache invalidation and naming things." - Phil Karlton
+
+PROBLEM: How to keep cache in sync with database?
+
+SCENARIO:
+┌──────────┐
+│  Redis   │ user:1001 = { name: "John", age: 30 }
+└──────────┘
+┌──────────┐
+│    DB    │ user:1001 = { name: "John Smith", age: 31 } (Updated!)
+└──────────┘
+
+Cache is STALE (outdated)! ❌
+
+SOLUTIONS:
+
+1. TIME-BASED EXPIRATION (TTL) ⭐ SIMPLEST
+
+// Cache for 1 hour
+await redis.set('user:1001', JSON.stringify(user), 'EX', 3600);
+
+After 1 hour:
+- Redis automatically deletes key
+- Next request will fetch from DB
+- Fresh data cached again
+
+PROS:
+✅ Simple
+✅ Automatic cleanup
+
+CONS:
+❌ Data can be stale for up to 1 hour
+❌ Can't control when data refreshes
+
+2. MANUAL INVALIDATION (Event-Based) ⭐ MOST ACCURATE
+
+// When user updates profile
+async function updateUserProfile(userId, newData) {
+  // 1. Update database
+  await db.query('UPDATE users SET name = ?, age = ? WHERE id = ?',
+    [newData.name, newData.age, userId]);
+
+  // 2. Delete cache (invalidate)
+  await redis.del(`user:${userId}`);
+
+  // Next read will fetch fresh data from DB
+}
+
+PROS:
+✅ Always accurate
+✅ No stale data
+
+CONS:
+❌ Must remember to invalidate everywhere
+❌ Easy to miss invalidation points
+
+3. CACHE STAMPEDE PROTECTION
+
+PROBLEM: Cache expires, 1000 requests hit DB simultaneously!
+
+Without Protection:
+┌──────────┐
+│  Redis   │ Cache expired! ❌
+└──────────┘
+     │
+     │ 1000 requests at once!
+     ▼
+┌──────────┐
+│    DB    │ 💥 Overload! (1000 queries)
+└──────────┘
+
+With Protection (Using Locks):
+async function getUser(userId) {
+  const cacheKey = `user:${userId}`;
+  const lockKey = `lock:${cacheKey}`;
+
+  // Check cache
+  let user = await redis.get(cacheKey);
+  if (user) return JSON.parse(user);
+
+  // Try to acquire lock
+  const lock = await redis.set(lockKey, '1', 'NX', 'EX', 10);
+
+  if (lock) {
+    // Only this request queries DB
+    user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+    await redis.set(cacheKey, JSON.stringify(user), 'EX', 3600);
+    await redis.del(lockKey);
+    return user;
+  } else {
+    // Other requests wait and retry
+    await sleep(100);
+    return getUser(userId); // Retry
+  }
+}
+
+Flow:
+Request 1: Gets lock → Queries DB → Updates cache ✅
+Request 2-1000: Wait → Read from cache (set by Request 1) ✅
+
+PROS:
+✅ Protects database
+✅ Only one query during cache miss
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 6: REDIS FOR SESSION MANAGEMENT
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: Stateless servers need to share session data
+
+Without Redis (In-Memory Sessions):
+┌─────────┐                          ┌─────────┐
+│ Server1 │ Session: user1 logged in │ Server2 │ Session: Empty
+└────┬────┘                          └────┬────┘
+     │                                    │
+     └─────────┬──────────────────────────┘
+               │
+          ┌────┴─────┐
+          │   User   │ First request → Server1 ✅
+          └────┬─────┘ Second request → Server2 ❌ (Session lost!)
+               │
+
+With Redis (Shared Sessions):
+┌─────────┐                          ┌─────────┐
+│ Server1 │                          │ Server2 │
+└────┬────┘                          └────┬────┘
+     │                                    │
+     └─────────┬──────────────────────────┘
+               │
+          ┌────┴─────┐
+          │  REDIS   │ session:abc123 = { userId: 1001 }
+          └──────────┘
+               │
+          ┌────┴─────┐
+          │   User   │ Any server can access session ✅
+          └──────────┘
+
+CODE EXAMPLE (Express + Redis):
+
+const express = require('express');
+const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const redis = require('redis');
+
+const redisClient = redis.createClient();
+
+const app = express();
+
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 24 hours
+  }
+}));
+
+// Login endpoint
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // Verify credentials
+  const user = await db.verifyUser(username, password);
+
+  if (user) {
+    // Store in session
+    req.session.userId = user.id;
+    req.session.username = user.username;
+
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+// Protected route
+app.get('/profile', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  res.json({
+    userId: req.session.userId,
+    username: req.session.username
+  });
+});
+
+// Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ success: true });
+});
+
+What Redis Stores:
+Key: sess:abc123xyz
+Value: {
+  "cookie": { "maxAge": 86400000 },
+  "userId": 1001,
+  "username": "john_doe"
+}
+Expiry: 24 hours
+
+BENEFITS:
+✅ Sessions work across multiple servers
+✅ Fast session access (memory)
+✅ Automatic expiration (TTL)
+✅ Session survives server restarts
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 7: REDIS FOR RATE LIMITING
+═══════════════════════════════════════════════════════════════════════════════════════
+
+GOAL: Limit user to 100 requests per minute
+
+IMPLEMENTATION 1: Simple Counter
+
+async function checkRateLimit(userId) {
+  const key = `rate_limit:${userId}`;
+
+  // Get current count
+  const current = await redis.get(key);
+
+  if (current && parseInt(current) >= 100) {
+    return false; // Rate limit exceeded
+  }
+
+  // Increment counter
+  await redis.incr(key);
+
+  // Set expiry on first request
+  if (!current) {
+    await redis.expire(key, 60); // 60 seconds
+  }
+
+  return true; // Allow request
+}
+
+// Usage
+app.get('/api/data', async (req, res) => {
+  const allowed = await checkRateLimit(req.user.id);
+
+  if (!allowed) {
+    return res.status(429).json({ error: 'Rate limit exceeded' });
+  }
+
+  // Process request
+  res.json({ data: 'some data' });
+});
+
+Flow:
+Request 1: counter = 1, expire in 60s ✅
+Request 2: counter = 2 ✅
+...
+Request 100: counter = 100 ✅
+Request 101: counter = 100 (limit reached) ❌
+
+After 60 seconds: counter expires, resets to 0
+
+IMPLEMENTATION 2: Sliding Window (More Accurate)
+
+async function checkRateLimitSliding(userId, limit = 100, windowSeconds = 60) {
+  const key = `rate_limit:sliding:${userId}`;
+  const now = Date.now();
+  const windowStart = now - (windowSeconds * 1000);
+
+  // Remove old entries
+  await redis.zremrangebyscore(key, 0, windowStart);
+
+  // Count requests in current window
+  const count = await redis.zcard(key);
+
+  if (count >= limit) {
+    return false; // Rate limit exceeded
+  }
+
+  // Add current request
+  await redis.zadd(key, now, `${now}-${Math.random()}`);
+
+  // Set expiry
+  await redis.expire(key, windowSeconds);
+
+  return true; // Allow request
+}
+
+VISUAL:
+┌────────────────────────────────────────────────┐
+│  Sliding Window (60 seconds)                   │
+│                                                │
+│  [■■■■■■■■■■] ────────────▶                    │
+│   10:00:00    Current: 10:00:30    10:01:00    │
+│                                                │
+│  Only count requests in last 60 seconds        │
+└────────────────────────────────────────────────┘
+
+IMPLEMENTATION 3: Token Bucket (Distributed)
+
+async function checkRateLimitTokenBucket(userId, capacity = 100, refillRate = 10) {
+  const key = `rate_limit:bucket:${userId}`;
+
+  const data = await redis.get(key);
+  let tokens = capacity;
+  let lastRefill = Date.now();
+
+  if (data) {
+    const parsed = JSON.parse(data);
+    tokens = parsed.tokens;
+    lastRefill = parsed.lastRefill;
+
+    // Refill tokens based on time passed
+    const now = Date.now();
+    const secondsPassed = (now - lastRefill) / 1000;
+    const tokensToAdd = Math.floor(secondsPassed * refillRate);
+
+    tokens = Math.min(capacity, tokens + tokensToAdd);
+    lastRefill = now;
+  }
+
+  if (tokens < 1) {
+    return false; // No tokens available
+  }
+
+  // Consume token
+  tokens -= 1;
+
+  // Save state
+  await redis.set(key, JSON.stringify({ tokens, lastRefill }), 'EX', 3600);
+
+  return true;
+}
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 8: REDIS FOR REAL-TIME FEATURES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. LEADERBOARD (Gaming/Competition)
+
+// Add player score
+async function updateScore(playerId, score) {
+  await redis.zadd('leaderboard:global', score, playerId);
+}
+
+// Get top 10 players
+async function getTopPlayers(limit = 10) {
+  const players = await redis.zrevrange('leaderboard:global', 0, limit - 1, 'WITHSCORES');
+
+  // Format: [player1, score1, player2, score2, ...]
+  const result = [];
+  for (let i = 0; i < players.length; i += 2) {
+    result.push({
+      playerId: players[i],
+      score: parseInt(players[i + 1]),
+      rank: (i / 2) + 1
+    });
+  }
+
+  return result;
+}
+
+// Get player's rank
+async function getPlayerRank(playerId) {
+  const rank = await redis.zrevrank('leaderboard:global', playerId);
+  const score = await redis.zscore('leaderboard:global', playerId);
+
+  return {
+    playerId,
+    rank: rank + 1, // 0-indexed, so +1
+    score: parseInt(score)
+  };
+}
+
+// Get players around a specific player
+async function getPlayersAround(playerId, range = 5) {
+  const rank = await redis.zrevrank('leaderboard:global', playerId);
+
+  const start = Math.max(0, rank - range);
+  const end = rank + range;
+
+  return await redis.zrevrange('leaderboard:global', start, end, 'WITHSCORES');
+}
+
+VISUAL:
+┌────────────────────────────────┐
+│   GLOBAL LEADERBOARD           │
+├────┬───────────────┬───────────┤
+│ #1 │ player_xyz    │ 15,000    │
+│ #2 │ player_abc    │ 12,500    │
+│ #3 │ player_def    │ 11,200    │
+│ #4 │ player_ghi    │ 10,800    │
+│ #5 │ player_jkl    │  9,500    │
+└────┴───────────────┴───────────┘
+
+2. ONLINE USERS TRACKING
+
+// User comes online
+async function userOnline(userId) {
+  const key = 'users:online';
+  await redis.sadd(key, userId);
+  await redis.expire(key, 86400); // Expire in 24 hours
+}
+
+// User goes offline
+async function userOffline(userId) {
+  await redis.srem('users:online', userId);
+}
+
+// Get all online users
+async function getOnlineUsers() {
+  return await redis.smembers('users:online');
+}
+
+// Check if user is online
+async function isUserOnline(userId) {
+  const online = await redis.sismember('users:online', userId);
+  return online === 1;
+}
+
+// Get online friends
+async function getOnlineFriends(userId) {
+  const friendsKey = `friends:${userId}`;
+  const onlineKey = 'users:online';
+
+  // Intersection of friends and online users
+  return await redis.sinter(friendsKey, onlineKey);
+}
+
+// Get count of online users
+async function getOnlineCount() {
+  return await redis.scard('users:online');
+}
+
+
+3. RECENT ACTIVITY FEED
+
+// Add activity
+async function addActivity(userId, activity) {
+  const key = `feed:${userId}`;
+  const data = JSON.stringify({
+    ...activity,
+    timestamp: Date.now()
+  });
+
+  // Add to beginning of list
+  await redis.lpush(key, data);
+
+  // Keep only last 100 items
+  await redis.ltrim(key, 0, 99);
+}
+
+// Get recent activities
+async function getRecentActivities(userId, limit = 20) {
+  const key = `feed:${userId}`;
+  const activities = await redis.lrange(key, 0, limit - 1);
+
+  return activities.map(a => JSON.parse(a));
+}
+
+// Example usage
+await addActivity('user:1001', {
+  type: 'post',
+  action: 'created',
+  content: 'Just learned Redis!'
+});
+
+await addActivity('user:1001', {
+  type: 'comment',
+  action: 'replied',
+  postId: '12345'
+});
+
+4. REAL-TIME NOTIFICATIONS
+
+// Send notification
+async function sendNotification(userId, notification) {
+  const key = `notifications:${userId}`;
+
+  await redis.lpush(key, JSON.stringify({
+    ...notification,
+    id: generateId(),
+    timestamp: Date.now(),
+    read: false
+  }));
+
+  // Increment unread count
+  await redis.incr(`notifications:${userId}:unread`);
+}
+
+// Get unread count
+async function getUnreadCount(userId) {
+  const count = await redis.get(`notifications:${userId}:unread`);
+  return parseInt(count) || 0;
+}
+
+// Mark as read
+async function markAsRead(userId, notificationId) {
+  // Decrement unread count
+  await redis.decr(`notifications:${userId}:unread`);
+}
+
+// Get notifications
+async function getNotifications(userId, limit = 20) {
+  const key = `notifications:${userId}`;
+  const notifications = await redis.lrange(key, 0, limit - 1);
+
+  return notifications.map(n => JSON.parse(n));
+}
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 9: REDIS PERSISTENCE (What if Redis Crashes?)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: Redis stores data in MEMORY (RAM)
+If server restarts → All data lost! ❌
+
+SOLUTION: Persistence Options
+
+1. RDB (Redis Database Backup) - Snapshots
+
+How it works:
+- Takes periodic snapshots of data
+- Saves to disk as .rdb file
+- Like taking photos at intervals
+
+Configuration:
+```
+# Save snapshot if:
+save 900 1      # At least 1 key changed in 900 seconds (15 min)
+save 300 10     # At least 10 keys changed in 300 seconds (5 min)
+save 60 10000   # At least 10,000 keys changed in 60 seconds (1 min)
+```
+
+VISUAL:
+┌────────────────────────────────────────────────┐
+│  Time:        0s    300s   600s   900s         │
+│  Redis:      [Data] [Data] [Data] [Data]       │
+│  Disk:       [----] [Snap] [----] [Snap]       │
+└────────────────────────────────────────────────┘
+
+PROS:
+✅ Fast restarts (single file)
+✅ Good for backups
+✅ Minimal performance impact
+
+CONS:
+❌ Can lose data between snapshots
+❌ Slow for large datasets
+
+2. AOF (Append-Only File) - Transaction Log
+
+How it works:
+- Logs every write operation
+- Like a journal of all changes
+- Replays log to restore data
+
+Configuration:
+```
+appendonly yes
+
+# How often to sync to disk
+appendfsync always     # Every write (slowest, safest)
+appendfsync everysec   # Every second (good balance) ⭐ RECOMMENDED
+appendfsync no         # Let OS decide (fastest, risky)
+```
+
+VISUAL:
+┌────────────────────────────────────────────────┐
+│  Redis Operations:                             │
+│  SET user:1001 "John"     ──▶ Log to AOF       │
+│  INCR counter:views       ──▶ Log to AOF       │
+│  HSET product:1 name "X"  ──▶ Log to AOF       │
+└────────────────────────────────────────────────┘
+
+On restart:
+- Read AOF file
+- Replay all operations
+- Restore exact state
+
+PROS:
+✅ Minimal data loss (1 second max)
+✅ Durable
+✅ Append-only (no corruption)
+
+CONS:
+❌ Larger file size
+❌ Slower restarts
+
+3. HYBRID (RDB + AOF) ⭐ BEST PRACTICE
+
+Use both:
+- RDB for fast restarts
+- AOF for durability
+
+Configuration:
+```
+# Enable both
+save 900 1
+appendonly yes
+appendfsync everysec
+```
+
+On restart:
+1. Load RDB (fast)
+2. Replay AOF changes (fill gaps)
+3. Fully restored
+
+RECOMMENDATION FOR INTERVIEWS:
+"Use AOF with everysec for critical data, RDB for caches"
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 10: REDIS SCALABILITY
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. REPLICATION (Master-Slave)
+
+Setup:
+┌──────────────┐
+│   Master     │ Handles writes
+└──────┬───────┘
+       │ Replicates
+   ┌───┴────┬────────┐
+   ▼        ▼        ▼
+┌──────┐ ┌──────┐ ┌──────┐
+│Slave1│ │Slave2│ │Slave3│ Handle reads
+└──────┘ └──────┘ └──────┘
+
+Configuration:
+```
+# On slave servers
+replicaof master-ip 6379
+```
+
+Benefits:
+✅ Read scalability (multiple slaves)
+✅ High availability (automatic failover)
+✅ Data redundancy
+
+Usage Pattern:
+```javascript
+// Write to master
+await masterClient.set('user:1001', data);
+
+// Read from slave (load balancing)
+const data = await slaveClient.get('user:1001');
+```
+
+2. SENTINEL (High Availability)
+
+Purpose: Automatic failover
+
+Setup:
+┌───────────────────────────────────┐
+│         Sentinel 1                │
+│         Sentinel 2                │ Monitor health
+│         Sentinel 3                │
+└───────────┬───────────────────────┘
+            │
+    ┌───────┴────────┐
+    ▼                ▼
+┌────────┐      ┌────────┐
+│ Master │      │ Slave  │
+└────────┘      └────────┘
+
+If master fails:
+1. Sentinels detect failure
+2. Vote on new master
+3. Promote slave to master
+4. Update clients
+
+DOWNTIME: 10-30 seconds
+
+3. CLUSTER (Horizontal Scaling)
+
+Purpose: Distribute data across multiple nodes
+
+Setup:
+┌─────────────────────────────────────┐
+│          Redis Cluster              │
+│                                     │
+│  Node 1: Hash slots 0-5460          │
+│  Node 2: Hash slots 5461-10922      │
+│  Node 3: Hash slots 10923-16383     │
+└─────────────────────────────────────┘
+
+How it works:
+1. Key is hashed → slot number (0-16383)
+2. Slot determines which node stores data
+3. Automatic data distribution
+
+Example:
+```
+Key: "user:1001"
+Hash: CRC16("user:1001") % 16384 = 3456
+→ Goes to Node 1 (slots 0-5460)
+
+Key: "user:2002"
+Hash: CRC16("user:2002") % 16384 = 8765
+→ Goes to Node 2 (slots 5461-10922)
+```
+
+Benefits:
+✅ Horizontal scaling (add more nodes)
+✅ Automatic sharding
+✅ High availability (each node can have replicas)
+
+PROBLEM: Multi-key operations
+
+
+// These work (keys on same node)
+await redis.mget('user:1001', 'user:1002');
+
+// This might fail (keys on different nodes)
+await redis.mget('user:1001', 'product:500');
+
+
+SOLUTION: Hash tags
+// Force keys to same slot using {}
+await redis.set('{user:1001}:profile', data);
+await redis.set('{user:1001}:settings', data);
+// Both go to same node (hash on "user:1001")
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 11: COMMON INTERVIEW QUESTIONS & ANSWERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q1: Why is Redis so fast?
+
+A: "Redis is fast because it stores data in memory (RAM), uses simple
+    data structures, and is single-threaded (no locking overhead)"
+
+Details:
+- RAM access: 0.1ms vs Disk: 10ms (100x faster)
+- Single-threaded: No context switching
+- Optimized C code
+- Simple data structures (no complex joins)
+
+Q2: What happens if Redis runs out of memory?
+
+A: "Redis has eviction policies to remove old data"
+
+Policies:
+1. noeviction: Return errors (safe)
+2. allkeys-lru: Remove least recently used (LRU) ⭐ MOST COMMON
+3. allkeys-lfu: Remove least frequently used (LFU)
+4. volatile-lru: Remove LRU with TTL
+5. volatile-ttl: Remove keys expiring soon
+6. allkeys-random: Random removal
+
+Configuration:
+```
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+```
+
+Q3: Redis vs Memcached?
+
+A: "Redis is more feature-rich, Memcached is simpler"
+
+┌──────────────────┬─────────────┬─────────────┐
+│ Feature          │   Redis     │  Memcached  │
+├──────────────────┼─────────────┼─────────────┤
+│ Data structures  │ Many        │ Strings only│
+│ Persistence      │ Yes         │ No          │
+│ Replication      │ Yes         │ No          │
+│ Transactions     │ Yes         │ No          │
+│ Pub/Sub          │ Yes         │ No          │
+│ Lua scripting    │ Yes         │ No          │
+│ Memory efficient │ Good        │ Better      │
+│ Multi-threaded   │ No (6.0+)   │ Yes         │
+└──────────────────┴─────────────┴─────────────┘
+
+Recommendation: "Use Redis for most use cases"
+
+Q4: How to handle cache penetration (querying non-existent keys)?
+
+A: "Use bloom filters or cache null results"
+
+PROBLEM:
+Attacker queries: user:99999999 (doesn't exist)
+→ Check Redis: Miss
+→ Check DB: Not found
+→ No cache (next request repeats!)
+
+SOLUTION 1: Cache null results
+
+async function getUser(userId) {
+  const cached = await redis.get(`user:${userId}`);
+
+  if (cached === 'NULL') {
+    return null; // Cached null result
+  }
+
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  const user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+
+  if (!user) {
+    // Cache null result for 5 minutes
+    await redis.set(`user:${userId}`, 'NULL', 'EX', 300);
+    return null;
+  }
+
+  await redis.set(`user:${userId}`, JSON.stringify(user), 'EX', 3600);
+  return user;
+}
+
+
+SOLUTION 2: Bloom filter
+
+// Check bloom filter first (fast)
+const exists = await bloomFilter.exists(`user:${userId}`);
+
+if (!exists) {
+  return null; // Definitely doesn't exist
+}
+
+// Might exist, check cache then DB
+
+Q5: How to implement distributed locks?
+
+A: "Use Redis SET with NX and EX options"
+
+async function acquireLock(lockKey, expireSeconds = 10) {
+  const lockValue = generateUniqueId();
+
+  // SET if not exists (NX) with expiry (EX)
+  const result = await redis.set(
+    lockKey,
+    lockValue,
+    'NX',
+    'EX',
+    expireSeconds
+  );
+
+  if (result === 'OK') {
+    return lockValue; // Lock acquired
+  }
+
+  return null; // Lock already held
+}
+
+async function releaseLock(lockKey, lockValue) {
+  // Only release if we own the lock (atomic)
+  const script = `
+    if redis.call("get", KEYS[1]) == ARGV[1] then
+      return redis.call("del", KEYS[1])
+    else
+      return 0
+    end
+  `;
+
+  await redis.eval(script, 1, lockKey, lockValue);
+}
+
+// Usage
+const lock = await acquireLock('order:process:1001');
+
+if (lock) {
+  try {
+    // Process order (only one instance)
+    await processOrder(1001);
+  } finally {
+    await releaseLock('order:process:1001', lock);
+  }
+}
+
+
+Q6: What are Redis transactions?
+
+A: "MULTI/EXEC provides atomic operations"
+
+// Without transaction (not atomic)
+await redis.incr('balance:user1');
+await redis.decr('balance:user2');
+// Problem: If second fails, inconsistent state!
+
+// With transaction (atomic)
+await redis.multi()
+  .incr('balance:user1')
+  .decr('balance:user2')
+  .exec();
+// All or nothing!
+
+Note: Redis transactions are NOT like SQL transactions
+- No rollback
+- All commands executed atomically
+- WATCH for optimistic locking
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 12: REDIS ANTI-PATTERNS (What NOT to Do!)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. STORING LARGE VALUES ❌
+
+BAD:
+
+// Storing 10MB image in Redis
+await redis.set('image:large', largeImageBuffer);
+
+
+WHY BAD:
+- Blocks other operations
+- Memory inefficient
+- Slow to transfer
+
+GOOD:
+// Store in object storage (S3), cache URL only
+await redis.set('image:large', 'https://cdn.example.com/image.jpg', 'EX', 3600);
+
+
+RULE: Keep values < 1MB (ideally < 100KB)
+
+2. USING KEYS COMMAND IN PRODUCTION ❌
+
+BAD:
+// Get all user keys
+const keys = await redis.keys('user:*');
+
+WHY BAD:
+- Blocks Redis (single-threaded)
+- Slow for millions of keys
+- Can freeze entire system!
+
+GOOD:
+// Use SCAN (non-blocking, cursor-based)
+let cursor = '0';
+const allKeys = [];
+
+do {
+  const result = await redis.scan(cursor, 'MATCH', 'user:*', 'COUNT', 100);
+  cursor = result[0];
+  allKeys.push(...result[1]);
+} while (cursor !== '0');
+
+3. NOT SETTING TTL ❌
+
+BAD:
+// No expiration
+await redis.set('temp:session:123', data);
+
+WHY BAD:
+- Memory leaks
+- Stale data forever
+
+GOOD:
+// Always set TTL for temporary data
+await redis.set('temp:session:123', data, 'EX', 3600);
+
+4. STORING EVERYTHING IN REDIS ❌
+
+BAD:
+- Historical data (use DB)
+- Large files (use object storage)
+- Permanent records (use DB)
+
+GOOD:
+- Hot data (frequently accessed)
+- Temporary data (sessions, caches)
+- Real-time data (leaderboards, counters)
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 13: QUICK REFERENCE - KEY POINTS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+REDIS IN ONE SENTENCE:
+"Redis is an in-memory key-value store that's super fast, supports
+multiple data structures, and is used for caching, sessions, and real-time features"
+
+WHEN TO USE REDIS:
+✅ Caching (reduce DB load)
+✅ Session storage (distributed systems)
+✅ Rate limiting (API throttling)
+✅ Leaderboards (sorted sets)
+✅ Real-time analytics (counters)
+✅ Pub/Sub messaging
+✅ Job queues (lists)
+✅ Distributed locks
+
+WHEN NOT TO USE REDIS:
+❌ Primary database (use PostgreSQL/MongoDB)
+❌ Large data storage (expensive memory)
+❌ Complex queries (no joins, no SQL)
+❌ Long-term archival (use object storage)
+
+KEY DATA STRUCTURES:
+- String: Simple values (cache, counters)
+- Hash: Objects (user profiles, products)
+- List: Ordered items (feeds, queues)
+- Set: Unique items (tags, online users)
+- Sorted Set: Ranked items (leaderboards, trending)
+
+CACHING STRATEGIES:
+- Cache-Aside: Check cache → miss → query DB → cache
+- Write-Through: Update cache + DB synchronously
+- Write-Behind: Update cache → async DB update
+- Refresh-Ahead: Proactively refresh before expiry
+
+PERSISTENCE:
+- RDB: Snapshots (fast restore, may lose data)
+- AOF: Transaction log (durable, slower restore)
+- Hybrid: Both (recommended)
+
+SCALING:
+- Replication: Master-slave (read scaling)
+- Sentinel: Auto failover (high availability)
+- Cluster: Sharding (horizontal scaling)
+
+MONITORING:
+- Memory usage (most critical!)
+- Hit rate (cache effectiveness)
+- Latency (response time)
+- Eviction rate (memory pressure)
+
+═══════════════════════════════════════════════════════════════════════════════════════
+MEMORIZATION TRICK
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Think of Redis as a WHITEBOARD IN YOUR OFFICE:
+
+📝 Whiteboard = Redis (Memory/RAM)
+📁 Filing Cabinet = Database (Disk)
+👥 Team = Applications
+
+Key Points:
+- Whiteboard is FAST (quick access)
+- Whiteboard is TEMPORARY (erase after use)
+- Whiteboard has LIMITED SPACE (expensive)
+- Filing cabinet is PERMANENT (archives)
+- Filing cabinet is SLOW (retrieve from drawer)
+
+Workflow:
+1. Check whiteboard first (cache)
+2. If not there, check filing cabinet (DB)
+3. Write on whiteboard for next time (cache it)
+4. Erase old stuff when space full (eviction)
+
+GOLDEN RULE FOR INTERVIEWS:
+"Redis is your fast, temporary memory layer that sits between
+your application and database to speed up reads and enable
+real-time features"
+
+═══════════════════════════════════════════════════════════════════════════════════════
+INTERVIEW PRO TIPS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. Always mention CACHE INVALIDATION challenges
+2. Know difference between CACHE-ASIDE and WRITE-THROUGH
+3. Explain why single-threaded is actually GOOD
+4. Mention PERSISTENCE options (RDB vs AOF)
+5. Know when NOT to use Redis (it's not always the answer!)
+6. Understand EVICTION policies
+7. Be ready to design RATE LIMITER or LEADERBOARD
+8. Know about DISTRIBUTED LOCKS
+9. Mention MONITORING (memory usage, hit rate)
+10. Discuss SCALING strategies (replication, cluster)
+
+Common follow-up: "Design a URL shortener with Redis"
+Answer structure:
+1. Use Hash for URL mapping (short → long)
+2. Use Sorted Set for analytics (clicks)
+3. Set TTL for expiration
+4. Use counters for IDs
+5. Cache hot URLs
+

@@ -1,4 +1,5 @@
-JavaScript and Node.js   
+introduce yourself
+JavaScript and Node.js
 Scoping and Hoisting
 Promises, Callbacks, Async/Await
 diffrence in any and unknown in TypeScript
@@ -58,7 +59,7 @@ What Does NestJS Use Under the Hood?
 
 Design and Architecture
 Table Design for Categories, Subcategories, etc.
-Microservices Architecture (MSA)	
+Microservices Architecture (MSA)
 What Questions to Ask if Starting a Project from Scratch?
 
 
@@ -98,14 +99,14 @@ solid principal
 
 
 
-find the quotent 
+find the quotent
 a=5;b=2
 o/p=2
 now use that without using / operator
 
 
 
-find missing no from an array 
+find missing no from an array
 
 Que-------------
 
@@ -114,7 +115,7 @@ const obj = {
     add: ,
     sub: ,
     div: ,
-    mul: 
+    mul:
 }
 
 
@@ -125,7 +126,7 @@ console.log(obj.value)
 
 Que-------------
 
-Sharding 
+Sharding
 Hoisting
 
 find missing no from array
@@ -148,14 +149,14 @@ name.toLowerCase() -> praveen
 // PrAvEeN
 
 
-Ecmascript new feature in js 
+Ecmascript new feature in js
 globalThis
 nullish and || operator
 promises
 
 
 
-NTT 
+NTT
 non-prime number with odd numbers upto 100 no
 promises,Callbacks,evenloop,event driven,call by value, call by refrence,
 
@@ -168,7 +169,7 @@ select e.name,m.name from emp as e join emp as m on e.id=m.empId
 
 
 
-git rebase 
+git rebase
 git cherrypick
 git latest logs
 
@@ -216,12 +217,12 @@ Q4. Swap 2 numbers
 Q5. arr=[10,20,25,3,6,12,52]
 	second largest no find
 
-Q6. 
+Q6.
 
 
 
-// NTT manager 
-//kafka implementation without using npm 
+// NTT manager
+//kafka implementation without using npm
 // solid principles
 // why you want to leave blockchain current work
 
@@ -259,7 +260,7 @@ systango
 //manthan 222,
 
 //    222,da
-//undefined 
+//undefined
 //100
 
 
@@ -289,7 +290,7 @@ systango
 
 
 
-//call stack func():undefined 
+//call stack func():undefined
 
 //21
 
@@ -327,17 +328,17 @@ systango
 
 // class Chameleon {
 
-     
+
 //     static colorChange(newColor) {
 //       this.newColor = newColor;
 //       return this.newColor;
 //     }
-  
+
 //     constructor({ newColor = 'green' } = {}) {
 //       this.newColor = newColor;
 //     }
 //   }
-  
+
 //   const freddie = new Chameleon({ newColor: 'purple' });
 //   console.log(freddie.colorChange('orange'));
 
@@ -348,7 +349,7 @@ systango
 // for (var i = 0; i < 3; i++) {
 //     setTimeout(() => console.log(i), 1);
 //   }
-  
+
 
   //3,3,3
 
@@ -369,7 +370,7 @@ systango
 //         if(char.match(/[a-z]/)){
 //             if(vowels.includes(char)){
 //                 console.log("inside vowels if");
-                
+
 //                 vowelCount++
 //             }else{
 //                 consonetCount++
@@ -434,7 +435,7 @@ pros and cons of Microservices
 C07540510
 
 
-if my application's user exist in dubai,india,uk,canada then what i want is  to wish him happy birthday at exact 12:00AM in the night according to it timezone it should be at 12:00AM only not other timeZone respect to its other country time how will you do 
+if my application's user exist in dubai,india,uk,canada then what i want is  to wish him happy birthday at exact 12:00AM in the night according to it timezone it should be at 12:00AM only not other timeZone respect to its other country time how will you do
 stack is nodejs,reactsjs and postgres
 
 
@@ -450,31 +451,31 @@ You tube design
 // const a = function() {
 
 //     console.log(this);//w
-  
+
 //     const b = function() {
-  
+
 //               console.log(this);//w
-  
+
 //               const c = {
-  
+
 //                   hi:   ()=>  {
-  
+
 //                               console.log(this);//w
-  
+
 //                       }
-  
+
 //               };
-  
+
 //       c.hi();
-  
+
 //     };
-  
+
 //     b();
-  
+
 //   };
-   
+
 //   a();
-   
+
 
 
 
@@ -501,13 +502,13 @@ console.log("start");
 
 setTimeout(()=>{
     console.log("a");
-    
+
 },0)
 
 
 
 Promise.resolve().then(() => {
-  
+
   setTimeout(() => {
     console.log("b");
   }, 0);
@@ -542,7 +543,7 @@ async function retry(fn, maxNumberOfRetries, delayBetweenRetry) {
       console.log(
         `Attempt ${attempt} failed. Retrying  in ${delayBetweenRetry} ms...`
       );
-      await new Promise(resolve => setTimeout(resolve, delayBetweenRetry)); 
+      await new Promise(resolve => setTimeout(resolve, delayBetweenRetry));
     }
   }
 }
@@ -601,10 +602,10 @@ async function asyncFunc() {
     await Promise.resolve()
     setTimeout(() => {
         console.log('async promise resolve 4')
-    }, 0)  
+    }, 0)
 }
 
-asyncFunc() 
+asyncFunc()
 setTimeout(() => {
     console.log('timer 2')
 }, 0)
@@ -630,26 +631,57 @@ o/p
 
 
 Nodejs
-event loop 
+event loop
 promise
-micro macro task 
+micro macro task
 @Controller @module @service
-Dependency Injection in nest js 
-interceptors in nest 
+Dependency Injection in nest js
+interceptors in nest
 caching strategy
 Authentication and Authorization
-Authentication stategy 
-How can achieve Multithread 
+Authentication stategy
+How can achieve Multithread
 Libuv
 prototypes and ___proto__
 
 
-React 
+React
 virtual DOM
 Genrator function
-React webpacks, bundlers 
+React webpacks, bundlers
 memo vs useMemo
 useCallbacks
 state manage in large application
 Hooks
 Use of key attribute
+
+
+
+
+tredence
+
+Que 1: const arr = [
+  { name: "praveen", role: "developer" },
+  { name: "kumar", role: "tester" },
+  { name: "sai", role: "developer" },
+  { name: "raju", role: "tester" },
+  { name: "praveen", role: "developer" }
+];
+
+
+
+output= {
+  developer: [
+      {name:"praveen", role:"developer"},
+      {name:"sai", role:"developer"},
+      {name:"praveen", role:"developer"}
+  ],
+  tester:[
+      {name:"kumar", role:"tester"},
+      {name:"raju", role:"tester"}
+  ]
+}
+
+
+Que 2: CacheStempede
+

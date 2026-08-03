@@ -1,10 +1,9 @@
-🧠 Q1: What is V8 in Node.js?
-
+Q1: What is V8 in Node.js?
 V8 is the JavaScript engine developed by Google (used in Chrome and Node.js) that compiles JavaScript directly to machine code, making it fast and efficient.
 
 
 
-💡 Key Points to Mention in Interviews:
+Key Points to Mention in Interviews:
 Written in C++ and used in Chrome and Node.js
 Compiles JS to machine code using Just-In-Time (JIT) compilation
 Manages memory, garbage collection, and execution stack
@@ -19,7 +18,7 @@ V8 is the high-performance JavaScript engine that powers Node.js. It compiles Ja
 
 
 
-
+ 
 
 
 

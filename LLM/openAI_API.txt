@@ -1,0 +1,78 @@
+Kid-Level Explanation
+- Chat vs completion: chat is an ongoing conversation; completion is a single reply.
+- Temperature & top_p: temperature controls how adventurous the answer gets; top_p keeps only the most likely ideas.
+- Token limits: every word uses puzzle pieces called tokens; you must stay under the box limit.
+- Streaming: hear the story as it is written instead of waiting for the whole book.
+- Function calling: give the model a toolbox so it can choose the right tool for you.
+- Embeddings: turn sentences into map points so close points mean similar meaning.
+
+Interview Prep Notes
+- Chat vs completion: chat keeps structured message history (`system`, `user`, `assistant`); completion requires manually stitching context and ends after one response.
+- Temperature & top_p: temperature rescales logits (0 = deterministic); top_p keeps nucleus probability mass. Tune only one knob at a time to avoid unpredictable sampling.
+- Token limits: total tokens = prompt + response + tool arguments. Use counters (e.g., `tiktoken`) and trim, summarize, or stash history externally when near limits.
+- Streaming: Server-Sent Events (SSE) stream partial tokens for low-latency UX; buffer chunks and handle `finish_reason` for graceful completion or retries.
+- Function calling: define JSON schemas, validate inputs, and whitelist actions to block prompt injection before executing real tools or APIs.
+- Embeddings: store vectors in FAISS, pgvector, Pinecone, etc. Use cosine similarity for semantic search, dedupe, clustering, or recommendation systems.
+
+Sample Code: Chat, Function Call, Streaming (Node.js)
+
+import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function runAssistant(city) {
+  // Step 1: Ask model to decide whether it needs the weather tool
+  const chatStream = await client.responses.stream({
+    model: "gpt-4.1-mini",
+    input: [
+      { role: "system", content: "You are a helpful planner." },
+      { role: "user", content: `Plan my day in ${city}.` }
+    ],
+    tools: [
+      {
+        type: "function",
+        name: "getWeather",
+        description: "Returns today's forecast for a city.",
+        parameters: {
+          type: "object",
+          properties: { city: { type: "string" } },
+          required: ["city"]
+        }
+      }
+    ]
+  });
+
+  let toolCallResult = null;
+
+  for await (const event of chatStream) {
+    if (event.type === "response.output_text.delta") {
+      process.stdout.write(event.delta);
+    }
+
+    if (event.type === "response.function_call_arguments") {
+      const args = JSON.parse(event.arguments);
+      toolCallResult = await mockWeatherApi(args.city); // Replace with real API.
+      await chatStream.sendToolOutput({
+        tool_name: "getWeather",
+        tool_call_id: event.id,
+        output: JSON.stringify(toolCallResult)
+      });
+    }
+  }
+
+  console.log("\n---");
+  console.log("Weather data used:", toolCallResult);
+}
+
+async function mockWeatherApi(city) {
+  // Keep logic obvious: return predictable data for interview demos.
+  return { city, temperatureC: 26, condition: "Sunny intervals" };
+}
+
+runAssistant("New Delhi").catch(console.error);
+
+Practice Prompts
+- Design a conversation flow that keeps context under 8k tokens.
+- Describe when you would switch from temperature tuning to top_p tuning.
+- Explain how you prevent prompt-injection when exposing function calls to users.
+- Compare keyword search vs embeddings for finding similar knowledge base articles.

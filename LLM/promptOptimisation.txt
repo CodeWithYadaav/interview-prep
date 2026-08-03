@@ -1,0 +1,113 @@
+Kid-Level Explanation
+- System prompt is the bossy instruction; user prompt is the question from you.
+- Guardrails are the safe fences that stop the helper from doing wrong things.
+- Few-shot examples are like practice quizzes that show the helper what a good answer looks like.
+- Structured output means the helper answers in neat boxes (like tables or JSON) instead of messy sentences.
+- JSON schema is a rulebook that says exactly how each answer box must look.
+
+Interview Prep Notes
+- System vs user prompts: system sets behavior hierarchy, user adds task context; clarify precedence and injection risks.
+- Guardrails: combine explicit instructions, allowed tool list, moderation filters, and post-response validators.
+- Few-shot prompting: curate domain-specific exemplars, highlight edge cases, balance token cost vs accuracy gains.
+- Structured output: enforce format via delimiter templates, XML tags, or JSON with explicit keys.
+- JSON schema enforcement: use function calling / responses API to validate shape, handle retries on validation failure.
+- Iteration: measure accuracy, hallucination, latency, and cost; maintain prompt version control.
+
+Detailed Walkthrough
+- Define objective: articulate success criteria and constraints (tone, facts, citations).
+- Draft system prompt: codify persona, safety rules, formatting requirements.
+- Add guardrails: include negative instructions, fallback messages, and mention rejection policy.
+- Few-shot selection: collect real edge cases, annotate ideal responses, keep examples current with product changes.
+- Structured output template: design JSON fields, descriptions, enum values, null handling, and default text.
+- Test harness: build evaluation suite with golden outputs, run regression whenever prompt changes.
+
+Advanced Engineering Notes
+- Prompt chaining: preprocess user input (normalization, entity extraction) before the main prompt.
+- Dynamic prompts: insert live context (user profile, locale, policies) via templating while avoiding injection.
+- Automatic prompt repair: detect invalid JSON, force re-ask with higher temperature or simplified prompt.
+- Analytics: log prompt versions, response tokens, validation failures, user feedback for continuous tuning.
+- Compliance: sanitize inputs for PII before storing prompts; ensure prompts do not leak internal policies.
+- A/B testing: rotate prompt variants with feature flags, collect win rates, roll back quickly on regression.
+
+Sample Code: Structured Prompting with JSON Schema (Node.js)
+
+import "dotenv/config";
+import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const systemPrompt = `
+You are a customer-support assistant. Follow these rules strictly:
+- Answer ONLY with validated JSON.
+- If information is missing, set "confidence" to "low" and explain limits.
+- Never invent policies; rely on provided context.
+`;
+
+const recommendationSchema = {
+  name: "support_recommendation",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      summary: { type: "string", description: "One sentence answer users can read." },
+      steps: {
+        type: "array",
+        description: "Ordered troubleshooting steps.",
+        items: { type: "string" },
+      },
+      confidence: {
+        type: "string",
+        enum: ["low", "medium", "high"],
+        description: "Confidence that steps solve the issue.",
+      },
+      escalationNeeded: { type: "boolean" },
+    },
+    required: ["summary", "steps", "confidence", "escalationNeeded"],
+    additionalProperties: false,
+  },
+};
+
+async function adviseCustomer(question, context) {
+  const messages = [
+    { role: "system", content: systemPrompt },
+    {
+      role: "user",
+      content: `Context:\n${context}\n\nCustomer question:\n${question}`,
+    },
+  ];
+
+  const response = await client.responses.create({
+    model: "gpt-4.1-mini",
+    input: messages,
+    temperature: 0.2,
+    response_format: recommendationSchema,
+    max_output_tokens: 400,
+  });
+
+  return response.output ? response.output[0].content[0].text : "{}";
+}
+
+async function main() {
+  const context = `
+- Premium plan includes 24/7 support and on-site repairs.
+- Standard plan includes email support within 48 hours.
+- Devices purchased before 2023 require manual firmware updates.
+`;
+
+  const question = "My premium device keeps restarting overnight. What should I do?";
+
+  try {
+    const jsonAnswer = await adviseCustomer(question, context);
+    console.log("Structured answer:", jsonAnswer);
+  } catch (error) {
+    console.error("Prompt optimisation failure:", error);
+  }
+}
+
+main();
+
+Practice Prompts
+- Redesign a prompt to switch between formal and friendly tone based on user profile metadata.
+- Explain how you would detect prompt injection attempts and recover safely.
+- Compare few-shot prompting vs retrieval augmented prompts for policy-heavy answers.
+- Outline an evaluation plan for measuring structured output accuracy over time.

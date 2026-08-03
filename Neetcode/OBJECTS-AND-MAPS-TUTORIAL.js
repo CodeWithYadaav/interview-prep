@@ -1,7 +1,7 @@
 // ════════════════════════════════════════════════════════════════════════════════════
-// 📚 JAVASCRIPT OBJECTS & MAPS - COMPLETE GROUND-UP TUTORIAL
+// JAVASCRIPT OBJECTS & MAPS - COMPLETE GROUND-UP TUTORIAL
 // ════════════════════════════════════════════════════════════════════════════════════
-// 
+//
 // Goal: Build a ROCK-SOLID mental model so you NEVER get confused again!
 // We'll move SLOWLY and VISUALLY through every concept.
 //
@@ -11,7 +11,7 @@
 // PART 1: OBJECTS - WHAT YOU ALREADY KNOW (Foundation)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🏠 REAL-WORLD ANALOGY: An object is like a FILING CABINET
+//  REAL-WORLD ANALOGY: An object is like a FILING CABINET
 //
 //     ┌─────────────────┐
 //     │  Filing Cabinet │
@@ -38,7 +38,7 @@ console.log(person.age);     // 30
 console.log(person["name"]); // "Praveen"
 console.log(person["age"]);  // 30
 
-// 💡 KEY INSIGHT: Both do the SAME thing!
+// KEY INSIGHT: Both do the SAME thing!
 // person.name === person["name"]  ✅ TRUE
 
 
@@ -46,7 +46,7 @@ console.log(person["age"]);  // 30
 // PART 2: WHY BRACKET NOTATION EXISTS (The "Aha!" Moment)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🎯 SCENARIO: What if the drawer label is stored in a VARIABLE?
+// SCENARIO: What if the drawer label is stored in a VARIABLE?
 
 const whichDrawer = "name";  // This is a STRING containing "name"
 
@@ -62,7 +62,7 @@ console.log(person[whichDrawer]);  // "Praveen"
 // Step 3: Open the "name" drawer → get "Praveen"
 
 
-// 🔍 LET'S SEE THIS IN ACTION:
+// LET'S SEE THIS IN ACTION:
 
 const key1 = "name";
 const key2 = "age";
@@ -71,7 +71,7 @@ console.log(person[key1]);  // JavaScript: key1 is "name" → person["name"] →
 console.log(person[key2]);  // JavaScript: key2 is "age" → person["age"] → 30
 
 
-// 💡 RULE #1: Use DOT notation when you write the property name directly
+// RULE #1: Use DOT notation when you write the property name directly
 //             Use BRACKET notation when the property name is in a variable
 
 
@@ -79,7 +79,7 @@ console.log(person[key2]);  // JavaScript: key2 is "age" → person["age"] → 3
 // PART 3: CREATING PROPERTIES DYNAMICALLY (The Game Changer!)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🏗️ REAL-WORLD ANALOGY: You're a LOCKER MANAGER at a gym
+// REAL-WORLD ANALOGY: You're a LOCKER MANAGER at a gym
 //
 // People come in, and you assign them lockers based on their membership type:
 // - "gold" members → locker in gold section
@@ -135,16 +135,16 @@ console.log("After Person 3:", lockers);
 // }
 
 
-// 🎯 KEY INSIGHT: lockers[membershipType] works because:
+// KEY INSIGHT: lockers[membershipType] works because:
 // 1. membershipType is a VARIABLE containing a STRING
 // 2. JavaScript evaluates it FIRST, then uses that string as the property name
 
 
 // ═══════════════════════════════════════════════════════════════════════════════════
-// PART 4: THE GROUPING PATTERN (Your Main Confusion Point!)
+// PART 4: THE GROUPING PATTERN (Main Confusion Point!)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🎓 REAL-WORLD EXAMPLE: Group students by their grade
+// REAL-WORLD EXAMPLE: Group students by their grade
 
 const students = [
   { name: "Alice", grade: "A" },
@@ -154,14 +154,14 @@ const students = [
   { name: "Eve", grade: "B" }
 ];
 
-// 🎯 GOAL: Create this structure:
+// GOAL: Create this structure:
 // {
 //   A: ["Alice", "Charlie"],
 //   B: ["Bob", "Eve"],
 //   C: ["David"]
 // }
 
-// 📝 STEP-BY-STEP WALKTHROUGH (Watch the object change!)
+// STEP-BY-STEP WALKTHROUGH (Watch the object change!)
 
 const groups = {};  // Empty object (filing cabinet with NO drawers yet)
 
@@ -263,7 +263,7 @@ console.log(groups);
 // }
 
 
-// 🎯 THE COMPLETE PATTERN (What you see in DSA problems):
+// THE COMPLETE PATTERN (What you see in DSA problems):
 
 function groupByGrade(students) {
   const groups = {};  // Empty object
@@ -284,7 +284,7 @@ function groupByGrade(students) {
 }
 
 
-// 💡 WHY CAN'T WE USE DOT NOTATION?
+// WHY CAN'T WE USE DOT NOTATION?
 
 // ❌ WRONG: This tries to access a property literally called "groupKey"
 // groups.groupKey = [];  // Creates: { groupKey: [] }  ← WRONG!
@@ -293,7 +293,7 @@ function groupByGrade(students) {
 // groups[groupKey] = [];  // Creates: { A: [] } or { B: [] } etc.
 
 
-// 🧠 MENTAL MODEL:
+// MENTAL MODEL:
 //
 // groups[groupKey] means:
 // 1. Look at what groupKey contains (let's say "A")
@@ -322,7 +322,7 @@ function groupAnagrams(words) {
   for (let word of words) {
     // Create a unique key by sorting the word's letters
     const groupKey = word.split('').sort().join('');
-    
+
     console.log(`Word: ${word} → Sorted key: ${groupKey}`);
 
     // If this key doesn't exist, create it
@@ -342,7 +342,7 @@ console.log("\n=== GROUP ANAGRAMS ===");
 const result = groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]);
 console.log(result);
 
-// 🎬 WHAT HAPPENS IN MEMORY:
+// WHAT HAPPENS IN MEMORY:
 //
 // After "eat":   { aet: ["eat"] }
 // After "tea":   { aet: ["eat", "tea"] }          ← same key!
@@ -356,7 +356,7 @@ console.log(result);
 // PART 6: INTRODUCING MAP (A Better Tool for Certain Jobs)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🏪 REAL-WORLD ANALOGY: Object vs Map
+// REAL-WORLD ANALOGY: Object vs Map
 //
 // OBJECT = Simple filing cabinet
 //   - Drawer labels MUST be strings
@@ -413,11 +413,11 @@ const hasAliceInMap = map.has("Alice");
 // PART 7: TWO SUM PROBLEM WITH MAP (Step-by-Step Breakdown)
 // ═══════════════════════════════════════════════════════════════════════════════════
 
-// 🎯 PROBLEM: Find two numbers that add up to target
+// PROBLEM: Find two numbers that add up to target
 // Input: nums = [2, 7, 11, 15], target = 9
 // Output: [0, 1] (because nums[0] + nums[1] = 2 + 7 = 9)
 
-// 🧠 STRATEGY:
+// STRATEGY:
 // For each number, check if we've seen its "complement" (target - number)
 // Store each number with its index as we go
 
@@ -441,18 +441,18 @@ function twoSum(nums, target) {
     // Check if we've seen the complement before
     if (map.has(complement)) {
       console.log(`✅ FOUND! Complement ${complement} exists in map!`);
-      
+
       const complementIndex = map.get(complement);
       console.log(`Complement ${complement} is at index ${complementIndex}`);
       console.log(`Solution: [${complementIndex}, ${i}]`);
-      
+
       return [complementIndex, i];
     }
 
     console.log(`Complement ${complement} not found. Storing ${currentNum} → ${i} in map`);
     // Store current number and its index for future lookups
     map.set(currentNum, i);
-    
+
     console.log("Map state:", map);
   }
 
@@ -460,7 +460,7 @@ function twoSum(nums, target) {
 }
 
 
-// 🎬 DETAILED WALKTHROUGH: nums = [2, 7, 11, 15], target = 9
+// DETAILED WALKTHROUGH: nums = [2, 7, 11, 15], target = 9
 
 console.log("\n" + "=".repeat(70));
 const nums = [2, 7, 11, 15];
@@ -469,7 +469,7 @@ const answer = twoSum(nums, target);
 console.log("\nFinal answer:", answer);
 
 
-// 📊 MEMORY STATE AT EACH ITERATION:
+// MEMORY STATE AT EACH ITERATION:
 //
 // Iteration 0: i=0, currentNum=2
 //   complement = 9 - 2 = 7
@@ -484,7 +484,7 @@ console.log("\nFinal answer:", answer);
 //   Return [0, 1] ← Found the answer!
 
 
-// 🎯 UNDERSTANDING map.get(complement):
+// UNDERSTANDING map.get(complement):
 //
 // map.get(complement) means:
 // 1. Look at what 'complement' contains (let's say 2)
@@ -494,7 +494,7 @@ console.log("\nFinal answer:", answer);
 // So: map.get(2) → 0
 
 
-// 🎯 UNDERSTANDING [map.get(complement), i]:
+// UNDERSTANDING [map.get(complement), i]:
 //
 // This creates an ARRAY with two elements:
 // [map.get(complement), i]
@@ -523,7 +523,7 @@ function countLetters(str) {
 
   for (let char of str) {
     console.log(`\nProcessing: '${char}'`);
-    
+
     // Check if we've seen this letter before
     if (map.has(char)) {
       const currentCount = map.get(char);
@@ -534,7 +534,7 @@ function countLetters(str) {
       console.log(`'${char}' is new, setting count to 1`);
       map.set(char, 1);
     }
-    
+
     console.log("Map state:", map);
   }
 
@@ -615,11 +615,11 @@ function groupByAge(people) {
 
   for (let person of people) {
     const groupKey = person.age;  // What's this? → a number (25 or 30)
-    
+
     if (!groups[groupKey]) {      // groups[25] or groups[30]
       groups[groupKey] = [];
     }
-    
+
     groups[groupKey].push(person.name);
   }
 
@@ -637,13 +637,13 @@ function findFirstDuplicate(nums) {
 
   for (let i = 0; i < nums.length; i++) {
     const num = nums[i];
-    
+
     if (seen.has(num)) {
       // Found a duplicate!
       const firstIndex = seen.get(num);
       return { value: num, firstIndex: firstIndex, secondIndex: i };
     }
-    
+
     seen.set(num, i);  // Store this number with its index
   }
 
@@ -660,7 +660,7 @@ console.log(findFirstDuplicate([1, 2, 3, 2, 4]));
 // ═══════════════════════════════════════════════════════════════════════════════════
 
 console.log("\n" + "=".repeat(70));
-console.log("🎯 KEY TAKEAWAYS - MEMORIZE THESE!");
+console.log("KEY TAKEAWAYS - MEMORIZE THESE!");
 console.log("=".repeat(70));
 
 /*
@@ -668,7 +668,7 @@ console.log("=".repeat(70));
 1. BRACKET NOTATION IS DYNAMIC ACCESS
    ────────────────────────────────────
    obj[key] means: "Use whatever VALUE is in the 'key' variable"
-   
+
    const key = "name";
    obj[key]  →  JavaScript replaces with obj["name"]
 
@@ -677,7 +677,7 @@ console.log("=".repeat(70));
    ─────────────────────
    obj.key   → Looks for property literally called "key"
    obj[key]  → Uses the VALUE inside the key variable
-   
+
    You MUST use brackets when the property name is in a variable!
 
 
@@ -686,11 +686,11 @@ console.log("=".repeat(70));
    const groups = {};
    for (let item of array) {
      const groupKey = /* some property */;
-     
+
      if (!groups[groupKey]) {     // Does this group exist?
        groups[groupKey] = [];     // No? Create it!
      }
-     
+
      groups[groupKey].push(item); // Add to group
 //    } --> this is the end of the for loop
 
@@ -699,7 +699,7 @@ console.log("=".repeat(70));
 //    ────────────────────────────── --> this is the end of the function
    map.set("Alice", 25);    // Store: "Alice" → 25
    map.get("Alice");        // Returns: 25
-   
+
 //    In Two Sum:
    map.set(2, 0);           // Store: number 2 at index 0
    map.get(2);              // Returns: 0 (the index)
@@ -708,7 +708,7 @@ console.log("=".repeat(70));
 // 5. [map.get(complement), i] IS AN ARRAY
 //    ───────────────────────────────────── --> this is the end of the function
 //    This creates: [index_where_complement_was_found, current_index]
-//   
+//
 //    Example: [0, 1]
 //             ↓  ↓
 //             |  Current position
@@ -719,11 +719,11 @@ console.log("=".repeat(70));
 // 6. MENTAL MODEL FOR DYNAMIC ACCESS
 //    ──────────────────────────────── --> this is the end of the function
 //    groups[groupKey]
-//   
+//
 //    Step 1: What does groupKey contain? (let's say "A")
 //    Step 2: Replace: groups["A"]
 //    Step 3: Access or create property "A"
-//   
+//
 //    It's like: "Open the drawer whose name is written on this sticky note"
 
 
@@ -735,7 +735,7 @@ console.log("=".repeat(70));
 //   3. That value becomes the property name!
 
 
-console.log("\n🎓 You now have a COMPLETE mental model!");
+console.log("\n You now have a COMPLETE mental model!");
 console.log("🔥 Practice these patterns and you'll NEVER forget them!");
 console.log("\n" + "=".repeat(70));
 

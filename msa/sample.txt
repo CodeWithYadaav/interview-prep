@@ -1,4 +1,4 @@
-🧱 1. MSA Fundamentals & Design
+ 1. MSA Fundamentals & Design
 
 | Question                                                         | What they expect                                                 |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -7,6 +7,11 @@
 | How do you split a monolith into microservices?                  | Realistic domain decomposition (e.g., users, orders, payments)   |
 | What is bounded context in microservices?                        | Explain via DDD or business logic ownership                      |
 | Can you explain CAP Theorem and how it applies to microservices? | Quick grasp of consistency vs availability tradeoffs             |
+| What are the disadvantages of microservices?                     | Complexity, distributed debugging, network latency, data consistency |
+| How do you decide service boundaries?                            | Business capabilities, team structure, data ownership            |
+| What is the difference between SOA and microservices?            | Granularity, independence, ESB vs smart endpoints                |
+| How do you handle shared code between services?                  | Shared libraries, code duplication vs coupling tradeoff          |
+| What is the strangler fig pattern?                               | Gradually migrate from monolith by replacing features incrementally |
 
 
 🧭 2. Communication Between Services
@@ -18,6 +23,12 @@
 | What is API Gateway and how does it help in MSA? | Central routing, auth, rate limit, caching         |
 | How do you version APIs in microservices?        | URL vs header-based versioning                     |
 | Have you used service discovery?                 | Talk about Consul, Eureka, or K8s service registry |
+| What is the difference between REST and gRPC?    | HTTP/JSON vs HTTP/2 binary, performance, contracts |
+| How do you handle backward compatibility?        | Versioning, optional fields, deprecation strategy  |
+| What is contract testing in microservices?       | Pact, consumer-driven contracts, API spec validation |
+| How do you handle API rate limiting?             | Token bucket, sliding window, per-user/IP limits   |
+| What is BFF (Backend for Frontend) pattern?      | Service layer tailored for specific frontend needs |
+| How do you handle request/response timeouts?     | Set appropriate timeouts, circuit breakers, fallbacks |
 
 
 🔁 3. Data Management
@@ -29,10 +40,15 @@
 | What are eventual consistency challenges?                      | Talk about delay, retries, compensating actions |
 | How to handle queries that span multiple services (reporting)? | Data duplication / CQRS / data warehouse        |
 | How do you keep data in sync across services?                  | Change Data Capture (CDC), events, Kafka        |
+| What is CQRS and when would you use it?                        | Separate read/write models, complex queries, high read load |
+| What is Event Sourcing?                                        | Store events instead of state, audit trail, replay capability |
+| How do you handle database schema changes?                     | Backward compatible changes, feature flags, dual writes |
+| What is the Outbox pattern?                                    | Ensure atomicity between DB write and event publish |
+| How do you handle data duplication across services?            | Accept it as tradeoff, use events to sync, eventual consistency |
+| What is database per service pattern pros/cons?                | Pros: independence; Cons: joins, transactions, data duplication |
 
 
 ⚠️ 4. Reliability, Failure Handling
-
 
 | Question                                         | What they expect                                    |
 | ------------------------------------------------ | --------------------------------------------------- |
@@ -41,6 +57,13 @@
 | How do you ensure fault isolation?               | Deployment isolation + containerization             |
 | What is the role of timeouts in microservices?   | Prevent thread blocking and cascading failures      |
 | How do you handle network failures?              | Timeouts, retries, async queues, fallback responses |
+| What is the bulkhead pattern?                    | Isolate resources (thread pools) to prevent cascading failures |
+| How do you implement graceful degradation?       | Fallback responses, cached data, reduced functionality |
+| What is chaos engineering in microservices?      | Intentionally inject failures to test resilience (Chaos Monkey) |
+| How do you handle cascading failures?            | Circuit breakers, timeouts, bulkheads, rate limiting |
+| What is the difference between retry and circuit breaker? | Retry = try again; Circuit breaker = stop trying temporarily |
+| How do you implement health checks?              | Liveness, readiness probes, dependency health checks |
+| What is the sidecar pattern?                     | Deploy helper container alongside main service (logging, proxy) |
 
 
 
@@ -53,6 +76,12 @@
 | How do you secure inter-service communication?                   | mTLS, service mesh (Istio/Linkerd), API tokens |
 | How do you prevent man-in-the-middle or replay attacks?          | JWT expiry, nonce, TLS                         |
 | How to implement role-based access in MSA?                       | Enforce at API Gateway or per service level    |
+| What is OAuth 2.0 and OpenID Connect?                            | Authorization framework, authentication layer on OAuth |
+| How do you handle secrets management?                            | Vault, AWS Secrets Manager, K8s secrets, never hardcode |
+| What is Zero Trust Architecture?                                 | Never trust, always verify, least privilege access |
+| How do you implement API key management?                         | Rotation, encryption, rate limiting per key    |
+| What is the principle of least privilege?                        | Grant minimum permissions needed for the task  |
+| How do you handle cross-origin requests (CORS)?                  | Configure CORS headers at API Gateway level    |
 
 
 🚀 6. Deployment & CI/CD
@@ -64,6 +93,14 @@
 | How do you handle rolling updates or blue-green deployments? | Canary/blue-green via CI or K8s strategies              |
 | What is service mesh? Why is it used?                        | Observability, traffic control, security (Envoy, Istio) |
 | How to rollback a failed service update?                     | CI/CD rollback + version pinning                        |
+| What is the difference between Docker and Kubernetes?        | Docker = containerization; K8s = orchestration          |
+| How do you handle environment-specific configurations?       | ConfigMaps, environment variables, feature flags        |
+| What is GitOps?                                              | Git as single source of truth, automated deployments    |
+| How do you implement canary deployments?                     | Gradual traffic shift, monitor metrics, rollback if needed |
+| What are Kubernetes pods, services, and deployments?         | Pod = container group; Service = networking; Deployment = replicas |
+| How do you handle database migrations in microservices?      | Versioned migrations, backward compatible, separate from deploy |
+| What is container orchestration?                             | Automated deployment, scaling, management of containers |
+| How do you implement feature flags?                          | LaunchDarkly, custom solution, gradual rollout, A/B testing |
 
 
 📊 7. Monitoring & Observability
@@ -75,6 +112,13 @@
 | How do you handle log correlation?                 | Trace ID / Correlation ID in headers              |
 | How do you set service-level alerts?               | Custom metrics, alert thresholds, dashboards      |
 | How do you debug an issue in a microservice chain? | Explain tracing flow with logs + metrics          |
+| What are the three pillars of observability?       | Logs, metrics, traces                             |
+| What is SLO, SLA, and SLI?                         | SLI = metric; SLO = target; SLA = agreement with consequences |
+| How do you implement structured logging?           | JSON format, consistent fields, log levels        |
+| What metrics do you monitor for microservices?     | Latency, error rate, throughput, saturation (RED/USE) |
+| How do you handle log aggregation?                 | Centralized logging (ELK, Splunk), log shippers   |
+| What is APM (Application Performance Monitoring)?  | End-to-end performance tracking, bottleneck identification |
+| How do you implement alerting strategy?            | Alert on symptoms not causes, runbooks, escalation |
 
 
 
@@ -87,9 +131,16 @@
 | What is the difference between Kafka and RabbitMQ? | Kafka = log-based, pub-sub; RabbitMQ = queue-based     |
 | How do you guarantee at-least-once delivery?       | Consumer offset management                             |
 | How do you handle idempotency in consumers?        | Track processed message IDs or use deduplication logic |
+| What is the difference between topics and partitions? | Topic = category; Partition = ordered log within topic |
+| How do you handle message ordering in Kafka?       | Same partition key ensures order within partition      |
+| What is consumer group in Kafka?                   | Multiple consumers share load, each partition to one consumer |
+| How do you handle dead letter queues?              | Separate queue for failed messages, retry logic        |
+| What is exactly-once semantics?                    | Transactional writes, idempotent producers, complex to achieve |
+| How do you handle backpressure in async systems?   | Rate limiting, queue size limits, flow control         |
+| What is the difference between pub-sub and queue?  | Pub-sub = broadcast; Queue = one consumer per message |
 
 
-👀 Bonus High-Level/Behavioral
+👀 9. Bonus High-Level/Behavioral
 
 | Question                                                                 | What they expect                                             |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -97,4 +148,1845 @@
 | Tell me about a failure you faced in microservices and how you solved it | Real incident, RCA, and fix                                  |
 | How do you ensure performance of your microservices?                     | Caching, indexing, async design                              |
 | How do you design microservices to scale?                                | Stateless services, horizontal scaling, queues               |
-| How would you improve your current MSA project?                          | Say “move to event-driven for X”, or “consolidate DBs for Y” |
+| How would you improve your current MSA project?                          | Say "move to event-driven for X", or "consolidate DBs for Y" |
+
+
+🎯 10. Performance & Optimization
+
+| Question                                           | What they expect                                       |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| How do you implement caching in microservices?     | Redis, in-memory cache, cache invalidation strategies |
+| What is cache invalidation strategy?               | TTL, event-based, write-through, cache-aside          |
+| How do you handle N+1 query problem?               | Batch requests, DataLoader pattern, GraphQL           |
+| What is connection pooling and why is it important? | Reuse connections, reduce overhead, configure pool size |
+| How do you optimize database queries?              | Indexing, query optimization, read replicas           |
+| What is lazy loading vs eager loading?             | Load data on-demand vs load all upfront               |
+| How do you handle large file uploads?              | Chunked uploads, presigned URLs, async processing     |
+| What is database sharding?                         | Horizontal partitioning, distribute data across nodes |
+| How do you implement pagination?                   | Offset-based, cursor-based, keyset pagination         |
+
+
+🧪 11. Testing in Microservices
+
+| Question                                           | What they expect                                       |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| How do you test microservices?                     | Unit, integration, contract, E2E tests                |
+| What is contract testing?                          | Verify service contracts, consumer-driven (Pact)      |
+| How do you mock external services in tests?        | Test doubles, WireMock, mock servers                  |
+| What is the testing pyramid?                       | Many unit tests, fewer integration, few E2E           |
+| How do you test async messaging?                   | Test consumers independently, verify message format   |
+| What is chaos testing?                             | Inject failures to test resilience                    |
+| How do you handle test data management?            | Test containers, fixtures, database seeding           |
+| What is smoke testing vs regression testing?       | Smoke = basic checks; Regression = verify no breaks  |
+
+
+💰 12. Cost & Resource Management
+
+| Question                                           | What they expect                                       |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| How do you optimize cloud costs for microservices? | Right-sizing, auto-scaling, spot instances, monitoring |
+| What is horizontal vs vertical scaling?            | Horizontal = add instances; Vertical = bigger instances |
+| How do you implement auto-scaling?                 | CPU/memory metrics, custom metrics, K8s HPA           |
+| What is resource quota management?                 | Limit CPU/memory per service, prevent resource hogging |
+| How do you handle cold start problems?             | Keep-alive, provisioned concurrency, connection pools |
+| What is the difference between stateful and stateless services? | Stateless = no local state; Stateful = maintains state |
+
+
+🔧 13. Real-World Scenarios (5 YOE Level) - DETAILED ANSWERS
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 1: Design a Payment Processing System
+═══════════════════════════════════════════════════════════════════════════════════════
+
+ARCHITECTURE:
+
+┌─────────────┐
+│   Client    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────┐
+│  API Gateway    │ (Auth, Rate Limiting)
+└────────┬────────┘
+         │
+    ┌────┴────┬──────────┬──────────────┐
+    ▼         ▼          ▼              ▼
+┌────────┐ ┌─────────┐ ┌──────────┐ ┌──────────┐
+│ Order  │ │ Payment │ │ Inventory│ │ Notify   │
+│Service │ │ Service │ │ Service  │ │ Service  │
+└───┬────┘ └────┬────┘ └────┬─────┘ └────┬─────┘
+    │           │           │             │
+    ▼           ▼           ▼             ▼
+┌────────┐ ┌─────────┐ ┌──────────┐ ┌──────────┐
+│Order DB│ │Payment  │ │Inventory │ │   Queue  │
+│        │ │   DB    │ │    DB    │ │          │
+└────────┘ └─────────┘ └──────────┘ └──────────┘
+                │
+                ▼
+         ┌──────────────┐
+         │ Payment      │
+         │ Gateway      │
+         │ (Stripe/     │
+         │  Razorpay)   │
+         └──────────────┘
+
+KEY POINTS TO EXPLAIN:
+
+1. IDEMPOTENCY (Critical!)
+   "We use idempotency keys to prevent duplicate charges"
+
+   Example:
+   - Client sends: POST /payments with idempotency-key: "abc123"
+   - If network fails and client retries with same key
+   - System checks: "Already processed abc123" → Return same response
+   - No duplicate charge!
+
+2. SAGA PATTERN for Distributed Transaction
+
+   Step 1: Create Order (status: PENDING)
+   Step 2: Reserve Inventory
+   Step 3: Process Payment
+   Step 4: Update Order (status: CONFIRMED)
+
+   If Step 3 fails:
+   - Compensate Step 2: Release inventory
+   - Compensate Step 1: Cancel order
+
+   "We use orchestration-based Saga with a coordinator service"
+
+3. ASYNC NOTIFICATIONS
+   "After payment success, we publish event to Kafka"
+   - Notification service consumes event
+   - Sends email/SMS asynchronously
+   - Doesn't block payment flow
+
+4. RETRY & CIRCUIT BREAKER
+   "Payment gateway calls have retry with exponential backoff"
+   - Try 1: Immediate
+   - Try 2: After 2 seconds
+   - Try 3: After 4 seconds
+   - If all fail: Circuit breaker opens, return error
+
+CODE EXAMPLE:
+```javascript
+async function processPayment(orderId, amount, idempotencyKey) {
+  // 1. Check idempotency
+  const existing = await checkIdempotency(idempotencyKey);
+  if (existing) return existing;
+
+  // 2. Start Saga
+  const sagaId = await startSaga();
+
+  try {
+    // 3. Reserve inventory
+    await inventoryService.reserve(orderId);
+
+    // 4. Charge payment
+    const payment = await paymentGateway.charge(amount);
+
+    // 5. Confirm order
+    await orderService.confirm(orderId);
+
+    // 6. Publish event
+    await kafka.publish('payment.success', { orderId, payment });
+
+    // 7. Store idempotency result
+    await storeIdempotency(idempotencyKey, payment);
+
+    return payment;
+
+  } catch (error) {
+    // Compensate: Rollback inventory
+    await inventoryService.release(orderId);
+    await orderService.cancel(orderId);
+    throw error;
+  }
+}
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 2: Migrate Monolith to Microservices
+═══════════════════════════════════════════════════════════════════════════════════════
+
+STRANGLER FIG PATTERN:
+
+PHASE 1: Current State
+┌────────────────────────────────┐
+│                                │
+│        MONOLITH                │
+│  - Users                       │
+│  - Orders                      │
+│  - Products                    │
+│  - Payments                    │
+│  - Notifications               │
+│                                │
+└────────────────────────────────┘
+
+PHASE 2: Start Strangling (Extract User Service)
+┌─────────────┐
+│ API Gateway │
+└──────┬──────┘
+   ┌───┴────┬──────────────────┐
+   ▼        ▼                  ▼
+┌──────┐ ┌──────────────────────┐
+│User  │ │     MONOLITH         │
+│Service│ │  - Orders           │
+│      │ │  - Products         │
+│(NEW) │ │  - Payments         │
+└──────┘ │  - Notifications    │
+         └─────────────────────┘
+
+PHASE 3: Continue Extracting
+┌─────────────┐
+│ API Gateway │
+└──────┬──────┘
+   ┌───┴────┬────────┬──────────┐
+   ▼        ▼        ▼          ▼
+┌──────┐ ┌──────┐ ┌──────────────┐
+│User  │ │Order │ │  MONOLITH    │
+│Service│ │Service│ │ - Products  │
+└──────┘ └──────┘ │ - Payments  │
+                  │ - Notify    │
+                  └─────────────┘
+
+PHASE 4: Final State (All Extracted)
+┌─────────────┐
+│ API Gateway │
+└──────┬──────┘
+   ┌───┴───┬────────┬─────────┬──────┐
+   ▼       ▼        ▼         ▼      ▼
+┌──────┐┌──────┐┌────────┐┌────────┐┌──────┐
+│User  ││Order ││Product ││Payment ││Notify│
+│Service││Service││Service││Service││Service│
+└──────┘└──────┘└────────┘└────────┘└──────┘
+
+STEP-BY-STEP EXPLANATION:
+
+"I would use the Strangler Fig pattern - gradually replace parts of monolith"
+
+1. IDENTIFY BOUNDARIES
+   "First, analyze the monolith and identify bounded contexts"
+   - User management (authentication, profiles)
+   - Order management (cart, checkout)
+   - Product catalog (search, details)
+   - Payment processing
+   - Notifications
+
+2. PRIORITIZE EXTRACTION
+   "Start with services that have:"
+   - Clear boundaries
+   - Least dependencies
+   - High change frequency
+   - Performance bottlenecks
+
+   Example: "I'd start with User Service - it's independent"
+
+3. CREATE FACADE/ADAPTER
+   "Use API Gateway to route requests"
+   - New requests → New microservice
+   - Old requests → Monolith (temporarily)
+   - Gradually move all traffic
+
+4. DATA MIGRATION STRATEGY
+   "This is tricky - I'd use dual-write pattern initially"
+
+   Step 1: Write to both (monolith DB + new service DB)
+   Step 2: Verify data consistency
+   Step 3: Read from new service
+   Step 4: Stop writing to monolith DB
+   Step 5: Decommission monolith table
+
+5. HANDLE SHARED CODE
+   "Extract common code to shared libraries"
+   - But avoid tight coupling
+   - Each service can have its own copy if needed
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 3: E-commerce with Inventory Management
+═══════════════════════════════════════════════════════════════════════════════════════
+
+ARCHITECTURE:
+
+┌─────────┐
+│ Client  │
+└────┬────┘
+     │
+     ▼
+┌──────────────┐
+│ API Gateway  │
+└──────┬───────┘
+       │
+   ┌───┴────┬──────────┬───────────┐
+   ▼        ▼          ▼           ▼
+┌──────┐ ┌─────────┐ ┌─────────┐ ┌──────┐
+│Order │ │Inventory│ │ Payment │ │ User │
+│Service│ │ Service │ │ Service │ │Service│
+└───┬──┘ └────┬────┘ └────┬────┘ └──────┘
+    │         │           │
+    ▼         ▼           ▼
+┌────────┐ ┌──────────┐ ┌─────────┐
+│Order DB│ │Inventory │ │Payment  │
+│        │ │   DB     │ │   DB    │
+└────────┘ └──────────┘ └─────────┘
+
+THE INVENTORY PROBLEM:
+
+"Two users trying to buy last item simultaneously"
+
+User A: "Buy iPhone" (1 left)
+User B: "Buy iPhone" (1 left)
+
+❌ WITHOUT PROPER HANDLING:
+Both see "1 available" → Both place order → Oversold!
+
+✅ WITH RESERVATION PATTERN:
+
+FLOW:
+1. User adds to cart → RESERVE inventory (not sold yet)
+2. Reserved for 10 minutes
+3. User completes payment → CONFIRM reservation → Reduce stock
+4. If timeout → RELEASE reservation → Stock available again
+
+DATABASE SCHEMA:
+
+Inventory Table:
+┌────────────┬───────────┬──────────┐
+│ product_id │ available │ reserved │
+├────────────┼───────────┼──────────┤
+│ iPhone-15  │    5      │    2     │
+└────────────┴───────────┴──────────┘
+Total Stock = available + reserved = 7
+Can sell = available = 5
+
+Reservations Table:
+┌────────────┬────────────┬───────────┬──────────┐
+│ reservation│ product_id │ quantity  │ expires  │
+├────────────┼────────────┼───────────┼──────────┤
+│ res-123    │ iPhone-15  │    1      │ 10:30 AM │
+│ res-456    │ iPhone-15  │    1      │ 10:35 AM │
+└────────────┴────────────┴───────────┴──────────┘
+
+CODE EXAMPLE:
+```javascript
+// 1. Reserve Inventory
+async function reserveInventory(productId, quantity) {
+  const inventory = await db.query(
+    'SELECT available FROM inventory WHERE product_id = ? FOR UPDATE',
+    [productId]
+  );
+
+  if (inventory.available < quantity) {
+    throw new Error('Out of stock');
+  }
+
+  // Create reservation
+  const reservationId = generateId();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 min
+
+  await db.transaction(async (tx) => {
+    // Reduce available, increase reserved
+    await tx.query(
+      'UPDATE inventory SET available = available - ?, reserved = reserved + ? WHERE product_id = ?',
+      [quantity, quantity, productId]
+    );
+
+    // Create reservation record
+    await tx.query(
+      'INSERT INTO reservations (id, product_id, quantity, expires_at) VALUES (?, ?, ?, ?)',
+      [reservationId, productId, quantity, expiresAt]
+    );
+  });
+
+  return reservationId;
+}
+
+// 2. Confirm Reservation (after payment)
+async function confirmReservation(reservationId) {
+  await db.transaction(async (tx) => {
+    const reservation = await tx.query(
+      'SELECT * FROM reservations WHERE id = ?',
+      [reservationId]
+    );
+
+    // Move from reserved to sold
+    await tx.query(
+      'UPDATE inventory SET reserved = reserved - ? WHERE product_id = ?',
+      [reservation.quantity, reservation.product_id]
+    );
+
+    // Delete reservation
+    await tx.query('DELETE FROM reservations WHERE id = ?', [reservationId]);
+  });
+}
+
+// 3. Release Expired Reservations (Background Job)
+async function releaseExpiredReservations() {
+  const expired = await db.query(
+    'SELECT * FROM reservations WHERE expires_at < NOW()'
+  );
+
+  for (const reservation of expired) {
+    await db.transaction(async (tx) => {
+      // Return to available
+      await tx.query(
+        'UPDATE inventory SET available = available + ?, reserved = reserved - ? WHERE product_id = ?',
+        [reservation.quantity, reservation.quantity, reservation.product_id]
+      );
+
+      await tx.query('DELETE FROM reservations WHERE id = ?', [reservation.id]);
+    });
+  }
+}
+
+// Run every minute
+setInterval(releaseExpiredReservations, 60 * 1000);
+```
+
+EVENTUAL CONSISTENCY:
+"Inventory updates are eventually consistent across services"
+- Order service publishes 'order.created' event
+- Inventory service listens and updates stock
+- If event processing fails, retry with dead letter queue
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 4: Handle 10x Traffic Spike
+═══════════════════════════════════════════════════════════════════════════════════════
+
+NORMAL TRAFFIC:
+┌──────┐     ┌─────────┐     ┌─────────┐
+│Client│────▶│Service  │────▶│Database │
+│      │     │(2 pods) │     │         │
+└──────┘     └─────────┘     └─────────┘
+             100 req/s        ✅ Healthy
+
+10X TRAFFIC SPIKE:
+┌──────┐     ┌─────────┐     ┌─────────┐
+│Client│────▶│Service  │────▶│Database │
+│      │     │(2 pods) │     │         │
+└──────┘     └─────────┘     └─────────┘
+             1000 req/s       ❌ Overloaded!
+
+SOLUTION ARCHITECTURE:
+
+                    ┌──────────────┐
+                    │ CDN (Static) │
+                    └──────────────┘
+                           │
+┌──────┐           ┌───────▼────────┐
+│Client│──────────▶│ Load Balancer  │
+└──────┘           │ (Rate Limiting)│
+                   └───────┬────────┘
+                           │
+                   ┌───────▼────────┐
+                   │  API Gateway   │
+                   │  (Caching)     │
+                   └───────┬────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│   Service    │   │   Service    │   │   Service    │
+│   (Pod 1)    │   │   (Pod 2)    │   │   (Pod N)    │
+└──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+       │                  │                  │
+       └──────────────────┼──────────────────┘
+                          ▼
+                   ┌──────────────┐
+                   │ Redis Cache  │
+                   └──────┬───────┘
+                          │
+                   ┌──────▼───────┐
+                   │   Database   │
+                   │ (Read Replica)│
+                   └──────────────┘
+
+STEP-BY-STEP SOLUTION:
+
+1. AUTO-SCALING
+   "Configure Kubernetes HPA (Horizontal Pod Autoscaler)"
+
+   ```yaml
+   apiVersion: autoscaling/v2
+   kind: HorizontalPodAutoscaler
+   metadata:
+     name: my-service
+   spec:
+     minReplicas: 2
+     maxReplicas: 20
+     metrics:
+     - type: Resource
+       resource:
+         name: cpu
+         target:
+           type: Utilization
+           averageUtilization: 70
+   ```
+
+   "When CPU > 70%, K8s automatically adds more pods"
+
+2. CACHING (Redis)
+   "Cache frequently accessed data"
+
+   ```javascript
+   async function getProduct(id) {
+     // Check cache first
+     const cached = await redis.get(`product:${id}`);
+     if (cached) return JSON.parse(cached);
+
+     // Cache miss - fetch from DB
+     const product = await db.query('SELECT * FROM products WHERE id = ?', [id]);
+
+     // Store in cache (TTL: 5 minutes)
+     await redis.setex(`product:${id}`, 300, JSON.stringify(product));
+
+     return product;
+   }
+   ```
+
+3. RATE LIMITING
+   "Protect backend from abuse"
+
+   ```javascript
+   // At API Gateway level
+   const rateLimit = {
+     windowMs: 60 * 1000, // 1 minute
+     max: 100, // 100 requests per minute per IP
+     message: 'Too many requests, please try again later'
+   };
+   ```
+
+4. DATABASE READ REPLICAS
+   "Separate read and write traffic"
+
+   Write → Master DB
+   Read  → Read Replicas (3 replicas)
+
+   "This distributes read load across multiple databases"
+
+5. ASYNC PROCESSING
+   "Move heavy operations to background"
+
+   ```javascript
+   // Instead of processing immediately
+   app.post('/orders', async (req, res) => {
+     // Quick: Save to DB
+     const order = await db.createOrder(req.body);
+
+     // Async: Send to queue for processing
+     await queue.publish('order.created', order);
+
+     // Return immediately
+     res.json({ orderId: order.id, status: 'processing' });
+   });
+   ```
+
+6. CDN FOR STATIC CONTENT
+   "Serve images, CSS, JS from CDN"
+   - Reduces load on backend
+   - Faster for users globally
+
+7. CONNECTION POOLING
+   "Reuse database connections"
+
+   ```javascript
+   const pool = mysql.createPool({
+     connectionLimit: 100,
+     host: 'db.example.com',
+     user: 'user',
+     password: 'password',
+     database: 'mydb'
+   });
+   ```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 5: Notification System (Email, SMS, Push)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+ARCHITECTURE:
+
+┌──────────────┐
+│   Services   │ (Order, Payment, User, etc.)
+└──────┬───────┘
+       │ Publish Events
+       ▼
+┌──────────────┐
+│  Kafka/Queue │
+└──────┬───────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Notification Service    │
+│ (Consumer)              │
+└────────┬────────────────┘
+         │
+    ┌────┴────┬─────────┬──────────┐
+    ▼         ▼         ▼          ▼
+┌───────┐ ┌──────┐ ┌───────┐ ┌──────────┐
+│Email  │ │ SMS  │ │ Push  │ │ Template │
+│Worker │ │Worker│ │Worker │ │ Service  │
+└───┬───┘ └──┬───┘ └───┬───┘ └──────────┘
+    │        │         │
+    ▼        ▼         ▼
+┌────────┐ ┌─────┐ ┌──────┐
+│SendGrid│ │Twilio│ │ FCM  │
+└────────┘ └─────┘ └──────┘
+
+KEY FEATURES:
+
+1. PRIORITY QUEUE
+   "Different queues for different priorities"
+
+   ┌──────────────┐
+   │ High Priority│ (OTP, Password Reset)
+   │ Queue        │ → Process immediately
+   └──────────────┘
+
+   ┌──────────────┐
+   │ Medium       │ (Order Confirmation)
+   │ Priority     │ → Process within 1 min
+   └──────────────┘
+
+   ┌──────────────┐
+   │ Low Priority │ (Marketing Emails)
+   │ Queue        │ → Process when idle
+   └──────────────┘
+
+2. RETRY LOGIC
+   ```javascript
+   async function sendEmail(notification) {
+     const maxRetries = 3;
+     let attempt = 0;
+
+     while (attempt < maxRetries) {
+       try {
+         await emailProvider.send(notification);
+         await markAsDelivered(notification.id);
+         return;
+       } catch (error) {
+         attempt++;
+
+         if (attempt === maxRetries) {
+           // Move to dead letter queue
+           await dlq.push(notification);
+           await markAsFailed(notification.id);
+         } else {
+           // Exponential backoff
+           await sleep(Math.pow(2, attempt) * 1000);
+         }
+       }
+     }
+   }
+   ```
+
+3. TEMPLATE MANAGEMENT
+   ```javascript
+   const templates = {
+     'order.confirmed': {
+       email: {
+         subject: 'Order Confirmed - {{orderId}}',
+         body: 'Hi {{userName}}, your order {{orderId}} is confirmed...'
+       },
+       sms: 'Order {{orderId}} confirmed. Track: {{trackingUrl}}'
+     },
+     'password.reset': {
+       email: {
+         subject: 'Reset Your Password',
+         body: 'Click here to reset: {{resetLink}}'
+       }
+     }
+   };
+
+   function renderTemplate(templateName, data) {
+     const template = templates[templateName];
+     return template.replace(/{{(\w+)}}/g, (match, key) => data[key]);
+   }
+   ```
+
+4. USER PREFERENCES
+   ```javascript
+   // Check user notification preferences
+   async function shouldSendNotification(userId, channel, type) {
+     const prefs = await getUserPreferences(userId);
+
+     // User opted out of marketing emails
+     if (type === 'marketing' && !prefs.emailMarketing) {
+       return false;
+     }
+
+     // User wants SMS only for urgent
+     if (channel === 'sms' && type !== 'urgent' && !prefs.smsAll) {
+       return false;
+     }
+
+     return true;
+   }
+   ```
+
+5. RATE LIMITING (Provider Limits)
+   "SendGrid allows 100 emails/second"
+
+   ```javascript
+   const rateLimiter = new RateLimiter({
+     tokensPerInterval: 100,
+     interval: 'second'
+   });
+
+   async function sendWithRateLimit(email) {
+     await rateLimiter.removeTokens(1);
+     await emailProvider.send(email);
+   }
+   ```
+
+6. DELIVERY STATUS TRACKING
+   ```sql
+   CREATE TABLE notifications (
+     id UUID PRIMARY KEY,
+     user_id UUID,
+     channel VARCHAR(20), -- email, sms, push
+     type VARCHAR(50),
+     status VARCHAR(20), -- pending, sent, delivered, failed
+     attempts INT DEFAULT 0,
+     created_at TIMESTAMP,
+     sent_at TIMESTAMP,
+     delivered_at TIMESTAMP
+   );
+   ```
+
+COMPLETE FLOW:
+```javascript
+// 1. Service publishes event
+await kafka.publish('order.confirmed', {
+  userId: '123',
+  orderId: 'ORD-456',
+  amount: 1000
+});
+
+// 2. Notification service consumes
+kafka.subscribe('order.confirmed', async (event) => {
+  const { userId, orderId, amount } = event;
+
+  // Get user details
+  const user = await userService.getUser(userId);
+
+  // Check preferences
+  const channels = await getPreferredChannels(userId);
+
+  // Create notifications
+  for (const channel of channels) {
+    if (await shouldSendNotification(userId, channel, 'transactional')) {
+      await createNotification({
+        userId,
+        channel,
+        type: 'order.confirmed',
+        data: { userName: user.name, orderId, amount }
+      });
+    }
+  }
+});
+
+// 3. Workers process notifications
+async function emailWorker() {
+  while (true) {
+    const notification = await queue.pop('email');
+
+    if (notification) {
+      const template = await getTemplate(notification.type, 'email');
+      const content = renderTemplate(template, notification.data);
+
+      await sendEmail({
+        to: notification.user.email,
+        subject: content.subject,
+        body: content.body
+      });
+    }
+  }
+}
+```
+
+This design handles:
+- ✅ High volume (queue-based)
+- ✅ Reliability (retry + DLQ)
+- ✅ User preferences
+- ✅ Multiple channels
+- ✅ Priority handling
+- ✅ Rate limiting
+- ✅ Template management
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 6: Multi-Tenant SaaS Application
+═══════════════════════════════════════════════════════════════════════════════════════
+
+TENANT ISOLATION STRATEGIES:
+
+APPROACH 1: Database Per Tenant (High Isolation)
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│Tenant A │     │Tenant B │     │Tenant C │
+│  App    │     │  App    │     │  App    │
+└────┬────┘     └────┬────┘     └────┬────┘
+     │               │               │
+     ▼               ▼               ▼
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│  DB A   │     │  DB B   │     │  DB C   │
+└─────────┘     └─────────┘     └─────────┘
+
+Pros: Maximum isolation, easy backup/restore per tenant
+Cons: Expensive, hard to manage many databases
+
+APPROACH 2: Schema Per Tenant (Medium Isolation)
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│Tenant A │     │Tenant B │     │Tenant C │
+│  App    │     │  App    │     │  App    │
+└────┬────┘     └────┬────┘     └────┬────┘
+     │               │               │
+     └───────────────┼───────────────┘
+                     ▼
+            ┌─────────────────┐
+            │   Database      │
+            │  ┌──────────┐   │
+            │  │Schema A  │   │
+            │  ├──────────┤   │
+            │  │Schema B  │   │
+            │  ├──────────┤   │
+            │  │Schema C  │   │
+            │  └──────────┘   │
+            └─────────────────┘
+
+Pros: Good isolation, easier management
+Cons: Still complex, schema migrations tricky
+
+APPROACH 3: Shared Database with Tenant ID (Low Isolation) ⭐ MOST COMMON
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│Tenant A │     │Tenant B │     │Tenant C │
+│  App    │     │  App    │     │  App    │
+└────┬────┘     └────┬────┘     └────┬────┘
+     │               │               │
+     └───────────────┼───────────────┘
+                     ▼
+            ┌─────────────────┐
+            │   Database      │
+            │  ┌──────────┐   │
+            │  │ Users    │   │
+            │  │ tenant_id│   │
+            │  ├──────────┤   │
+            │  │ Orders   │   │
+            │  │ tenant_id│   │
+            │  └──────────┘   │
+            └─────────────────┘
+
+Pros: Cost-effective, easy to manage
+Cons: Must ensure tenant isolation in code
+
+IMPLEMENTATION:
+
+1. TENANT IDENTIFICATION
+   ```javascript
+   // Extract tenant from subdomain or header
+   function getTenantId(req) {
+     // Option 1: Subdomain (acme.myapp.com)
+     const subdomain = req.hostname.split('.')[0];
+     return tenantMap[subdomain];
+
+     // Option 2: Header
+     return req.headers['x-tenant-id'];
+
+     // Option 3: JWT token
+     const token = req.headers.authorization;
+     const decoded = jwt.verify(token);
+     return decoded.tenantId;
+   }
+   ```
+
+2. TENANT CONTEXT MIDDLEWARE
+   ```javascript
+   // Express middleware
+   app.use(async (req, res, next) => {
+     const tenantId = getTenantId(req);
+
+     if (!tenantId) {
+       return res.status(400).json({ error: 'Tenant not identified' });
+     }
+
+     // Verify tenant exists and is active
+     const tenant = await db.query(
+       'SELECT * FROM tenants WHERE id = ? AND status = ?',
+       [tenantId, 'active']
+     );
+
+     if (!tenant) {
+       return res.status(403).json({ error: 'Invalid tenant' });
+     }
+
+     // Store in request context
+     req.tenantId = tenantId;
+     req.tenant = tenant;
+
+     next();
+   });
+   ```
+
+3. QUERY FILTERING (CRITICAL!)
+   ```javascript
+   // ❌ DANGEROUS - No tenant filtering
+   async function getOrders() {
+     return await db.query('SELECT * FROM orders');
+     // Returns ALL tenants' orders!
+   }
+
+   // ✅ SAFE - Always filter by tenant
+   async function getOrders(tenantId) {
+     return await db.query(
+       'SELECT * FROM orders WHERE tenant_id = ?',
+       [tenantId]
+     );
+   }
+
+   // ✅ EVEN BETTER - Use ORM with global filter
+   class Order {
+     static async findAll(tenantId) {
+       return this.query()
+         .where('tenant_id', tenantId)
+         .select();
+     }
+   }
+   ```
+
+4. DATABASE SCHEMA
+   ```sql
+   -- Every table has tenant_id
+   CREATE TABLE users (
+     id UUID PRIMARY KEY,
+     tenant_id UUID NOT NULL,
+     email VARCHAR(255),
+     name VARCHAR(255),
+     FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+   );
+
+   CREATE INDEX idx_users_tenant ON users(tenant_id);
+
+   -- Composite unique constraints include tenant_id
+   CREATE UNIQUE INDEX idx_users_email ON users(tenant_id, email);
+   ```
+
+5. TENANT-SPECIFIC CONFIGURATION
+   ```javascript
+   const tenantConfigs = {
+     'tenant-a': {
+       features: ['advanced-analytics', 'api-access'],
+       limits: {
+         users: 100,
+         storage: '10GB',
+         apiCallsPerDay: 10000
+       },
+       branding: {
+         logo: 'https://cdn.example.com/tenant-a/logo.png',
+         primaryColor: '#FF5733'
+       }
+     },
+     'tenant-b': {
+       features: ['basic'],
+       limits: {
+         users: 10,
+         storage: '1GB',
+         apiCallsPerDay: 1000
+       }
+     }
+   };
+
+   // Check feature access
+   function hasFeature(tenantId, feature) {
+     return tenantConfigs[tenantId].features.includes(feature);
+   }
+
+   // Enforce limits
+   async function checkLimit(tenantId, limitType) {
+     const usage = await getUsage(tenantId, limitType);
+     const limit = tenantConfigs[tenantId].limits[limitType];
+
+     if (usage >= limit) {
+       throw new Error(`Limit exceeded for ${limitType}`);
+     }
+   }
+   ```
+
+6. TENANT ONBOARDING
+   ```javascript
+   async function createTenant(data) {
+     const tenantId = generateId();
+
+     await db.transaction(async (tx) => {
+       // 1. Create tenant record
+       await tx.query(
+         'INSERT INTO tenants (id, name, subdomain, plan, status) VALUES (?, ?, ?, ?, ?)',
+         [tenantId, data.name, data.subdomain, data.plan, 'active']
+       );
+
+       // 2. Create default admin user
+       await tx.query(
+         'INSERT INTO users (id, tenant_id, email, role) VALUES (?, ?, ?, ?)',
+         [generateId(), tenantId, data.adminEmail, 'admin']
+       );
+
+       // 3. Initialize default data
+       await tx.query(
+         'INSERT INTO settings (tenant_id, key, value) VALUES (?, ?, ?)',
+         [tenantId, 'timezone', 'UTC']
+       );
+
+       // 4. Provision resources (S3 bucket, etc.)
+       await provisionResources(tenantId);
+     });
+
+     return tenantId;
+   }
+   ```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 7: Real-Time Chat Application
+═══════════════════════════════════════════════════════════════════════════════════════
+
+ARCHITECTURE:
+
+┌─────────┐                    ┌─────────┐
+│ User A  │                    │ User B  │
+└────┬────┘                    └────┬────┘
+     │ WebSocket                    │ WebSocket
+     ▼                              ▼
+┌──────────────────────────────────────────┐
+│      WebSocket Gateway (Load Balanced)   │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
+│  │ WS Pod 1│  │ WS Pod 2│  │ WS Pod 3│  │
+│  └────┬────┘  └────┬────┘  └────┬────┘  │
+└───────┼───────────┼────────────┼─────────┘
+        │           │            │
+        └───────────┼────────────┘
+                    ▼
+            ┌───────────────┐
+            │  Redis Pub/Sub│ (Message Broker)
+            └───────┬───────┘
+                    │
+        ┌───────────┼───────────┬──────────┐
+        ▼           ▼           ▼          ▼
+┌──────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐
+│ Message  │ │ Presence │ │ User    │ │ Notification│
+│ Service  │ │ Service  │ │ Service │ │ Service   │
+└────┬─────┘ └────┬─────┘ └─────────┘ └──────────┘
+     │            │
+     ▼            ▼
+┌─────────┐  ┌─────────┐
+│Messages │  │ Presence│
+│   DB    │  │  Redis  │
+└─────────┘  └─────────┘
+
+KEY COMPONENTS:
+
+1. WEBSOCKET CONNECTION MANAGEMENT
+   ```javascript
+   // Server-side (Node.js + Socket.io)
+   const io = require('socket.io')(server);
+   const redis = require('socket.io-redis');
+
+   // Use Redis adapter for multi-server setup
+   io.adapter(redis({ host: 'redis', port: 6379 }));
+
+   io.on('connection', async (socket) => {
+     const userId = socket.handshake.auth.userId;
+     const token = socket.handshake.auth.token;
+
+     // 1. Authenticate
+     const user = await authenticateToken(token);
+     if (!user) {
+       socket.disconnect();
+       return;
+     }
+
+     // 2. Join user's personal room
+     socket.join(`user:${userId}`);
+
+     // 3. Update presence
+     await presenceService.setOnline(userId);
+
+     // 4. Get user's chat rooms
+     const rooms = await getUserRooms(userId);
+     rooms.forEach(room => socket.join(`room:${room.id}`));
+
+     // 5. Handle incoming messages
+     socket.on('message', async (data) => {
+       await handleMessage(userId, data);
+     });
+
+     // 6. Handle disconnect
+     socket.on('disconnect', async () => {
+       await presenceService.setOffline(userId);
+     });
+   });
+   ```
+
+2. MESSAGE SENDING
+   ```javascript
+   async function handleMessage(senderId, data) {
+     const { roomId, content, type } = data;
+
+     // 1. Validate user has access to room
+     const hasAccess = await checkRoomAccess(senderId, roomId);
+     if (!hasAccess) {
+       throw new Error('Access denied');
+     }
+
+     // 2. Save message to database
+     const message = await db.query(
+       `INSERT INTO messages (id, room_id, sender_id, content, type, created_at)
+        VALUES (?, ?, ?, ?, ?, NOW())`,
+       [generateId(), roomId, senderId, content, type]
+     );
+
+     // 3. Publish to Redis (for other servers)
+     await redis.publish('chat:message', JSON.stringify({
+       roomId,
+       message
+     }));
+
+     // 4. Broadcast to room members
+     io.to(`room:${roomId}`).emit('message', message);
+
+     // 5. Send push notification to offline users
+     const offlineUsers = await getOfflineRoomMembers(roomId);
+     for (const user of offlineUsers) {
+       await notificationService.sendPush(user.id, {
+         title: 'New message',
+         body: content
+       });
+     }
+
+     return message;
+   }
+   ```
+
+3. PRESENCE SYSTEM
+   ```javascript
+   class PresenceService {
+     // Set user online
+     async setOnline(userId) {
+       await redis.setex(
+         `presence:${userId}`,
+         300, // 5 minutes TTL
+         JSON.stringify({
+           status: 'online',
+           lastSeen: Date.now()
+         })
+       );
+
+       // Notify friends
+       const friends = await getFriends(userId);
+       friends.forEach(friendId => {
+         io.to(`user:${friendId}`).emit('presence', {
+           userId,
+           status: 'online'
+         });
+       });
+     }
+
+     // Heartbeat to keep connection alive
+     async heartbeat(userId) {
+       await redis.expire(`presence:${userId}`, 300);
+     }
+
+     // Get user status
+     async getStatus(userId) {
+       const data = await redis.get(`presence:${userId}`);
+       return data ? JSON.parse(data) : { status: 'offline' };
+     }
+
+     // Typing indicator
+     async setTyping(userId, roomId) {
+       await redis.setex(`typing:${roomId}:${userId}`, 5, '1');
+
+       io.to(`room:${roomId}`).emit('typing', {
+         userId,
+         roomId
+       });
+     }
+   }
+   ```
+
+4. MESSAGE HISTORY & PAGINATION
+   ```javascript
+   async function getMessages(roomId, userId, cursor = null, limit = 50) {
+     // Verify access
+     const hasAccess = await checkRoomAccess(userId, roomId);
+     if (!hasAccess) throw new Error('Access denied');
+
+     // Cursor-based pagination
+     let query = `
+       SELECT * FROM messages
+       WHERE room_id = ?
+     `;
+     const params = [roomId];
+
+     if (cursor) {
+       query += ` AND created_at < ?`;
+       params.push(cursor);
+     }
+
+     query += ` ORDER BY created_at DESC LIMIT ?`;
+     params.push(limit);
+
+     const messages = await db.query(query, params);
+
+     return {
+       messages: messages.reverse(),
+       nextCursor: messages.length > 0
+         ? messages[0].created_at
+         : null
+     };
+   }
+   ```
+
+5. SCALING STRATEGY
+   ```javascript
+   // Sticky sessions for WebSocket
+   // nginx.conf
+   upstream websocket {
+     ip_hash; // Same user always goes to same server
+     server ws-server-1:3000;
+     server ws-server-2:3000;
+     server ws-server-3:3000;
+   }
+
+   // Redis Pub/Sub for cross-server communication
+   redis.subscribe('chat:message');
+   redis.on('message', (channel, message) => {
+     const data = JSON.parse(message);
+     io.to(`room:${data.roomId}`).emit('message', data.message);
+   });
+   ```
+
+6. READ RECEIPTS
+   ```javascript
+   // Track message delivery and read status
+   socket.on('message:delivered', async ({ messageId }) => {
+     await db.query(
+       `INSERT INTO message_status (message_id, user_id, status, timestamp)
+        VALUES (?, ?, 'delivered', NOW())`,
+       [messageId, userId]
+     );
+   });
+
+   socket.on('message:read', async ({ messageId }) => {
+     await db.query(
+       `UPDATE message_status
+        SET status = 'read', timestamp = NOW()
+        WHERE message_id = ? AND user_id = ?`,
+       [messageId, userId]
+     );
+
+     // Notify sender
+     const message = await getMessage(messageId);
+     io.to(`user:${message.sender_id}`).emit('message:read', {
+       messageId,
+       readBy: userId
+     });
+   });
+   ```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 8: Long-Running Operations
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM:
+User uploads 1000 images for processing → Takes 30 minutes
+Can't keep HTTP connection open for 30 minutes!
+
+SOLUTION: Async Job Processing
+
+ARCHITECTURE:
+
+┌─────────┐
+│ Client  │
+└────┬────┘
+     │ 1. POST /process
+     ▼
+┌──────────────┐
+│ API Service  │
+└──────┬───────┘
+       │ 2. Create Job
+       │ 3. Return job_id
+       ▼
+┌──────────────┐
+│  Job Queue   │ (Redis/RabbitMQ/SQS)
+└──────┬───────┘
+       │ 4. Pick job
+       ▼
+┌──────────────┐
+│ Worker Pool  │
+│ ┌──────────┐ │
+│ │ Worker 1 │ │
+│ ├──────────┤ │
+│ │ Worker 2 │ │
+│ ├──────────┤ │
+│ │ Worker 3 │ │
+│ └──────────┘ │
+└──────┬───────┘
+       │ 5. Update status
+       ▼
+┌──────────────┐
+│   Database   │
+└──────┬───────┘
+       │ 6. Notify completion
+       ▼
+┌──────────────┐
+│ Notification │
+│   Service    │
+└──────────────┘
+
+IMPLEMENTATION:
+
+1. CREATE JOB API
+   ```javascript
+   app.post('/api/process-images', async (req, res) => {
+     const { images, userId } = req.body;
+
+     // 1. Create job record
+     const jobId = generateId();
+     await db.query(
+       `INSERT INTO jobs (id, user_id, type, status, total_items, created_at)
+        VALUES (?, ?, 'image-processing', 'pending', ?, NOW())`,
+       [jobId, userId, images.length]
+     );
+
+     // 2. Add to queue
+     await queue.add('image-processing', {
+       jobId,
+       userId,
+       images
+     });
+
+     // 3. Return immediately
+     res.json({
+       jobId,
+       status: 'pending',
+       message: 'Job queued for processing',
+       statusUrl: `/api/jobs/${jobId}`
+     });
+   });
+   ```
+
+2. STATUS CHECKING API
+   ```javascript
+   app.get('/api/jobs/:jobId', async (req, res) => {
+     const { jobId } = req.params;
+
+     const job = await db.query(
+       'SELECT * FROM jobs WHERE id = ?',
+       [jobId]
+     );
+
+     if (!job) {
+       return res.status(404).json({ error: 'Job not found' });
+     }
+
+     res.json({
+       jobId: job.id,
+       status: job.status, // pending, processing, completed, failed
+       progress: {
+         completed: job.completed_items,
+         total: job.total_items,
+         percentage: (job.completed_items / job.total_items * 100).toFixed(2)
+       },
+       result: job.result,
+       error: job.error,
+       createdAt: job.created_at,
+       completedAt: job.completed_at
+     });
+   });
+   ```
+
+3. WORKER IMPLEMENTATION
+   ```javascript
+   // Bull queue worker
+   const Queue = require('bull');
+   const queue = new Queue('image-processing', {
+     redis: { host: 'redis', port: 6379 }
+   });
+
+   queue.process(async (job) => {
+     const { jobId, userId, images } = job.data;
+
+     try {
+       // Update status to processing
+       await db.query(
+         `UPDATE jobs SET status = 'processing', started_at = NOW()
+          WHERE id = ?`,
+         [jobId]
+       );
+
+       let completed = 0;
+       const results = [];
+
+       // Process each image
+       for (const image of images) {
+         try {
+           // Actual processing
+           const result = await processImage(image);
+           results.push(result);
+           completed++;
+
+           // Update progress
+           await db.query(
+             `UPDATE jobs SET completed_items = ? WHERE id = ?`,
+             [completed, jobId]
+           );
+
+           // Report progress (for real-time updates)
+           job.progress(completed / images.length * 100);
+
+         } catch (error) {
+           console.error(`Failed to process image ${image}:`, error);
+           results.push({ image, error: error.message });
+         }
+       }
+
+       // Mark as completed
+       await db.query(
+         `UPDATE jobs
+          SET status = 'completed',
+              result = ?,
+              completed_at = NOW()
+          WHERE id = ?`,
+         [JSON.stringify(results), jobId]
+       );
+
+       // Send notification
+       await notificationService.send(userId, {
+         type: 'job-completed',
+         jobId,
+         message: `Processed ${completed}/${images.length} images`
+       });
+
+       return results;
+
+     } catch (error) {
+       // Mark as failed
+       await db.query(
+         `UPDATE jobs
+          SET status = 'failed',
+              error = ?,
+              completed_at = NOW()
+          WHERE id = ?`,
+         [error.message, jobId]
+       );
+
+       throw error;
+     }
+   });
+   ```
+
+4. REAL-TIME PROGRESS (WebSocket)
+   ```javascript
+   // Client subscribes to job updates
+   socket.emit('subscribe:job', { jobId });
+
+   // Worker publishes progress
+   async function updateProgress(jobId, progress) {
+     await redis.publish('job:progress', JSON.stringify({
+       jobId,
+       progress
+     }));
+   }
+
+   // WebSocket server broadcasts
+   redis.subscribe('job:progress');
+   redis.on('message', (channel, message) => {
+     const { jobId, progress } = JSON.parse(message);
+     io.to(`job:${jobId}`).emit('progress', progress);
+   });
+   ```
+
+5. WEBHOOK CALLBACK
+   ```javascript
+   // User can provide webhook URL
+   app.post('/api/process-images', async (req, res) => {
+     const { images, userId, webhookUrl } = req.body;
+
+     const jobId = await createJob({
+       userId,
+       images,
+       webhookUrl
+     });
+
+     res.json({ jobId });
+   });
+
+   // Worker calls webhook on completion
+   async function notifyWebhook(job) {
+     if (job.webhookUrl) {
+       await axios.post(job.webhookUrl, {
+         jobId: job.id,
+         status: job.status,
+         result: job.result
+       }, {
+         timeout: 5000,
+         retry: 3
+       });
+     }
+   }
+   ```
+
+6. JOB CLEANUP
+   ```javascript
+   // Clean up old completed jobs
+   async function cleanupOldJobs() {
+     // Delete jobs older than 30 days
+     await db.query(
+       `DELETE FROM jobs
+        WHERE status IN ('completed', 'failed')
+        AND completed_at < DATE_SUB(NOW(), INTERVAL 30 DAY)`
+     );
+   }
+
+   // Run daily
+   cron.schedule('0 0 * * *', cleanupOldJobs);
+   ```
+
+CLIENT-SIDE POLLING:
+```javascript
+async function pollJobStatus(jobId) {
+  const maxAttempts = 60; // 5 minutes (5s interval)
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const response = await fetch(`/api/jobs/${jobId}`);
+    const job = await response.json();
+
+    console.log(`Progress: ${job.progress.percentage}%`);
+
+    if (job.status === 'completed') {
+      console.log('Job completed!', job.result);
+      return job;
+    }
+
+    if (job.status === 'failed') {
+      throw new Error(job.error);
+    }
+
+    // Wait 5 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    attempts++;
+  }
+
+  throw new Error('Job timeout');
+}
+```
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SCENARIO 9: Search Functionality Across Services
+═══════════════════════════════════════════════════════════════════════════════════════
+
+PROBLEM:
+Need to search across Users, Products, Orders from different microservices
+
+SOLUTION: Dedicated Search Service with Elasticsearch
+
+ARCHITECTURE:
+
+┌─────────┐  ┌─────────┐  ┌─────────┐
+│  User   │  │ Product │  │  Order  │
+│ Service │  │ Service │  │ Service │
+└────┬────┘  └────┬────┘  └────┬────┘
+     │            │            │
+     │ Publish    │ Publish    │ Publish
+     │ Events     │ Events     │ Events
+     ▼            ▼            ▼
+┌────────────────────────────────────┐
+│         Kafka/Event Bus            │
+└────────────────┬───────────────────┘
+                 │
+                 │ Consume
+                 ▼
+        ┌─────────────────┐
+        │ Search Service  │
+        │   (Indexer)     │
+        └────────┬────────┘
+                 │
+                 │ Index
+                 ▼
+        ┌─────────────────┐
+        │ Elasticsearch   │
+        │  ┌───────────┐  │
+        │  │Users Index│  │
+        │  ├───────────┤  │
+        │  │Prod Index │  │
+        │  ├───────────┤  │
+        │  │Order Index│  │
+        │  └───────────┘  │
+        └─────────────────┘
+                 ▲
+                 │ Query
+                 │
+        ┌────────┴────────┐
+        │  Search API     │
+        └─────────────────┘
+                 ▲
+                 │
+        ┌────────┴────────┐
+        │     Client      │
+        └─────────────────┘
+
+IMPLEMENTATION:
+
+1. EVENT PUBLISHING (From Services)
+   ```javascript
+   // User Service
+   async function createUser(userData) {
+     const user = await db.createUser(userData);
+
+     // Publish event for search indexing
+     await kafka.publish('user.created', {
+       id: user.id,
+       name: user.name,
+       email: user.email,
+       type: 'user',
+       createdAt: user.createdAt
+     });
+
+     return user;
+   }
+
+   async function updateUser(userId, updates) {
+     const user = await db.updateUser(userId, updates);
+
+     await kafka.publish('user.updated', {
+       id: user.id,
+       name: user.name,
+       email: user.email,
+       type: 'user',
+       updatedAt: user.updatedAt
+     });
+
+     return user;
+   }
+   ```
+
+2. SEARCH INDEXER (Consumes Events)
+   ```javascript
+   const { Client } = require('@elastic/elasticsearch');
+   const es = new Client({ node: 'http://elasticsearch:9200' });
+
+   // Listen to events
+   kafka.subscribe('user.*', async (event) => {
+     await indexUser(event.data);
+   });
+
+   kafka.subscribe('product.*', async (event) => {
+     await indexProduct(event.data);
+   });
+
+   kafka.subscribe('order.*', async (event) => {
+     await indexOrder(event.data);
+   });
+
+   // Index user
+   async function indexUser(user) {
+     await es.index({
+       index: 'users',
+       id: user.id,
+       document: {
+         name: user.name,
+         email: user.email,
+         type: 'user',
+         createdAt: user.createdAt
+       }
+     });
+   }
+
+   // Index product
+   async function indexProduct(product) {
+     await es.index({
+       index: 'products',
+       id: product.id,
+       document: {
+         name: product.name,
+         description: product.description,
+         category: product.category,
+         price: product.price,
+         type: 'product',
+         createdAt: product.createdAt
+       }
+     });
+   }
+   ```
+
+3. SEARCH API
+   ```javascript
+   app.get('/api/search', async (req, res) => {
+     const { q, type, page = 1, limit = 20 } = req.query;
+
+     // Build search query
+     const query = {
+       bool: {
+         must: [
+           {
+             multi_match: {
+               query: q,
+               fields: ['name^3', 'description^2', 'email'],
+               fuzziness: 'AUTO'
+             }
+           }
+         ]
+       }
+     };
+
+     // Filter by type if specified
+     if (type) {
+       query.bool.filter = [
+         { term: { type } }
+       ];
+     }
+
+     // Search across all indices
+     const result = await es.search({
+       index: ['users', 'products', 'orders'],
+       from: (page - 1) * limit,
+       size: limit,
+       query,
+       highlight: {
+         fields: {
+           name: {},
+           description: {}
+         }
+       }
+     });
+
+     res.json({
+       total: result.hits.total.value,
+       page,
+       results: result.hits.hits.map(hit => ({
+         id: hit._id,
+         type: hit._source.type,
+         score: hit._score,
+         data: hit._source,
+         highlights: hit.highlight
+       }))
+     });
+   });
+   ```
+
+4. ADVANCED SEARCH FEATURES
+   ```javascript
+   // Autocomplete
+   app.get('/api/search/autocomplete', async (req, res) => {
+     const { q } = req.query;
+
+     const result = await es.search({
+       index: ['users', 'products'],
+       size: 10,
+       query: {
+         bool: {
+           should: [
+             {
+               match_phrase_prefix: {
+                 name: {
+                   query: q,
+                   boost: 2
+                 }
+               }
+             },
+             {
+               match: {
+                 name: {
+                   query: q,
+                   fuzziness: 'AUTO'
+                 }
+               }
+             }
+           ]
+         }
+       }
+     });
+
+     res.json({
+       suggestions: result.hits.hits.map(hit => ({
+         text: hit._source.name,
+         type: hit._source.type
+       }))
+     });
+   });
+
+   // Faceted search
+   app.get('/api/search/products', async (req, res) => {
+     const { q, category, minPrice, maxPrice } = req.query;
+
+     const filters = [];
+
+     if (category) {
+       filters.push({ term: { category } });
+     }
+
+     if (minPrice || maxPrice) {
+       filters.push({
+         range: {
+           price: {
+             gte: minPrice,
+             lte: maxPrice
+           }
+         }
+       });
+     }
+
+     const result = await es.search({
+       index: 'products',
+       query: {
+         bool: {
+           must: [
+             { match: { name: q } }
+           ],
+           filter: filters
+         }
+       },
+       aggs: {
+         categories: {
+           terms: { field: 'category.keyword' }
+         },
+         price_ranges: {
+           range: {
+             field: 'price',
+             ranges: [
+               { to: 100 },
+               { from: 100, to: 500 },
+               { from: 500 }
+             ]
+           }
+         }
+       }
+     });
+
+     res.json({
+       results: result.hits.hits,
+       facets: {
+         categories: result.aggregations.categories.buckets,
+         priceRanges: result.aggregations.price_ranges.buckets
+       }
+     });
+   });
+   ```
+
+5. BULK REINDEXING
+   ```javascript
+   // Initial bulk index or reindex
+   async function bulkReindex() {
+     // Get all users
+     const users = await userService.getAllUsers();
+
+     const operations = users.flatMap(user => [
+       { index: { _index: 'users', _id: user.id } },
+       {
+         name: user.name,
+         email: user.email,
+         type: 'user',
+         createdAt: user.createdAt
+       }
+     ]);
+
+     await es.bulk({ operations });
+
+     console.log(`Indexed ${users.length} users`);
+   }

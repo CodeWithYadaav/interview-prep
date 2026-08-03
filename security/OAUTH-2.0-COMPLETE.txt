@@ -1,0 +1,920 @@
+// ════════════════════════════════════════════════════════════════════════════════════
+// OAUTH 2.0 - "Login with Google/GitHub" Explained Simply
+// ════════════════════════════════════════════════════════════════════════════════════
+
+// Goal: Master OAuth 2.0 for senior developer interviews - implement social login!
+
+// ════════════════════════════════════════════════════════════════════════════════════
+// PART 1: WHAT IS OAUTH 2.0? (The Valet Key Analogy)
+// ════════════════════════════════════════════════════════════════════════════════════
+
+Imagine you're at a fancy hotel:
+
+🚗 **WITHOUT OAuth (Traditional):**
+- Valet asks for YOUR HOUSE KEYS to park your car
+- Now valet has access to your ENTIRE HOUSE!
+- What if valet is malicious? What if keys stolen?
+- You must TRUST valet completely
+
+🔑 **WITH OAuth (Smart):**
+- Your car has a VALET KEY (limited access)
+- Valet can: Park car, drive car
+- Valet CANNOT: Open trunk, glove box, access home
+- You gave LIMITED PERMISSION
+- You can REVOKE valet key anytime
+
+**OAuth 2.0 in Real World:**
+- You (User) want to use App X
+- App X asks: "Can I access your Google profile?"
+- You say "Yes" → Google gives App X a VALET KEY (Access Token)
+- App X can: Read your email, name
+- App X CANNOT: Change your password, delete emails
+- You can REVOKE access anytime in Google settings
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+REAL-WORLD EXAMPLE: "Login with Google"
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Scenario: Building a blog platform. Users can "Login with Google" instead of creating password.
+
+Flow Diagram:
+
+┌──────────┐                                            ┌──────────────┐
+│  User    │                                            │  Your App    │
+│ (Browser)│                                            │  (Backend)   │
+└────┬─────┘                                            └──────┬───────┘
+     │                                                         │
+     │ 1. Click "Login with Google" button                    │
+     ├────────────────────────────────────────────────────────▶
+     │                                                         │
+     │ 2. Redirect to Google login page                       │
+     │    https://accounts.google.com/o/oauth2/v2/auth?       │
+     │    client_id=YOUR_CLIENT_ID                            │
+     │    &redirect_uri=http://yourapp.com/callback           │
+     │    &scope=email profile                                │
+     ◀────────────────────────────────────────────────────────┤
+     │                                                         │
+     │         ┌──────────────────────────────┐              │
+     │         │      Google Login Page       │              │
+     │         │                              │              │
+     │         │ Email: user@gmail.com        │              │
+     │         │ Password: ********           │              │
+     │         │                              │              │
+     │         │ [Login Button]               │              │
+     │         └──────────────────────────────┘              │
+     │                                                         │
+     │ 3. User enters credentials & logs in                   │
+     │                                                         │
+     │         ┌──────────────────────────────┐              │
+     │         │  Permission Screen           │              │
+     │         │                              │              │
+     │         │  "YourApp wants to access:"  │              │
+     │         │  ✓ Your email address        │              │
+     │         │  ✓ Your profile info         │              │
+     │         │                              │              │
+     │         │  [Allow]  [Deny]             │              │
+     │         └──────────────────────────────┘              │
+     │                                                         │
+     │ 4. User clicks "Allow"                                 │
+     │                                                         │
+     │ 5. Google redirects back with AUTHORIZATION CODE       │
+     │    http://yourapp.com/callback?code=abc123xyz          │
+     ├────────────────────────────────────────────────────────▶
+     │                                                         │
+     │                 6. Exchange code for access token      │
+     │                    POST to Google:                     │
+     │                    code=abc123xyz                      │
+     │                    client_id=YOUR_ID                   │
+     │                    client_secret=YOUR_SECRET           │
+     │                                         ┌───────────┐  │
+     │                                         │  Google   │  │
+     │                                         │  OAuth    │  │
+     │                                         │  Server   │  │
+     │                 7. Google returns:      └─────┬─────┘  │
+     │                    {                          │        │
+     │                      access_token: "ya29..", │        │
+     │                      refresh_token: "1/...", │        │
+     │                      expires_in: 3600        │        │
+     │                    }                          │        │
+     │                                         ◀─────┘        │
+     │                                                         │
+     │                 8. Use access token to get user info   │
+     │                    GET https://www.googleapis.com/     │
+     │                    oauth2/v2/userinfo                  │
+     │                    Authorization: Bearer ya29...       │
+     │                                         ┌───────────┐  │
+     │                                         │  Google   │  │
+     │                 9. Google returns:      │  API      │  │
+     │                    {                    └─────┬─────┘  │
+     │                      email: "user@...", │        │     │
+     │                      name: "John Doe",  │        │     │
+     │                      picture: "..."     │        │     │
+     │                    }              ◀─────┘        │     │
+     │                                                  │     │
+     │                 10. Create user in your DB      │     │
+     │                     Generate your own JWT       │     │
+     │                                                  │     │
+     │ 11. Send YOUR JWT to frontend                   │     │
+     │     { token: "eyJhbG..." }                      │     │
+     ◀────────────────────────────────────────────────┘     │
+     │                                                        │
+     │ 12. User is now logged in!                            │
+     │     Store token, make API calls                       │
+     │                                                        │
+
+
+Key Terms:
+
+1. **Authorization Code**: Temporary code from Google (abc123xyz)
+   - One-time use
+   - Expires in ~10 minutes
+   - Exchanged for access token
+
+2. **Access Token**: The "valet key" (ya29...)
+   - Used to call Google APIs
+   - Expires in 1 hour
+   - Contains limited permissions
+
+3. **Refresh Token**: Long-lived token (1/...)
+   - Used to get NEW access tokens
+   - Doesn't expire (until revoked)
+   - Kept secret on backend
+
+4. **Scopes**: Permissions requested
+   - email: Read email address
+   - profile: Read name, picture
+   - openid: Standard identity info
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 2: IMPLEMENTATION - "Login with Google" (Step-by-Step)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────────────
+STEP 1: Register your app with Google
+────────────────────────────────────────────────────────────────────────────────────────
+
+1. Go to: https://console.cloud.google.com/
+2. Create new project: "MyBlogApp"
+3. Enable "Google+ API"
+4. Create OAuth 2.0 Credentials
+5. You'll get:
+   - CLIENT_ID: "123456789-abc.apps.googleusercontent.com"
+   - CLIENT_SECRET: "GOCSPX-xyz123..."
+6. Add Authorized redirect URIs:
+   - http://localhost:3000/auth/google/callback (development)
+   - https://yourdomain.com/auth/google/callback (production)
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+STEP 2: Backend Implementation (NestJS + Passport)
+────────────────────────────────────────────────────────────────────────────────────────
+
+Install dependencies:
+npm install @nestjs/passport passport passport-google-oauth20
+
+
+// .env file
+GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xyz123...
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+
+// src/auth/google.strategy.ts
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+
+@Injectable()
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
+  constructor() {
+    super({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      scope: ['email', 'profile'], // Permissions we want
+    });
+  }
+
+  // This runs AFTER user authorizes
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: VerifyCallback,
+  ): Promise<any> {
+    // profile contains user info from Google
+    const { id, name, emails, photos } = profile;
+
+    const user = {
+      googleId: id,
+      email: emails[0].value,
+      firstName: name.givenName,
+      lastName: name.familyName,
+      picture: photos[0].value,
+      accessToken,  // Google's access token
+    };
+
+    done(null, user); // Attach to request
+  }
+}
+
+
+// src/auth/auth.controller.ts
+import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  // Route 1: Initiate Google OAuth
+  // User clicks "Login with Google" → calls this endpoint
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // This redirects to Google login page
+    // No code here - Passport handles it
+  }
+
+  // Route 2: Google redirects here after login
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req, @Res() res) {
+    // req.user contains data from Google
+    const user = req.user;
+
+    // Find or create user in YOUR database
+    const dbUser = await this.authService.findOrCreateUser({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      picture: user.picture,
+      googleId: user.googleId,
+    });
+
+    // Generate YOUR OWN JWT token
+    const token = await this.authService.generateJwtToken(dbUser);
+
+    // Redirect to frontend with token
+    // Frontend will store this token
+    res.redirect(`http://localhost:3001/auth/success?token=${token}`);
+  }
+}
+
+
+// src/auth/auth.service.ts
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private jwtService: JwtService,
+  ) {}
+
+  async findOrCreateUser(googleUser: any): Promise<User> {
+    // Check if user exists
+    let user = await this.userRepository.findOne({
+      where: { email: googleUser.email },
+    });
+
+    if (!user) {
+      // Create new user
+      user = this.userRepository.create({
+        email: googleUser.email,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        picture: googleUser.picture,
+        googleId: googleUser.googleId,
+        authProvider: 'google',
+      });
+      await this.userRepository.save(user);
+    } else {
+      // Update existing user
+      user.googleId = googleUser.googleId;
+      user.picture = googleUser.picture;
+      await this.userRepository.save(user);
+    }
+
+    return user;
+  }
+
+  async generateJwtToken(user: User): Promise<string> {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`,
+    };
+
+    return this.jwtService.sign(payload, {
+      expiresIn: '7d',
+    });
+  }
+}
+
+
+// src/auth/user.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
+  picture: string;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column({ default: 'local' })
+  authProvider: string; // 'local' | 'google' | 'github'
+
+  @Column({ nullable: true })
+  password: string; // Only for local auth
+}
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+STEP 3: Frontend Implementation (React)
+────────────────────────────────────────────────────────────────────────────────────────
+
+// LoginPage.jsx
+import React from 'react';
+
+function LoginPage() {
+  const handleGoogleLogin = () => {
+    // Redirect to backend OAuth route
+    window.location.href = 'http://localhost:3000/auth/google';
+  };
+
+  return (
+    <div className="login-page">
+      <h1>Welcome to MyBlog</h1>
+
+      {/* Traditional login form */}
+      <form>
+        <input type="email" placeholder="Email" />
+        <input type="password" placeholder="Password" />
+        <button type="submit">Login</button>
+      </form>
+
+      <div className="divider">OR</div>
+
+      {/* OAuth login */}
+      <button onClick={handleGoogleLogin} className="google-btn">
+        <img src="/google-icon.png" alt="Google" />
+        Login with Google
+      </button>
+    </div>
+  );
+}
+
+
+// AuthSuccess.jsx - Handle redirect from backend
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+function AuthSuccess() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get token from URL query param
+    const token = searchParams.get('token');
+
+    if (token) {
+      // Store token
+      localStorage.setItem('authToken', token);
+
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } else {
+      // Error - redirect to login
+      navigate('/login');
+    }
+  }, []);
+
+  return <div>Logging you in...</div>;
+}
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+ALTERNATIVE: Using popup instead of redirect
+────────────────────────────────────────────────────────────────────────────────────────
+
+// LoginPage.jsx - Popup version (better UX)
+function LoginPage() {
+  const handleGoogleLogin = () => {
+    // Open OAuth in popup
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    const popup = window.open(
+      'http://localhost:3000/auth/google',
+      'Google Login',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    // Listen for message from popup
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'http://localhost:3000') return;
+
+      const { token } = event.data;
+      if (token) {
+        localStorage.setItem('authToken', token);
+        popup.close();
+        window.location.href = '/dashboard';
+      }
+    });
+  };
+
+  return (
+    <button onClick={handleGoogleLogin}>Login with Google</button>
+  );
+}
+
+// Backend - Modified callback for popup
+@Get('google/callback')
+@UseGuards(AuthGuard('google'))
+async googleAuthRedirect(@Req() req, @Res() res) {
+  const user = req.user;
+  const dbUser = await this.authService.findOrCreateUser(user);
+  const token = await this.authService.generateJwtToken(dbUser);
+
+  // Send token to parent window
+  res.send(`
+    <html>
+      <script>
+        window.opener.postMessage({ token: '${token}' }, 'http://localhost:3001');
+        window.close();
+      </script>
+    </html>
+  `);
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 3: OAUTH 2.0 GRANT TYPES (What Interviewer Might Ask)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+OAuth 2.0 has 4 main "grant types" (ways to get access token):
+
+────────────────────────────────────────────────────────────────────────────────────────
+1. AUTHORIZATION CODE (Most Common - What we just implemented)
+────────────────────────────────────────────────────────────────────────────────────────
+
+Used for: Web apps, Mobile apps
+Security: Most secure (secret never exposed to browser)
+
+Flow:
+1. User → Your App
+2. Your App → Google (redirect)
+3. Google → User (login)
+4. Google → Your App (authorization code)
+5. Your App → Google (exchange code + secret for token)
+6. Google → Your App (access token)
+
+✅ Secret stays on backend
+✅ Works with refresh tokens
+✅ Industry standard
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+2. IMPLICIT (Deprecated - Don't use!)
+────────────────────────────────────────────────────────────────────────────────────────
+
+Used for: Old SPAs (before 2019)
+Security: ❌ Less secure (token in URL)
+
+Flow:
+1. User → Your App
+2. Your App → Google (redirect)
+3. Google → User (login)
+4. Google → Your App (access token directly in URL!)
+
+❌ Token exposed in browser history
+❌ No refresh token
+❌ Use Authorization Code + PKCE instead
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+3. CLIENT CREDENTIALS (Server-to-Server)
+────────────────────────────────────────────────────────────────────────────────────────
+
+Used for: Microservices, Cron jobs, Backend APIs
+Security: ✅ Secure (no user involved)
+
+Flow:
+1. Your Service → Google (client_id + client_secret)
+2. Google → Your Service (access token)
+
+Example: Your backend service automatically uploads files to Google Drive
+
+// Implementation
+const axios = require('axios');
+
+async function getAccessToken() {
+  const response = await axios.post('https://oauth2.googleapis.com/token', {
+    client_id: 'YOUR_CLIENT_ID',
+    client_secret: 'YOUR_CLIENT_SECRET',
+    grant_type: 'client_credentials',
+    scope: 'https://www.googleapis.com/auth/drive'
+  });
+
+  return response.data.access_token;
+}
+
+
+────────────────────────────────────────────────────────────────────────────────────────
+4. PASSWORD GRANT (Legacy - Avoid)
+────────────────────────────────────────────────────────────────────────────────────────
+
+Used for: First-party apps only
+Security: ⚠️ User gives password to your app
+
+Flow:
+1. User enters username + password in YOUR app
+2. Your app → Google (username + password + client_secret)
+3. Google → Your app (access token)
+
+❌ User must trust your app completely
+❌ Defeats purpose of OAuth
+❌ Use only for your own apps (e.g., Twitter mobile app)
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 4: ADDING MULTIPLE OAUTH PROVIDERS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Adding GitHub, Facebook, Twitter, etc. is similar!
+
+// GitHub Strategy
+import { Strategy as GitHubStrategy } from 'passport-github2';
+
+@Injectable()
+export class GitHubAuthStrategy extends PassportStrategy(GitHubStrategy, 'github') {
+  constructor() {
+    super({
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: 'http://localhost:3000/auth/github/callback',
+      scope: ['user:email'],
+    });
+  }
+
+  async validate(accessToken: string, refreshToken: string, profile: any) {
+    const { id, username, emails, photos } = profile;
+    return {
+      githubId: id,
+      username,
+      email: emails[0].value,
+      picture: photos[0].value,
+    };
+  }
+}
+
+// Controller
+@Get('github')
+@UseGuards(AuthGuard('github'))
+async githubAuth() {}
+
+@Get('github/callback')
+@UseGuards(AuthGuard('github'))
+async githubAuthRedirect(@Req() req, @Res() res) {
+  // Same logic as Google
+}
+
+
+Frontend:
+<button onClick={() => window.location.href = '/auth/google'}>
+  Login with Google
+</button>
+
+<button onClick={() => window.location.href = '/auth/github'}>
+  Login with GitHub
+</button>
+
+<button onClick={() => window.location.href = '/auth/facebook'}>
+  Login with Facebook
+</button>
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 5: COMMON INTERVIEW QUESTIONS
+═══════════════════════════════════════════════════════════════════════════════════════
+
+Q1: What's the difference between Authentication and Authorization in OAuth?
+
+A: "OAuth 2.0 is primarily an AUTHORIZATION framework, not authentication.
+
+**Authorization (OAuth):**
+- Granting permissions
+- "Can this app read my emails?"
+- Access delegation
+
+**Authentication (Who are you?):**
+- Verifying identity
+- "Are you really John Doe?"
+- Login process
+
+**Problem:** OAuth 2.0 doesn't standardize authentication!
+- Google returns user info differently than Facebook
+- No standard way to get user profile
+
+**Solution:** OpenID Connect (OIDC)
+- Built on top of OAuth 2.0
+- Adds authentication layer
+- Standard 'id_token' with user info
+
+In practice, we use OAuth for both:
+1. Authentication: 'Login with Google'
+2. Authorization: 'Allow app to access Google Drive'"
+
+
+Q2: How do you handle users who signed up with both email and Google?
+
+A: "Account linking strategy:
+
+**Scenario:**
+- User signs up with email: john@gmail.com
+- Later tries 'Login with Google' with same email
+
+**Solution:**
+
+// auth.service.ts
+async findOrCreateUser(googleUser: any): Promise<User> {
+  // Check if user exists by email
+  let user = await this.userRepository.findOne({
+    where: { email: googleUser.email }
+  });
+
+  if (user) {
+    // User exists - link Google account
+    if (!user.googleId) {
+      user.googleId = googleUser.googleId;
+      user.picture = googleUser.picture;
+      await this.userRepository.save(user);
+    }
+    return user;
+  }
+
+  // New user - create account
+  user = this.userRepository.create({
+    email: googleUser.email,
+    googleId: googleUser.googleId,
+    authProvider: 'google',
+    // ... other fields
+  });
+
+  await this.userRepository.save(user);
+  return user;
+}
+
+**Better UX:**
+'We found an existing account with this email.
+Would you like to link your Google account?'
+[Yes, Link Accounts] [No, Create New Account]"
+
+
+Q3: How do you implement 'Login with Google' in mobile apps?
+
+A: "Two approaches:
+
+**1. In-App Browser (WebView):**
+✅ Same OAuth flow as web
+✅ Works immediately
+❌ Google discourages (security)
+❌ Poor UX
+
+**2. Native SDK (Recommended):**
+✅ Better UX (native UI)
+✅ Biometric support
+✅ Auto sign-in
+
+// React Native with Google Sign-In
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+// Configure
+GoogleSignin.configure({
+  webClientId: 'YOUR_WEB_CLIENT_ID',
+  offlineAccess: true,
+});
+
+// Sign in
+async function signInWithGoogle() {
+  await GoogleSignin.hasPlayServices();
+  const userInfo = await GoogleSignin.signIn();
+
+  // Send to your backend
+  const response = await fetch('https://api.yourapp.com/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({
+      idToken: userInfo.idToken,
+    }),
+  });
+
+  const { token } = await response.json();
+  // Store your JWT
+}
+
+// Backend validates Google token
+@Post('auth/google')
+async googleAuthMobile(@Body() body: { idToken: string }) {
+  // Verify Google token
+  const ticket = await this.oauth2Client.verifyIdToken({
+    idToken: body.idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+
+  // Create/find user
+  const user = await this.authService.findOrCreateUser({
+    email: payload.email,
+    googleId: payload.sub,
+    // ...
+  });
+
+  // Return YOUR JWT
+  const token = this.authService.generateJwtToken(user);
+  return { token };
+}"
+
+
+Q4: What is PKCE and why is it important?
+
+A: "PKCE (Proof Key for Code Exchange) - pronounced 'pixy'
+
+**Problem:** Mobile/SPA apps can't keep client_secret safe
+- JavaScript code is public
+- Mobile apps can be decompiled
+
+**Without PKCE:**
+❌ Attacker intercepts authorization code
+❌ Uses your client_id to exchange for token
+❌ No secret needed!
+
+**With PKCE:**
+1. App generates random 'code_verifier'
+2. Creates 'code_challenge' = hash(code_verifier)
+3. Sends code_challenge to Google
+4. Google returns authorization code
+5. App exchanges code + code_verifier
+6. Google verifies: hash(code_verifier) == code_challenge
+✅ Attacker can't exchange code (doesn't have verifier)
+
+**Implementation:**
+
+// Generate PKCE codes
+function generateCodeVerifier() {
+  return base64URLEncode(crypto.randomBytes(32));
+}
+
+function generateCodeChallenge(verifier) {
+  return base64URLEncode(
+    crypto.createHash('sha256').update(verifier).digest()
+  );
+}
+
+// Step 1: Start OAuth with code_challenge
+const codeVerifier = generateCodeVerifier();
+const codeChallenge = generateCodeChallenge(codeVerifier);
+
+const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?
+  client_id=${CLIENT_ID}
+  &redirect_uri=${REDIRECT_URI}
+  &response_type=code
+  &scope=email profile
+  &code_challenge=${codeChallenge}
+  &code_challenge_method=S256`;
+
+// Step 2: Exchange code with code_verifier
+const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+  code: authorizationCode,
+  client_id: CLIENT_ID,
+  redirect_uri: REDIRECT_URI,
+  grant_type: 'authorization_code',
+  code_verifier: codeVerifier, // Prove you're the same app
+});
+
+**When to use:**
+✅ Always for SPAs (React, Vue, Angular)
+✅ Always for mobile apps
+⚠️ Optional for traditional server-side web apps"
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+PART 6: SECURITY BEST PRACTICES
+═══════════════════════════════════════════════════════════════════════════════════════
+
+1. ✅ Always use HTTPS (redirect URIs must be https://)
+2. ✅ Validate 'state' parameter (CSRF protection)
+3. ✅ Use PKCE for SPAs and mobile apps
+4. ✅ Store client_secret securely (backend only!)
+5. ✅ Implement timeout for authorization codes
+6. ✅ Rotate refresh tokens
+7. ✅ Allow users to revoke access
+8. ✅ Scope to minimum permissions needed
+9. ✅ Validate redirect_uri on backend
+10. ✅ Log OAuth events for security monitoring
+
+
+State Parameter (CSRF Protection):
+
+// Before redirecting to Google
+const state = crypto.randomBytes(16).toString('hex');
+req.session.oauthState = state; // Store in session
+
+const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?
+  client_id=${CLIENT_ID}
+  &state=${state}  // Send state
+  ...`;
+
+// In callback
+@Get('google/callback')
+async callback(@Query('state') state: string, @Req() req) {
+  // Verify state matches
+  if (state !== req.session.oauthState) {
+    throw new UnauthorizedException('Invalid state - possible CSRF attack');
+  }
+
+  // Continue with OAuth flow...
+}
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+QUICK COMPARISON: OAuth Providers
+═══════════════════════════════════════════════════════════════════════════════════════
+
+╔═══════════╦══════════════════╦════════════════╦═══════════════════╗
+║ Provider  ║  Setup Ease      ║  Popular       ║  Best For         ║
+╠═══════════╬══════════════════╬════════════════╬═══════════════════╣
+║ Google    ║  ⭐⭐⭐⭐⭐      ║  ⭐⭐⭐⭐⭐    ║  Consumer apps    ║
+║ GitHub    ║  ⭐⭐⭐⭐⭐      ║  ⭐⭐⭐⭐      ║  Developer tools  ║
+║ Facebook  ║  ⭐⭐⭐          ║  ⭐⭐⭐⭐      ║  Social apps      ║
+║ Twitter   ║  ⭐⭐⭐          ║  ⭐⭐⭐        ║  Social apps      ║
+║ LinkedIn  ║  ⭐⭐⭐⭐        ║  ⭐⭐⭐        ║  Professional     ║
+║ Microsoft ║  ⭐⭐⭐⭐        ║  ⭐⭐⭐⭐      ║  Enterprise       ║
+╚═══════════╩══════════════════╩════════════════╩═══════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+SUMMARY - What to Tell Interviewer
+═══════════════════════════════════════════════════════════════════════════════════════
+
+"For implementing social login (OAuth 2.0), I follow this approach:
+
+1. **Authorization Code Grant** (most secure)
+   - Client secret stays on backend
+   - PKCE for SPAs/mobile
+   - State parameter for CSRF protection
+
+2. **Implementation:**
+   - Backend: NestJS + Passport strategies
+   - Frontend: Redirect or popup flow
+   - Store minimal scopes (email, profile)
+
+3. **User Management:**
+   - Link accounts by email
+   - Support multiple auth providers
+   - Allow password reset for OAuth users
+
+4. **Security:**
+   - HTTPS only
+   - Validate all callbacks
+   - Store refresh tokens securely
+   - Allow users to revoke access
+
+5. **Popular Providers:**
+   - Google (consumer apps)
+   - GitHub (developer tools)
+   - Enterprise SSO (Microsoft/Okta)
+
+I've implemented this for [mention your projects], which improved
+sign-up conversion by 40% and reduced password reset requests."
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+NEXT: Read API-SECURITY.txt for OWASP Top 10, XSS, CSRF, SQL Injection!
+═══════════════════════════════════════════════════════════════════════════════════════
+
